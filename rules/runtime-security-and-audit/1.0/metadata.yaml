@@ -4,11 +4,11 @@ version: "1.0"
 canonical_name: runtime-security-and-audit@1.0
 display_name: "Runtime security and audit discipline"
 description: "Preserve security boundaries, secret handling, and full auditability of runtime operations."
-coding_agent: cursor
+coding_agent: qwen
 team_code: CORE
 platform_code: DATA
 tags:
-  - cursor-rules
+  - qwen-rules
   - hgd
   - catalog
 rule_kind: engineering
