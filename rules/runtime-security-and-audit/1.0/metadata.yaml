@@ -1,0 +1,26 @@
+entity_type: rule
+id: runtime-security-and-audit
+version: "1.0"
+canonical_name: runtime-security-and-audit@1.0
+display_name: "Runtime security and audit discipline"
+description: "Preserve security boundaries, secret handling, and full auditability of runtime operations."
+coding_agent: cursor
+team_code: CORE
+platform_code: DATA
+tags:
+  - cursor-rules
+  - hgd
+  - catalog
+rule_kind: engineering
+scope: project
+environment: dev
+approval_status: published
+approved_by: codex
+approved_at: "2026-03-24T00:00:00Z"
+published_at: "2026-03-24T00:00:00Z"
+source_ref: main
+source_path: "rules/runtime-security-and-audit/1.0"
+content_source: git
+visibility: internal
+lifecycle_status: active
+checksum: "9e7d6d10323aa7a9bcc95125da850cc4f1fa0db790dad1c27d44c08d98060508"

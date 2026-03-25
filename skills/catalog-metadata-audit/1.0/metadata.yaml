@@ -1,0 +1,25 @@
+entity_type: skill
+id: catalog-metadata-audit
+version: "1.0"
+canonical_name: catalog-metadata-audit@1.0
+display_name: "Catalog metadata audit"
+description: "Validate catalog structure and metadata integrity for rules/skills/flows. Use before publish/sync and after catalog changes."
+coding_agent: qwen
+team_code: CORE
+platform_code: DATA
+tags:
+  - claude-skills-library-style
+  - hgd
+  - catalog
+skill_kind: engineering
+environment: dev
+approval_status: published
+approved_by: codex
+approved_at: "2026-03-24T00:00:00Z"
+published_at: "2026-03-24T00:00:00Z"
+source_ref: main
+source_path: "skills/catalog-metadata-audit/1.0"
+content_source: git
+visibility: internal
+lifecycle_status: active
+checksum: "941b9acd79090bbf0446f5125a92aa64ffe0de7cdd19d359411ce142c2f9027f"

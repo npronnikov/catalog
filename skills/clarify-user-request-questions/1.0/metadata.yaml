@@ -1,0 +1,25 @@
+entity_type: skill
+id: clarify-user-request-questions
+version: "1.0"
+canonical_name: clarify-user-request-questions@1.0
+display_name: "Clarify request with questions"
+description: "Ask clarifying questions with answer options. Use when requirements are ambiguous and implementation risk is high."
+coding_agent: qwen
+team_code: CORE
+platform_code: DATA
+tags:
+  - claude-skills-library-style
+  - hgd
+  - catalog
+skill_kind: engineering
+environment: dev
+approval_status: published
+approved_by: codex
+approved_at: "2026-03-24T00:00:00Z"
+published_at: "2026-03-24T00:00:00Z"
+source_ref: main
+source_path: "skills/clarify-user-request-questions/1.0"
+content_source: git
+visibility: internal
+lifecycle_status: active
+checksum: "ae101eddfe4535c71c60c55756b2a57144bca5223cb7dc1dcba8df11eaa9e8f0"

@@ -1,0 +1,26 @@
+entity_type: rule
+id: java-backend-layering-and-validation
+version: "1.0"
+canonical_name: java-backend-layering-and-validation@1.0
+display_name: "Backend layering and validation"
+description: "Ensure Spring Boot backend changes keep clean layering, validation, and predictable API contracts."
+coding_agent: cursor
+team_code: CORE
+platform_code: DATA
+tags:
+  - cursor-rules
+  - hgd
+  - catalog
+rule_kind: engineering
+scope: project
+environment: dev
+approval_status: published
+approved_by: codex
+approved_at: "2026-03-24T00:00:00Z"
+published_at: "2026-03-24T00:00:00Z"
+source_ref: main
+source_path: "rules/java-backend-layering-and-validation/1.0"
+content_source: git
+visibility: internal
+lifecycle_status: active
+checksum: "fe06058dcf28694d194daf9ead05ddabd1b3981bdbf318caae23f6aec2a28636"
