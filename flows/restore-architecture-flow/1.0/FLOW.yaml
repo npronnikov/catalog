@@ -6,7 +6,7 @@ description: Flow to reconstruct architecture artifacts from code.
 status: published
 start_node_id: analyze-architecture
 rule_refs:
-  - project-architecture-rule@1.0
+  - java-backend-layering-and-validation@1.0
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: true
 
