@@ -42,7 +42,10 @@ nodes:
     instruction: |
       Open the `questions.md` artifact in the current run working directory.
       Add your answers directly into this file, then click "Reply" to continue flow execution.
-    produced_artifacts: []
+    produced_artifacts:
+      - scope: run
+        path: questions.md
+        required: true
     expected_mutations: []
     on_submit: execute-request
 
