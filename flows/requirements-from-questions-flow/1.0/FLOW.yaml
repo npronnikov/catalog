@@ -58,6 +58,7 @@ nodes:
         path: questions.md
         scope: run
         required: true
+        transfer_mode: by_value
     instruction: |
       You have the original user request and the `questions.md` file with clarifying questions and user answers.
       Based on them, produce new detailed requirements for the user-specified topic.
