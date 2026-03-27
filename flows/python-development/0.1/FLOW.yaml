@@ -1,0 +1,40 @@
+id: python-development
+version: "0.1"
+canonical_name: python-development@0.1
+title: Development
+description: Dev app in python
+start_node_id: ai-1
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+rule_refs:
+  - base-python-rules@0.1
+
+nodes:
+  - id: ai-1
+    title: New AI Executor
+    description: Change the code according to user instruction
+    type: ai
+    execution_context: []
+    instruction: |
+      Change the code according to user request
+    checkpoint_before_run: true
+    produced_artifacts: []
+    expected_mutations: []
+    on_success: approval-2
+    on_failure: terminal
+  - id: approval-2
+    title: New Human Approval Gate
+    type: human_approval
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve: terminal
+    on_rework:
+      keep_changes: false
+      next_node: ai-1
+  - id: terminal
+    title: New Terminal
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

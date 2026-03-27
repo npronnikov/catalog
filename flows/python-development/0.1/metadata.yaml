@@ -1,0 +1,23 @@
+entity_type: flow
+id: python-development
+version: "0.1"
+canonical_name: python-development@0.1
+display_name: "Development"
+description: "Dev app in python"
+coding_agent: "qwen"
+team_code: "NICKS"
+platform_code: "FRONT"
+tags: ["python"]
+flow_kind: "delivery"
+risk_level: "low"
+environment: dev
+approval_status: pending_approval
+approved_by: ''
+approved_at: ''
+published_at: ''
+source_ref: "main"
+source_path: "flows/python-development/0.1"
+content_source: git
+visibility: internal
+lifecycle_status: active
+checksum: "fc44254ba7af40ca96ad954436d2c58589b78fc0000176308340ba9ed329e2e2"
