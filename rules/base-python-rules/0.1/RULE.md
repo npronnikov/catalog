@@ -1,8 +1,14 @@
 ---
 id: base-python-rules
-version: "1.0"
+version: "0.1"
+canonical_name: base-python-rules@0.1
 title: Base rules for Python developer
-description: Key principles for developind 
+description: Key principles for Python development
+allowed_paths:
+  - "**/*"
+forbidden_paths: []
+allowed_commands: []
+require_structured_response: false
 ---
 # You are an expert in Python development.
   

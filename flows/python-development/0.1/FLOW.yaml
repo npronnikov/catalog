@@ -30,7 +30,6 @@ nodes:
     expected_mutations: []
     on_approve: terminal
     on_rework:
-      keep_changes: false
       next_node: ai-1
   - id: terminal
     title: New Terminal
