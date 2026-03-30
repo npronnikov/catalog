@@ -10,14 +10,12 @@ platform_code: "FRONT"
 tags: ["python"]
 flow_kind: "delivery"
 risk_level: "low"
-environment: dev
+scope: organization
 approval_status: pending_approval
 approved_by: ''
 approved_at: ''
 published_at: ''
 source_ref: "main"
 source_path: "flows/python-development/0.1"
-content_source: git
-visibility: internal
 lifecycle_status: active
 checksum: "45dd7c7169549599db0a0bdc3e5326e261f17277e5f439443adfb173713a3aee"

@@ -11,15 +11,13 @@ tags:
   - claude-skills-library-style
   - hgd
   - catalog
-skill_kind: engineering
-environment: dev
+skill_kind: code
+scope: organization
 approval_status: published
 approved_by: codex
 approved_at: "2026-03-24T00:00:00Z"
 published_at: "2026-03-24T00:00:00Z"
 source_ref: main
 source_path: "skills/restore-sequence-diagrams/1.0"
-content_source: git
-visibility: internal
 lifecycle_status: active
 checksum: "b63e30f01ffd474601a1bdec63c104b2873b93e9605f53e053cf80543ab3b7ac"

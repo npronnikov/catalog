@@ -8,16 +8,13 @@ coding_agent: qwen
 team_code: "CORE"
 platform_code: "DATA"
 tags: ["qwen-rules", "hgd", "catalog"]
-rule_kind: "engineering"
-scope: "project"
-environment: dev
+rule_kind: "architecture"
+scope: organization
 approval_status: pending_approval
 approved_by: ''
 approved_at: ''
 published_at: ''
 source_ref: "main"
 source_path: "rules/react-frontend-antd-page-patterns/1.1"
-content_source: git
-visibility: internal
 lifecycle_status: active
 checksum: "ee6adb3a959e01ffe3746b6c5fd38e0ed6b4723557cb30f50be2025ceba033f5"

@@ -8,15 +8,13 @@ coding_agent: qwen
 team_code: "ALMAZ"
 platform_code: "FRONT"
 tags: ["java", "spring"]
-skill_kind: "generation"
-environment: dev
+skill_kind: "code"
+scope: organization
 approval_status: pending_approval
 approved_by: ''
 approved_at: ''
 published_at: ''
 source_ref: "main"
 source_path: "skills/restore-sequence-diagrams/1.4"
-content_source: git
-visibility: internal
 lifecycle_status: active
 checksum: "74faeb9c46fa0fbde9184962f7d0371975eb39392d58b36f279531ae11b61bfc"

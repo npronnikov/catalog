@@ -1,10 +1,20 @@
 id: restore-sequence-diagrams
-version: 1.1
+version: "1.1"
 canonical_name: restore-sequence-diagrams@1.1
 entity_type: skill
-display_name: Restore sequence diagrams
+display_name: "Restore sequence diagrams"
 description: "Reconstruct sequence diagrams for integration and runtime flows. Use when interaction logic must be documented from code."
 coding_agent: qwen
+team_code: "ALMAZ"
+platform_code: "FRONT"
+tags: ["java", "spring"]
+skill_kind: "code"
+approval_status: pending_approval
+approved_by: ''
+approved_at: ''
+published_at: ''
 source_ref: main
 source_path: skills/restore-sequence-diagrams/1.1
-checksum: sha256:ff86f5eb81b7fe083d0f134cf9b34d5343fb01dd28e9bdd96cd1b5d6dbc99db5
+lifecycle_status: active
+checksum: "ff86f5eb81b7fe083d0f134cf9b34d5343fb01dd28e9bdd96cd1b5d6dbc99db5"
+scope: organization

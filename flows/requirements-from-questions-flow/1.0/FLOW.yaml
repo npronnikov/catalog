@@ -34,6 +34,7 @@ nodes:
   - id: answer-questions
     title: User answers to questions
     type: human_input
+    checkpoint_before_run: false
     execution_context:
       - type: artifact_ref
         node_id: analyze-request-and-generate-questions
@@ -81,6 +82,7 @@ nodes:
   - id: complete-requirements-flow
     title: Complete flow
     type: terminal
+    checkpoint_before_run: false
     execution_context: []
     produced_artifacts: []
     expected_mutations: []
