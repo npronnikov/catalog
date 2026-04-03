@@ -15,7 +15,7 @@ tags:
   - spring-boot
   - backend
   - qwen-rules
-rule_kind: code
+rule_kind: coding-style
 scope: organization
 approval_status: published
 approved_by: demo
