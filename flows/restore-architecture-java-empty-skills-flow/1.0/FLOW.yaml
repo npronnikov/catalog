@@ -1,11 +1,11 @@
-id: restore-architecture-java-flow
+id: restore-architecture-java-empty-skills-flow
 version: "1.0"
-canonical_name: restore-architecture-java-flow@1.0
-title: Restore architecture documentation (Java/C4)
+canonical_name: restore-architecture-java-empty-skills-flow@1.0
+title: Restore architecture documentation (Java/C4, no skills)
 description: >
   Analyzes a Java/Spring Boot project and generates C4 architecture
   documentation with Mermaid diagrams (Context, Container, Component).
-  Human reviews and approves or requests corrections.
+  Human reviews and approves or requests corrections. The flow does not use skills.
 start_node_id: ai-analyze-architecture
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
@@ -22,10 +22,8 @@ nodes:
       Изучи весь код проекта и подготовь архитектурную документацию
       в нотации модели C4 с использованием диаграмм Mermaid.
 
-      Строго следуй подключенному skill.
       Сохрани результат в `docs/architecture.md` в директории проекта.
-    skill_refs:
-      - restore-c4-architecture-java@1.0
+    skill_refs: []
     produced_artifacts:
       - scope: project
         path: docs/architecture.md
