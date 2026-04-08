@@ -15,7 +15,7 @@ tags:
   - clarification
   - html-gate
   - short-cycle
-flow_kind: short-cycle
+flow_kind: delivery
 risk_level: medium
 scope: organization
 approval_status: published
