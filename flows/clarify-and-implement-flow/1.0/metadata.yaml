@@ -7,7 +7,7 @@ description: >
   Короткий флоу для Product Owner: агент анализирует задачу и формирует
   уточняющие вопросы в HTML-формате, PO отвечает на них, после чего агент
   реализует функциональность.
-coding_agent: claude
+coding_agent: qwen
 team_code: Demo
 platform_code: BACK
 tags:
