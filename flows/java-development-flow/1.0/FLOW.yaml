@@ -33,7 +33,7 @@ nodes:
       - scope: run
         path: questions.md
         required: true
-        modifiable: true
+        modifiable: false
     expected_mutations: []
     on_success: human-answer-questions
     on_failure: terminal-complete
@@ -48,6 +48,7 @@ nodes:
         path: questions.md
         scope: run
         required: true
+        modifiable: true
     instruction: |
       Открой `questions.md` в рабочей директории запуска.
       Для каждого вопроса отметь один из предложенных вариантов (например, "[x] Вариант A")
