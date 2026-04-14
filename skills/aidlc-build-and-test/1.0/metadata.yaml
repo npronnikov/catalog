@@ -7,9 +7,9 @@ description: >
   Produce build-instructions.md, unit-test-instructions.md,
   integration-test-instructions.md, and build-and-test-summary.md
   covering all generated units.
-coding_agent: claude
+coding_agent: qwen
 team_code: AIDLC
-platform_code: ANY
+platform_code: BACK
 tags:
   - aidlc
   - construction

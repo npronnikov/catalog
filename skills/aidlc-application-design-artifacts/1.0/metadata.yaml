@@ -6,9 +6,9 @@ display_name: "AIDLC: Application Design Artifacts"
 description: >
   Generate consolidated application-design.md from answered design questions:
   component definitions, method signatures, service layer, and dependency map.
-coding_agent: claude
+coding_agent: qwen
 team_code: AIDLC
-platform_code: ANY
+platform_code: BACK
 tags:
   - aidlc
   - inception

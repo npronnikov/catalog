@@ -6,9 +6,9 @@ display_name: "AIDLC: Units Decomposition Artifacts"
 description: >
   Generate unit-of-work.md, unit-of-work-dependency.md, and
   unit-of-work-story-map.md from answered decomposition questions.
-coding_agent: claude
+coding_agent: qwen
 team_code: AIDLC
-platform_code: ANY
+platform_code: BACK
 tags:
   - aidlc
   - inception

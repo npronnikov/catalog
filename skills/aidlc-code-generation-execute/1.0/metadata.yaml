@@ -6,9 +6,9 @@ display_name: "AIDLC: Code Generation Execution"
 description: >
   Execute the approved code-generation-plan.md step by step: create/modify files,
   write tests, apply migrations, verify each step, and mark checkboxes as complete.
-coding_agent: claude
+coding_agent: qwen
 team_code: AIDLC
-platform_code: ANY
+platform_code: BACK
 tags:
   - aidlc
   - construction
