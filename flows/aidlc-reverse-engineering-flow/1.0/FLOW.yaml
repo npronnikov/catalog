@@ -37,17 +37,37 @@ nodes:
     skill_refs:
       - aidlc-reverse-engineering@1.0
     produced_artifacts:
-      - scope: run
+      - scope: project
         path: aidlc-docs/inception/reverse-engineering/business-overview.md
         required: true
         modifiable: false
-      - scope: run
+      - scope: project
         path: aidlc-docs/inception/reverse-engineering/architecture.md
-        required: false
+        required: true
         modifiable: false
-      - scope: run
+      - scope: project
+        path: aidlc-docs/inception/reverse-engineering/code-structure.md
+        required: true
+        modifiable: false
+      - scope: project
+        path: aidlc-docs/inception/reverse-engineering/api-documentation.md
+        required: true
+        modifiable: false
+      - scope: project
+        path: aidlc-docs/inception/reverse-engineering/component-inventory.md
+        required: true
+        modifiable: false
+      - scope: project
         path: aidlc-docs/inception/reverse-engineering/technology-stack.md
-        required: false
+        required: true
+        modifiable: false
+      - scope: project
+        path: aidlc-docs/inception/reverse-engineering/dependencies.md
+        required: true
+        modifiable: false
+      - scope: project
+        path: aidlc-docs/inception/reverse-engineering/code-quality-assessment.md
+        required: true
         modifiable: false
     expected_mutations: []
     on_success: approve-reverse-engineering
