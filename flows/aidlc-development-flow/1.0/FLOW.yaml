@@ -137,6 +137,9 @@ nodes:
       risk level, decide which Construction stages to EXECUTE vs SKIP, and create
       a Mermaid workflow visualisation.
 
+      Do NOT read, create, or update aidlc-state.md or audit.md — these files
+      are not used in this flow. Skip any skill step that references them.
+
       Save as aidlc-docs/inception/plans/execution-plan.md.
     skill_refs:
       - aidlc-workflow-planning@1.0
@@ -200,6 +203,10 @@ nodes:
         path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
         required: true
         modifiable: false
+      - scope: project
+        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
+        required: true
+        modifiable: false
     expected_mutations: []
     on_success: approve-functional-design
     on_failure: terminal-complete
@@ -230,6 +237,24 @@ nodes:
       - type: artifact_ref
         node_id: ai-generate-requirements
         path: aidlc-docs/inception/requirements/requirements.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/domain-entities.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
         scope: project
         required: true
         transfer_mode: by_value
@@ -284,6 +309,30 @@ nodes:
       - type: artifact_ref
         node_id: ai-generate-requirements
         path: aidlc-docs/inception/requirements/requirements.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/domain-entities.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-nfr-requirements
+        path: aidlc-docs/construction/main-unit/nfr-requirements/tech-stack-decisions.md
         scope: project
         required: true
         transfer_mode: by_value
@@ -385,6 +434,9 @@ nodes:
         - aidlc-docs/construction/build-and-test/build-and-test-summary.md
 
       Include performance test instructions only if NFR targets were specified.
+
+      Do NOT read, create, or update aidlc-state.md or audit.md — determine the
+      build system and workspace root by inspecting the actual project structure.
     skill_refs:
       - aidlc-build-and-test@1.0
     produced_artifacts:
