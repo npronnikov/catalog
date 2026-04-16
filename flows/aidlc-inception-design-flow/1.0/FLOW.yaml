@@ -73,29 +73,7 @@ nodes:
         path: aidlc-docs/inception/plans/story-questions.md
         required: true
     expected_mutations: []
-    on_submit: approve-story-plan
-
-  - id: approve-story-plan
-    title: Review and approve user story planning questions
-    type: human_approval
-    execution_context: []
-    instruction: |
-      Review the story planning questions and answers at:
-        aidlc-docs/inception/plans/story-questions.md
-
-      Verify that:
-      - The story need assessment is correct (execute vs. skip justification)
-      - Identified personas match the actual system users
-      - All questions are answered clearly without ambiguity
-      - The breakdown approach and acceptance criteria format are appropriate
-
-      Approve to proceed to story generation, or request rework if questions
-      need to be revised or answers are unclear.
-    produced_artifacts: []
-    expected_mutations: []
-    on_approve: ai-user-stories-generate
-    on_rework:
-      next_node: ai-user-stories-questions
+    on_submit: ai-user-stories-generate
 
   - id: ai-user-stories-generate
     title: Generate user stories and personas
@@ -222,29 +200,7 @@ nodes:
         path: aidlc-docs/inception/plans/design-questions.md
         required: true
     expected_mutations: []
-    on_submit: approve-design-plan
-
-  - id: approve-design-plan
-    title: Review and approve application design questions
-    type: human_approval
-    execution_context: []
-    instruction: |
-      Review the design planning questions and answers at:
-        aidlc-docs/inception/plans/design-questions.md
-
-      Verify that:
-      - Component scope (new vs. existing) is correctly identified
-      - All answers about component boundaries are specific and unambiguous
-      - Service layer decisions are clearly defined
-      - Design pattern preferences are actionable
-
-      Approve to proceed to design artifact generation, or request rework if
-      questions need revision or answers are unclear.
-    produced_artifacts: []
-    expected_mutations: []
-    on_approve: ai-application-design-artifacts
-    on_rework:
-      next_node: ai-application-design-questions
+    on_submit: ai-application-design-artifacts
 
   - id: ai-application-design-artifacts
     title: Generate application design document
@@ -368,29 +324,7 @@ nodes:
         path: aidlc-docs/inception/plans/units-questions.md
         required: true
     expected_mutations: []
-    on_submit: approve-units-plan
-
-  - id: approve-units-plan
-    title: Review and approve units decomposition questions
-    type: human_approval
-    execution_context: []
-    instruction: |
-      Review the units decomposition questions and answers at:
-        aidlc-docs/inception/plans/units-questions.md
-
-      Verify that:
-      - Candidate units inferred by the AI match your intent
-      - Deployment model decision (microservices vs. monolith) is correct
-      - Team ownership and boundaries are clearly defined
-      - Story grouping strategy is aligned with the application design
-
-      Approve to proceed to unit artifact generation, or request rework if
-      questions need revision or answers are unclear.
-    produced_artifacts: []
-    expected_mutations: []
-    on_approve: ai-units-decomposition-artifacts
-    on_rework:
-      next_node: ai-units-decomposition-questions
+    on_submit: ai-units-decomposition-artifacts
 
   - id: ai-units-decomposition-artifacts
     title: Generate units decomposition artifacts
