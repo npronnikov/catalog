@@ -35,7 +35,7 @@ nodes:
            and quality attributes.
         3. Generate comprehensive clarifying questions with [Answer]: tags.
 
-      Save as aidlc-docs/inception/requirements/requirement-questions.md.
+      Save as requirement-questions.md.
     skill_refs:
       - aidlc-requirements-clarification@1.0
     produced_artifacts:
@@ -61,7 +61,7 @@ nodes:
         modifiable: true
         transfer_mode: by_ref
     instruction: |
-      Open aidlc-docs/inception/requirements/requirement-questions.md.
+      Open requirement-questions.md.
       Fill in every [Answer]: tag — use the A/B/C letter options where provided,
       or write a free-form answer for X) Other questions.
       Answer ALL questions before clicking Submit.

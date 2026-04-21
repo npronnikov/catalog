@@ -17,7 +17,7 @@ and reviewers can use as the single source of truth for the entire implementatio
 
 ## Step 1 — Load and Validate Answers
 
-1. Read `aidlc-docs/inception/requirements/requirement-questions.md`.
+1. Read `requirement-questions.md`.
 2. Confirm every `[Answer]:` tag has a non-empty answer.
 3. Check for vague or contradictory answers (e.g., "depends", "not sure", "maybe").
    - If found: list the ambiguities in the output and flag them as risks.

@@ -17,7 +17,7 @@ order so each unit can be designed and built independently.
 
 ## Step 1 — Load and Validate
 
-1. Read `aidlc-docs/inception/plans/units-questions.md` — confirm all `[Answer]:` filled.
+1. Read `units-questions.md` — confirm all `[Answer]:` filled.
 2. Read `aidlc-docs/inception/application-design/application-design.md`.
 3. Read `aidlc-docs/inception/user-stories/stories.md` (if available) or requirements.md.
 4. Flag ambiguous answers as unit boundary risks.

@@ -52,15 +52,15 @@ nodes:
       - aidlc-functional-design@1.0
     produced_artifacts:
       - scope: project
-        path: aidlc-docs/construction/main-unit/functional-design/domain-entities.md
+        path: aidlc-docs/construction/*/functional-design/domain-entities.md
         required: true
         modifiable: false
       - scope: project
-        path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
+        path: aidlc-docs/construction/*/functional-design/business-rules.md
         required: true
         modifiable: false
       - scope: project
-        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
+        path: aidlc-docs/construction/*/functional-design/data-flow.md
         required: true
         modifiable: false
     expected_mutations: []
@@ -99,19 +99,19 @@ nodes:
     execution_context:
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/domain-entities.md
+        path: aidlc-docs/construction/*/functional-design/domain-entities.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
+        path: aidlc-docs/construction/*/functional-design/business-rules.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
+        path: aidlc-docs/construction/*/functional-design/data-flow.md
         scope: project
         required: true
         transfer_mode: by_value
@@ -133,11 +133,11 @@ nodes:
       - aidlc-nfr-requirements@1.0
     produced_artifacts:
       - scope: project
-        path: aidlc-docs/construction/main-unit/nfr-requirements/nfr-requirements.md
+        path: aidlc-docs/construction/*/nfr-requirements/nfr-requirements.md
         required: true
         modifiable: false
       - scope: project
-        path: aidlc-docs/construction/main-unit/nfr-requirements/tech-stack-decisions.md
+        path: aidlc-docs/construction/*/nfr-requirements/tech-stack-decisions.md
         required: true
         modifiable: false
     expected_mutations: []
@@ -174,25 +174,25 @@ nodes:
     execution_context:
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/domain-entities.md
+        path: aidlc-docs/construction/*/functional-design/domain-entities.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
+        path: aidlc-docs/construction/*/functional-design/business-rules.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
+        path: aidlc-docs/construction/*/functional-design/data-flow.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-nfr-requirements
-        path: aidlc-docs/construction/main-unit/nfr-requirements/tech-stack-decisions.md
+        path: aidlc-docs/construction/*/nfr-requirements/tech-stack-decisions.md
         scope: project
         required: true
         transfer_mode: by_value

@@ -16,7 +16,7 @@ requirements and can serve as the specification for implementation and testing.
 
 ## Step 1 — Load and Validate Answers
 
-1. Read `aidlc-docs/inception/plans/story-questions.md`.
+1. Read `story-questions.md`.
 2. Confirm every `[Answer]:` tag is filled; note any vague or contradictory answers.
 3. Read `aidlc-docs/inception/requirements/requirements.md` for functional scope.
 4. Check for any unanswered ambiguities — if found, list them as risks in the output.

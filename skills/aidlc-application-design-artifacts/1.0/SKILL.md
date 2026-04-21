@@ -17,7 +17,7 @@ Detailed business logic is deferred to Functional Design.
 
 ## Step 1 — Load and Validate
 
-1. Read `aidlc-docs/inception/plans/design-questions.md` — confirm all `[Answer]:` filled.
+1. Read `design-questions.md` — confirm all `[Answer]:` filled.
 2. Read `aidlc-docs/inception/requirements/requirements.md`.
 3. Check for ambiguous or contradictory answers; list as design risks.
 4. Load reverse engineering: code-structure.md (brownfield — use existing class names).

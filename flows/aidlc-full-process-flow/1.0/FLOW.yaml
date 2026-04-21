@@ -40,7 +40,7 @@ nodes:
            and quality attributes.
         3. Generate comprehensive clarifying questions with [Answer]: tags.
 
-      Save as aidlc-docs/inception/requirements/requirement-questions.md.
+      Save as requirement-questions.md.
     skill_refs:
       - aidlc-requirements-clarification@1.0
     produced_artifacts:
@@ -66,7 +66,7 @@ nodes:
         modifiable: true
         transfer_mode: by_ref
     instruction: |
-      Open aidlc-docs/inception/requirements/requirement-questions.md.
+      Open requirement-questions.md.
       Fill in every [Answer]: tag — use the A/B/C letter options where provided,
       or write a free-form answer for X) Other questions.
       Answer ALL questions before clicking Submit.
@@ -166,7 +166,7 @@ nodes:
            personas, story granularity, format, breakdown approach, acceptance
            criteria style, user journeys, business context, technical constraints.
 
-      Save as aidlc-docs/inception/plans/story-questions.md.
+      Save as story-questions.md.
       Do NOT generate stories yet.
     skill_refs:
       - aidlc-user-stories-questions@1.0
@@ -192,7 +192,7 @@ nodes:
         modifiable: true
         transfer_mode: by_ref
     instruction: |
-      Open aidlc-docs/inception/plans/story-questions.md.
+      Open story-questions.md.
       Fill in every [Answer]: tag — use the A/B/C letter options where provided,
       or write a free-form answer for X) Other questions.
       Answer ALL questions before clicking Submit.
@@ -294,7 +294,7 @@ nodes:
 
       Note for brownfield: reference actual existing classes from code-structure.md.
 
-      Save as aidlc-docs/inception/plans/design-questions.md.
+      Save as design-questions.md.
       Do NOT generate design artifacts yet.
     skill_refs:
       - aidlc-application-design-questions@1.0
@@ -320,7 +320,7 @@ nodes:
         modifiable: true
         transfer_mode: by_ref
     instruction: |
-      Open aidlc-docs/inception/plans/design-questions.md.
+      Open design-questions.md.
       Fill in all [Answer]: tags with your architectural decisions about components,
       service layer design, and dependency patterns. Submit when complete.
     produced_artifacts:
@@ -417,7 +417,7 @@ nodes:
 
       Reference actual components from application-design.md when forming questions.
 
-      Save as aidlc-docs/inception/plans/units-questions.md.
+      Save as units-questions.md.
       Do NOT generate unit artifacts yet.
     skill_refs:
       - aidlc-units-decomposition-questions@1.0
@@ -443,7 +443,7 @@ nodes:
         modifiable: true
         transfer_mode: by_ref
     instruction: |
-      Open aidlc-docs/inception/plans/units-questions.md.
+      Open units-questions.md.
       Fill in all [Answer]: tags with your decisions about unit boundaries,
       deployment model, team ownership, and integration strategy.
       Submit when complete.
@@ -639,15 +639,15 @@ nodes:
       - aidlc-functional-design@1.0
     produced_artifacts:
       - scope: project
-        path: aidlc-docs/construction/main-unit/functional-design/domain-entities.md
+        path: aidlc-docs/construction/*/functional-design/domain-entities.md
         required: true
         modifiable: false
       - scope: project
-        path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
+        path: aidlc-docs/construction/*/functional-design/business-rules.md
         required: true
         modifiable: false
       - scope: project
-        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
+        path: aidlc-docs/construction/*/functional-design/data-flow.md
         required: true
         modifiable: false
     expected_mutations: []
@@ -684,19 +684,19 @@ nodes:
     execution_context:
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/domain-entities.md
+        path: aidlc-docs/construction/*/functional-design/domain-entities.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
+        path: aidlc-docs/construction/*/functional-design/business-rules.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
+        path: aidlc-docs/construction/*/functional-design/data-flow.md
         scope: project
         required: true
         transfer_mode: by_value
@@ -718,11 +718,11 @@ nodes:
       - aidlc-nfr-requirements@1.0
     produced_artifacts:
       - scope: project
-        path: aidlc-docs/construction/main-unit/nfr-requirements/nfr-requirements.md
+        path: aidlc-docs/construction/*/nfr-requirements/nfr-requirements.md
         required: true
         modifiable: false
       - scope: project
-        path: aidlc-docs/construction/main-unit/nfr-requirements/tech-stack-decisions.md
+        path: aidlc-docs/construction/*/nfr-requirements/tech-stack-decisions.md
         required: true
         modifiable: false
     expected_mutations: []
@@ -757,25 +757,25 @@ nodes:
     execution_context:
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/domain-entities.md
+        path: aidlc-docs/construction/*/functional-design/domain-entities.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
+        path: aidlc-docs/construction/*/functional-design/business-rules.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-functional-design
-        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
+        path: aidlc-docs/construction/*/functional-design/data-flow.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-nfr-requirements
-        path: aidlc-docs/construction/main-unit/nfr-requirements/tech-stack-decisions.md
+        path: aidlc-docs/construction/*/nfr-requirements/tech-stack-decisions.md
         scope: project
         required: true
         transfer_mode: by_value

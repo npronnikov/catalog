@@ -39,7 +39,7 @@ nodes:
            personas, story granularity, format, breakdown approach, acceptance
            criteria style, user journeys, business context, technical constraints.
 
-      Save as aidlc-docs/inception/plans/story-questions.md.
+      Save as story-questions.md.
       Do NOT generate stories yet.
     skill_refs:
       - aidlc-user-stories-questions@1.0
@@ -65,7 +65,7 @@ nodes:
         modifiable: true
         transfer_mode: by_ref
     instruction: |
-      Open aidlc-docs/inception/plans/story-questions.md.
+      Open story-questions.md.
       Fill in every [Answer]: tag — use the A/B/C letter options where provided,
       or write a free-form answer for X) Other questions.
       Answer ALL questions before clicking Submit.
@@ -169,7 +169,7 @@ nodes:
 
       Note for brownfield: reference actual existing classes from code-structure.md.
 
-      Save as aidlc-docs/inception/plans/design-questions.md.
+      Save as design-questions.md.
       Do NOT generate design artifacts yet.
     skill_refs:
       - aidlc-application-design-questions@1.0
@@ -195,7 +195,7 @@ nodes:
         modifiable: true
         transfer_mode: by_ref
     instruction: |
-      Open aidlc-docs/inception/plans/design-questions.md.
+      Open design-questions.md.
       Fill in all [Answer]: tags with your architectural decisions about components,
       service layer design, and dependency patterns. Submit when complete.
     produced_artifacts:
@@ -294,7 +294,7 @@ nodes:
 
       Reference actual components from application-design.md when forming questions.
 
-      Save as aidlc-docs/inception/plans/units-questions.md.
+      Save as units-questions.md.
       Do NOT generate unit artifacts yet.
     skill_refs:
       - aidlc-units-decomposition-questions@1.0
@@ -320,7 +320,7 @@ nodes:
         modifiable: true
         transfer_mode: by_ref
     instruction: |
-      Open aidlc-docs/inception/plans/units-questions.md.
+      Open units-questions.md.
       Fill in all [Answer]: tags with your decisions about unit boundaries,
       deployment model, team ownership, and integration strategy.
       Submit when complete.
