@@ -58,7 +58,6 @@ Save as `units-questions.md`:
 ## Q1: [Question title]
 **Category**: Story Grouping / Deployment Model / etc.
 **Context**: [decomposition decision this drives]
-**Options**:
 A) [Option A]
 B) [Option B]
 C) [Option C]

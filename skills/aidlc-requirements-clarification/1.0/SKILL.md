@@ -74,7 +74,6 @@ Save as `requirement-questions.md`:
 
 ### Q1: [Short question title]
 **Context**: [Why this question matters]
-**Options**:
 A) [Option A]
 B) [Option B]
 C) [Option C]

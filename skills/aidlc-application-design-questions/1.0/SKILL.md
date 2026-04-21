@@ -56,7 +56,6 @@ Save as `design-questions.md`:
 ## Q1: [Question title]
 **Category**: Component Identification / Service Layer / etc.
 **Context**: [design decision this drives]
-**Options**:
 A) [Option A]
 B) [Option B]
 C) [Option C]

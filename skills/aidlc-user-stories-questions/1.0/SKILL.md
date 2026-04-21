@@ -77,7 +77,6 @@ Save as `story-questions.md`:
 ## Q1: [Question title]
 **Category**: User Personas / Story Format / etc.
 **Context**: [why this decision matters]
-**Options**:
 A) [Option A]
 B) [Option B]
 C) [Option C]
