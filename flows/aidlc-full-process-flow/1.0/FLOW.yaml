@@ -1,109 +1,45 @@
 id: aidlc-full-process-flow
 version: "1.0"
 canonical_name: aidlc-full-process-flow@1.0
-title: AIDLC Full Process (inception → construction, no operations)
+title: AIDLC Full Process (Requirements Analysis → Inception Design → Construction)
 description: >
-  Complete AIDLC pipeline from workspace detection through code generation and
-  build/test — without the operations phase. Includes workspace detection, reverse
-  engineering (brownfield), requirements clarification, requirements document,
-  user stories, workflow planning, application design, units decomposition,
-  functional design, NFR requirements, code generation plan, code execution,
-  and build/test instructions. Every stage has a human approval or human input gate.
-start_node_id: ai-workspace-detection
+  End-to-end AIDLC flow. Sequentially composes three sub-flows:
+  1. aidlc-requirements-analysis-flow 1.0  — clarifying questions, requirements doc, approval
+  2. aidlc-inception-design-flow 1.0       — user stories, app design, units, workflow plan
+  3. aidlc-development-flow 1.0            — functional design, NFR, code gen plan, code gen, build & test
+  Each stage has human Q&A and/or an approval gate with rework capability.
+start_node_id: ai-analyze-and-questions
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
 
 nodes:
 
   # ════════════════════════════════════════════════════════════════════════════
-  # INCEPTION PHASE — Workspace & Reverse Engineering
+  # PHASE 1 — Requirements Analysis  (aidlc-requirements-analysis-flow@1.0)
   # ════════════════════════════════════════════════════════════════════════════
 
-  - id: ai-workspace-detection
-    title: Detect workspace type and bootstrap state tracking
-    type: ai
-    checkpoint_before_run: false
-    execution_context: []
-    instruction: |
-      Scan the project workspace to determine brownfield vs greenfield.
-      Follow the attached skill:
-        - Check for existing aidlc-docs/aidlc-state.md (resume if found).
-        - Scan source files and build descriptors.
-        - Create aidlc-docs/aidlc-state.md with full workspace findings.
-    skill_refs:
-      - aidlc-workspace-detection@1.0
-    produced_artifacts:
-      - scope: run
-        path: aidlc-docs/aidlc-state.md
-        required: true
-        modifiable: false
-    expected_mutations: []
-    on_success: ai-reverse-engineering
-    on_failure: terminal-complete
-    allow_retry: true
-
-  - id: ai-reverse-engineering
-    title: Reverse-engineer existing codebase
-    type: ai
-    checkpoint_before_run: true
-    execution_context:
-      - type: artifact_ref
-        node_id: ai-workspace-detection
-        path: aidlc-docs/aidlc-state.md
-        scope: run
-        required: true
-        transfer_mode: by_value
-    instruction: |
-      Perform comprehensive reverse-engineering of the existing codebase following
-      the attached skill. Produce ALL artifacts in aidlc-docs/inception/reverse-engineering/:
-        business-overview.md, architecture.md, code-structure.md, api-documentation.md,
-        component-inventory.md, technology-stack.md, dependencies.md,
-        code-quality-assessment.md.
-      If greenfield, create a brief business-overview.md noting no existing code.
-      Update aidlc-docs/aidlc-state.md.
-    skill_refs:
-      - aidlc-reverse-engineering@1.0
-    produced_artifacts:
-      - scope: project
-        path: aidlc-docs/inception/reverse-engineering/business-overview.md
-        required: true
-        modifiable: false
-      - scope: project
-        path: aidlc-docs/inception/reverse-engineering/architecture.md
-        required: false
-        modifiable: false
-    expected_mutations: []
-    on_success: approve-reverse-engineering
-    on_failure: terminal-complete
-    allow_retry: true
-
-  - id: approve-reverse-engineering
-    title: Review and approve reverse-engineering artifacts
-    type: human_approval
-    execution_context: []
-    instruction: |
-      Review aidlc-docs/inception/reverse-engineering/.
-      Verify accuracy of business-overview.md, architecture.md, api-documentation.md,
-      technology-stack.md. Approve to proceed to requirements analysis.
-    produced_artifacts: []
-    expected_mutations: []
-    on_approve: ai-requirements-clarification
-    on_rework:
-      next_node: ai-reverse-engineering
-
-  # ════════════════════════════════════════════════════════════════════════════
-  # INCEPTION PHASE — Requirements Analysis
-  # ════════════════════════════════════════════════════════════════════════════
-
-  - id: ai-requirements-clarification
+  # ── Step 1: Analyse request and generate clarifying questions ─────────────
+  - id: ai-analyze-and-questions
     title: Analyse request and generate clarifying questions
     type: ai
-    checkpoint_before_run: true
-    execution_context: []
+    checkpoint_before_run: false
+    execution_context:
+      - type: user_request
+        required: true
     instruction: |
-      Analyse the user request and codebase. Load reverse-engineering context
-      if available. Follow the attached skill to classify the request and generate
-      comprehensive clarifying questions with [Answer]: tags.
+      Analyse the user request and the existing codebase. Load reverse-engineering
+      context if available (brownfield project):
+        - aidlc-docs/inception/reverse-engineering/architecture.md
+        - aidlc-docs/inception/reverse-engineering/component-inventory.md
+        - aidlc-docs/inception/reverse-engineering/technology-stack.md
+
+      Follow the attached skill precisely to:
+        1. Classify the request (clarity, type, scope, complexity).
+        2. Identify ALL ambiguous areas across functional requirements,
+           NFRs, user scenarios, business context, technical context,
+           and quality attributes.
+        3. Generate comprehensive clarifying questions with [Answer]: tags.
+
       Save as aidlc-docs/inception/requirements/requirement-questions.md.
     skill_refs:
       - aidlc-requirements-clarification@1.0
@@ -113,16 +49,17 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: human-answer-requirement-questions
+    on_success: human-answer-questions
     on_failure: terminal-complete
     allow_retry: true
 
-  - id: human-answer-requirement-questions
+  # ── Gate: User answers clarifying questions ───────────────────────────────
+  - id: human-answer-questions
     title: Answer requirement clarification questions
     type: human_input
     execution_context:
       - type: artifact_ref
-        node_id: ai-requirements-clarification
+        node_id: ai-analyze-and-questions
         path: aidlc-docs/inception/requirements/requirement-questions.md
         scope: run
         required: true
@@ -130,8 +67,9 @@ nodes:
         transfer_mode: by_ref
     instruction: |
       Open aidlc-docs/inception/requirements/requirement-questions.md.
-      Fill in every [Answer]: tag. Use the A/B/C options where provided, or write
-      a free-form answer for X) Other questions. Answer ALL before clicking Submit.
+      Fill in every [Answer]: tag — use the A/B/C letter options where provided,
+      or write a free-form answer for X) Other questions.
+      Answer ALL questions before clicking Submit.
     produced_artifacts:
       - scope: run
         path: aidlc-docs/inception/requirements/requirement-questions.md
@@ -139,21 +77,30 @@ nodes:
     expected_mutations: []
     on_submit: ai-generate-requirements
 
+  # ── Step 2: Generate requirements document ────────────────────────────────
   - id: ai-generate-requirements
     title: Generate requirements document
     type: ai
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
-        node_id: human-answer-requirement-questions
+        node_id: human-answer-questions
         path: aidlc-docs/inception/requirements/requirement-questions.md
         scope: run
         required: true
         transfer_mode: by_value
     instruction: |
-      Read the answered requirement-questions.md and produce requirements.md
-      following the attached skill. Cover: request classification, affected files,
-      FR-*, API-*, DM-*, AUTH-*, TEST-* sections, constraints, and acceptance criteria.
+      Read the answered requirement-questions.md and produce a complete requirements
+      document following the attached skill.
+
+      Load reverse-engineering context (brownfield) to reference exact file/class names:
+        - aidlc-docs/inception/reverse-engineering/architecture.md
+        - aidlc-docs/inception/reverse-engineering/technology-stack.md
+        - aidlc-docs/inception/reverse-engineering/code-structure.md
+
+      Cover all sections: request classification, affected files, FR-*, API-*,
+      DM-*, AUTH-*, TEST-*, constraints, and acceptance criteria.
+
       Save as aidlc-docs/inception/requirements/requirements.md.
     skill_refs:
       - aidlc-requirements-document@1.0
@@ -167,14 +114,24 @@ nodes:
     on_failure: terminal-complete
     allow_retry: true
 
+  # ── Gate: Review and approve requirements ─────────────────────────────────
   - id: approve-requirements
     title: Review and approve requirements
     type: human_approval
     execution_context: []
     instruction: |
-      Review aidlc-docs/inception/requirements/requirements.md.
-      Verify completeness, specificity, and alignment with your expectations.
-      Approve to proceed to user stories, or request rework.
+      Review the requirements document at:
+        aidlc-docs/inception/requirements/requirements.md
+
+      Verify that:
+      - Request classification (type, scope, complexity) is accurate
+      - Affected files list is complete and correct
+      - Functional requirements (FR-*) are specific and verifiable
+      - API, data model, and authorization requirements are complete
+      - Testing requirements cover happy path and edge cases
+      - Acceptance criteria are measurable
+
+      Approve to proceed to Inception Design, or request rework with specific corrections.
     produced_artifacts: []
     expected_mutations: []
     on_approve: ai-user-stories-questions
@@ -182,25 +139,35 @@ nodes:
       next_node: ai-generate-requirements
 
   # ════════════════════════════════════════════════════════════════════════════
-  # INCEPTION PHASE — User Stories
+  # PHASE 2 — Inception Design  (aidlc-inception-design-flow@1.0)
   # ════════════════════════════════════════════════════════════════════════════
+
+  # ── Phase 2.1: User Stories ───────────────────────────────────────────────
 
   - id: ai-user-stories-questions
     title: Generate user story planning questions
     type: ai
-    checkpoint_before_run: true
+    checkpoint_before_run: false
     execution_context:
-      - type: artifact_ref
-        node_id: ai-generate-requirements
-        path: aidlc-docs/inception/requirements/requirements.md
-        scope: project
+      - type: user_request
         required: true
-        transfer_mode: by_value
     instruction: |
-      Review requirements.md and generate story-planning questions with [Answer]: tags
-      following the attached skill. Cover personas, granularity, format, breakdown
-      approach, acceptance criteria style, and business context.
+      Analyse the requirements and existing codebase context to generate user
+      story planning questions.
+
+      Load from project:
+        - aidlc-docs/inception/requirements/requirements.md  ← REQUIRED
+        - aidlc-docs/inception/reverse-engineering/architecture.md  ← if available
+
+      Follow the attached skill precisely to:
+        1. Assess whether user stories add clear value for this request.
+        2. Identify personas implied by the requirements.
+        3. Generate comprehensive planning questions with [Answer]: tags covering:
+           personas, story granularity, format, breakdown approach, acceptance
+           criteria style, user journeys, business context, technical constraints.
+
       Save as aidlc-docs/inception/plans/story-questions.md.
+      Do NOT generate stories yet.
     skill_refs:
       - aidlc-user-stories-questions@1.0
     produced_artifacts:
@@ -226,8 +193,9 @@ nodes:
         transfer_mode: by_ref
     instruction: |
       Open aidlc-docs/inception/plans/story-questions.md.
-      Fill in all [Answer]: tags with your decisions about personas, story format,
-      breakdown approach, and acceptance criteria format. Submit when complete.
+      Fill in every [Answer]: tag — use the A/B/C letter options where provided,
+      or write a free-form answer for X) Other questions.
+      Answer ALL questions before clicking Submit.
     produced_artifacts:
       - scope: run
         path: aidlc-docs/inception/plans/story-questions.md
@@ -246,18 +214,19 @@ nodes:
         scope: run
         required: true
         transfer_mode: by_value
-      - type: artifact_ref
-        node_id: ai-generate-requirements
-        path: aidlc-docs/inception/requirements/requirements.md
-        scope: project
-        required: true
-        transfer_mode: by_value
     instruction: |
-      Read the answered story-questions.md and requirements.md. Generate INVEST-
-      compliant user stories and user personas following the attached skill.
+      Read the answered story-questions.md and generate INVEST-compliant user
+      stories and user personas following the attached skill.
+
+      Also load from project:
+        - aidlc-docs/inception/requirements/requirements.md — ensure every story
+          traces back to at least one FR-*, API-*, DM-*, or AUTH-* requirement.
+
       Save:
         - aidlc-docs/inception/user-stories/stories.md
         - aidlc-docs/inception/user-stories/personas.md
+
+      Do NOT update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-user-stories-generate@1.0
     produced_artifacts:
@@ -279,70 +248,25 @@ nodes:
     type: human_approval
     execution_context: []
     instruction: |
-      Review aidlc-docs/inception/user-stories/stories.md and personas.md.
-      Verify that stories accurately represent user needs, have clear acceptance
-      criteria, and map to requirements. Approve to proceed to workflow planning.
-    produced_artifacts: []
-    expected_mutations: []
-    on_approve: ai-workflow-planning
-    on_rework:
-      next_node: ai-user-stories-generate
+      Review the generated artifacts at:
+        aidlc-docs/inception/user-stories/stories.md
+        aidlc-docs/inception/user-stories/personas.md
 
-  # ════════════════════════════════════════════════════════════════════════════
-  # INCEPTION PHASE — Workflow Planning
-  # ════════════════════════════════════════════════════════════════════════════
+      Verify that:
+      - Stories follow INVEST criteria (Independent, Negotiable, Valuable,
+        Estimable, Small, Testable)
+      - Every story traces to at least one requirement (FR-*, API-*, etc.)
+      - Acceptance criteria are written as Given/When/Then statements
+      - Personas accurately represent real user types from the requirements
 
-  - id: ai-workflow-planning
-    title: Create workflow execution plan
-    type: ai
-    checkpoint_before_run: true
-    execution_context:
-      - type: artifact_ref
-        node_id: ai-generate-requirements
-        path: aidlc-docs/inception/requirements/requirements.md
-        scope: project
-        required: true
-        transfer_mode: by_value
-      - type: artifact_ref
-        node_id: ai-user-stories-generate
-        path: aidlc-docs/inception/user-stories/stories.md
-        scope: project
-        required: false
-        transfer_mode: by_value
-    instruction: |
-      Load all prior context and produce a workflow execution plan following
-      the attached skill. Assess impact and risk, determine which construction
-      stages to EXECUTE vs SKIP, create a Mermaid visualisation.
-      Save as aidlc-docs/inception/plans/execution-plan.md.
-    skill_refs:
-      - aidlc-workflow-planning@1.0
-    produced_artifacts:
-      - scope: project
-        path: aidlc-docs/inception/plans/execution-plan.md
-        required: true
-        modifiable: false
-    expected_mutations: []
-    on_success: approve-workflow-plan
-    on_failure: terminal-complete
-    allow_retry: true
-
-  - id: approve-workflow-plan
-    title: Review and approve workflow execution plan
-    type: human_approval
-    execution_context: []
-    instruction: |
-      Review aidlc-docs/inception/plans/execution-plan.md.
-      Verify stage selection rationale and risk assessment. You can request
-      stages to be added or removed. Approve to proceed to application design.
+      Approve to proceed to Application Design, or request rework with corrections.
     produced_artifacts: []
     expected_mutations: []
     on_approve: ai-application-design-questions
     on_rework:
-      next_node: ai-workflow-planning
+      next_node: ai-user-stories-generate
 
-  # ════════════════════════════════════════════════════════════════════════════
-  # INCEPTION PHASE — Application Design
-  # ════════════════════════════════════════════════════════════════════════════
+  # ── Phase 2.2: Application Design ────────────────────────────────────────
 
   - id: ai-application-design-questions
     title: Generate application design clarification questions
@@ -350,16 +274,28 @@ nodes:
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
-        node_id: ai-generate-requirements
-        path: aidlc-docs/inception/requirements/requirements.md
+        node_id: ai-user-stories-generate
+        path: aidlc-docs/inception/user-stories/stories.md
         scope: project
         required: true
         transfer_mode: by_value
     instruction: |
-      Review requirements.md and user stories (if available) and generate design-
-      clarification questions following the attached skill. Cover component
-      identification, method interfaces, service layer, and dependency patterns.
+      Review requirements and user stories to generate design clarification
+      questions covering all architectural decisions.
+
+      Load from project:
+        - aidlc-docs/inception/requirements/requirements.md  ← REQUIRED
+        - aidlc-docs/inception/reverse-engineering/architecture.md  ← if available
+        - aidlc-docs/inception/reverse-engineering/code-structure.md  ← if available
+
+      Follow the attached skill to identify all areas needing clarification:
+      component boundaries, method interfaces, service layer design, dependency
+      patterns, and architectural style preferences.
+
+      Note for brownfield: reference actual existing classes from code-structure.md.
+
       Save as aidlc-docs/inception/plans/design-questions.md.
+      Do NOT generate design artifacts yet.
     skill_refs:
       - aidlc-application-design-questions@1.0
     produced_artifacts:
@@ -386,7 +322,7 @@ nodes:
     instruction: |
       Open aidlc-docs/inception/plans/design-questions.md.
       Fill in all [Answer]: tags with your architectural decisions about components,
-      service layer, and dependency patterns. Submit when complete.
+      service layer design, and dependency patterns. Submit when complete.
     produced_artifacts:
       - scope: run
         path: aidlc-docs/inception/plans/design-questions.md
@@ -395,7 +331,7 @@ nodes:
     on_submit: ai-application-design-artifacts
 
   - id: ai-application-design-artifacts
-    title: Generate application design artifacts
+    title: Generate application design document
     type: ai
     checkpoint_before_run: true
     execution_context:
@@ -406,10 +342,20 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
-      Read answered design-questions.md and produce the consolidated application
-      design document following the attached skill. Include component definitions,
-      method signatures, service layer design, and dependency map with Mermaid diagram.
+      Read the answered design-questions.md and produce the consolidated application
+      design document following the attached skill.
+
+      Also load from project:
+        - aidlc-docs/inception/requirements/requirements.md
+        - aidlc-docs/inception/user-stories/stories.md
+        - aidlc-docs/inception/reverse-engineering/code-structure.md  ← brownfield:
+          use existing class names and package structure
+
+      The document must include: component definitions with method tables, service
+      layer orchestration patterns, Mermaid dependency diagram, and design decisions.
+
       Save as aidlc-docs/inception/application-design/application-design.md.
+      Do NOT update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-application-design-artifacts@1.0
     produced_artifacts:
@@ -427,18 +373,24 @@ nodes:
     type: human_approval
     execution_context: []
     instruction: |
-      Review aidlc-docs/inception/application-design/application-design.md.
-      Verify component boundaries, method signatures, service orchestration patterns,
-      and dependency map are correct. Approve to proceed to units decomposition.
+      Review the application design at:
+        aidlc-docs/inception/application-design/application-design.md
+
+      Verify that:
+      - Component boundaries are correct and responsibilities are clearly separated
+      - Method signatures match the expected interfaces
+      - Service layer orchestration is logical and transaction boundaries are clear
+      - Mermaid dependency diagram is accurate and has no cycles
+      - Design decisions are documented with rationale
+
+      Approve to proceed to Units Decomposition, or request rework with corrections.
     produced_artifacts: []
     expected_mutations: []
     on_approve: ai-units-decomposition-questions
     on_rework:
       next_node: ai-application-design-artifacts
 
-  # ════════════════════════════════════════════════════════════════════════════
-  # INCEPTION PHASE — Units Decomposition
-  # ════════════════════════════════════════════════════════════════════════════
+  # ── Phase 2.3: Units Decomposition ───────────────────────────────────────
 
   - id: ai-units-decomposition-questions
     title: Generate units decomposition questions
@@ -452,10 +404,21 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
-      Review application-design.md and requirements. Generate decomposition-planning
-      questions following the attached skill covering unit boundaries, deployment
-      model, dependencies, and team ownership.
+      Review the application design and generate decomposition planning questions.
+
+      Also load from project:
+        - aidlc-docs/inception/requirements/requirements.md
+        - aidlc-docs/inception/user-stories/stories.md
+
+      Follow the attached skill to identify all decomposition decisions: story
+      grouping strategy, unit boundary definition (domain / team / deployment),
+      inter-unit communication and dependencies, deployment model (microservices
+      vs. monolith modules), and team alignment.
+
+      Reference actual components from application-design.md when forming questions.
+
       Save as aidlc-docs/inception/plans/units-questions.md.
+      Do NOT generate unit artifacts yet.
     skill_refs:
       - aidlc-units-decomposition-questions@1.0
     produced_artifacts:
@@ -481,8 +444,9 @@ nodes:
         transfer_mode: by_ref
     instruction: |
       Open aidlc-docs/inception/plans/units-questions.md.
-      Fill in all [Answer]: tags with decisions about unit boundaries, deployment
-      model, and team ownership. Submit when complete.
+      Fill in all [Answer]: tags with your decisions about unit boundaries,
+      deployment model, team ownership, and integration strategy.
+      Submit when complete.
     produced_artifacts:
       - scope: run
         path: aidlc-docs/inception/plans/units-questions.md
@@ -508,12 +472,20 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
-      Read answered units-questions.md and application-design.md. Generate the three
-      unit-of-work artifacts following the attached skill:
+      Read the answered units-questions.md and application-design.md, then produce
+      the three unit-of-work artifacts following the attached skill.
+
+      Also load aidlc-docs/inception/user-stories/stories.md — every user story
+      and functional requirement must be assigned to exactly one unit.
+
+      Save:
         - aidlc-docs/inception/application-design/unit-of-work.md
         - aidlc-docs/inception/application-design/unit-of-work-dependency.md
         - aidlc-docs/inception/application-design/unit-of-work-story-map.md
-      All stories and requirements must be assigned to exactly one unit.
+
+      Constraints: no unassigned stories, no units without work, unit names must
+      be filesystem-safe (lowercase, hyphens, no spaces).
+      Do NOT update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-units-decomposition-artifacts@1.0
     produced_artifacts:
@@ -539,44 +511,130 @@ nodes:
     type: human_approval
     execution_context: []
     instruction: |
-      Review aidlc-docs/inception/application-design/ (unit-of-work.md,
-      unit-of-work-dependency.md, unit-of-work-story-map.md).
-      Verify that unit boundaries are correct, all stories are assigned, and the
-      build sequence is sensible. Approve to proceed to construction phase.
+      Review the units decomposition at:
+        aidlc-docs/inception/application-design/unit-of-work.md
+        aidlc-docs/inception/application-design/unit-of-work-dependency.md
+        aidlc-docs/inception/application-design/unit-of-work-story-map.md
+
+      Verify that:
+      - Unit boundaries are logical and well-defined
+      - Every user story and requirement is assigned to exactly one unit
+      - Build sequence has no circular dependencies
+      - Deployment model matches the project architecture
+      - Unit names are filesystem-safe
+
+      Approve to proceed to Workflow Planning, or request rework with corrections.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-functional-design
+    on_approve: ai-workflow-planning
     on_rework:
       next_node: ai-units-decomposition-artifacts
 
-  # ════════════════════════════════════════════════════════════════════════════
-  # CONSTRUCTION PHASE — Functional Design
-  # ════════════════════════════════════════════════════════════════════════════
+  # ── Phase 2.4: Workflow Planning ──────────────────────────────────────────
 
-  - id: ai-functional-design
-    title: Design business logic and domain model
+  - id: ai-workflow-planning
+    title: Create workflow execution plan
     type: ai
     checkpoint_before_run: true
     execution_context:
-      - type: artifact_ref
-        node_id: ai-generate-requirements
-        path: aidlc-docs/inception/requirements/requirements.md
-        scope: project
-        required: true
-        transfer_mode: by_value
       - type: artifact_ref
         node_id: ai-units-decomposition-artifacts
         path: aidlc-docs/inception/application-design/unit-of-work.md
         scope: project
         required: true
         transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-user-stories-generate
+        path: aidlc-docs/inception/user-stories/stories.md
+        scope: project
+        required: false
+        transfer_mode: by_value
     instruction: |
+      Load all prior inception context and produce a comprehensive workflow execution
+      plan following the attached skill.
+
+      Load from project:
+        - aidlc-docs/inception/requirements/requirements.md  ← REQUIRED
+        - aidlc-docs/inception/application-design/application-design.md  ← REQUIRED
+        - aidlc-docs/inception/reverse-engineering/  ← if available (brownfield)
+
+      Perform impact analysis (user-facing, structural, data model, API, NFR),
+      risk assessment (Low / Medium / High / Critical), and determine which
+      Construction-phase stages to EXECUTE vs SKIP with explicit rationale.
+      Include Mermaid workflow visualisation.
+
+      Note: there is no aidlc-state.md — skip Step 1 of the skill that loads it.
+      Do NOT update aidlc-state.md or audit.md.
+
+      Save as aidlc-docs/inception/plans/execution-plan.md.
+    skill_refs:
+      - aidlc-workflow-planning@1.0
+    produced_artifacts:
+      - scope: project
+        path: aidlc-docs/inception/plans/execution-plan.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success: approve-workflow-plan
+    on_failure: terminal-complete
+    allow_retry: true
+
+  - id: approve-workflow-plan
+    title: Review and approve workflow execution plan
+    type: human_approval
+    execution_context: []
+    instruction: |
+      Review the workflow execution plan at:
+        aidlc-docs/inception/plans/execution-plan.md
+
+      Verify that:
+      - Impact analysis accurately reflects the scope of changes
+      - Risk level is correctly assessed
+      - Each stage marked EXECUTE or SKIP has explicit rationale
+      - Build sequence across units is correct (dependencies respected)
+      - Mermaid visualisation matches the planned stages
+
+      Approve to proceed to Construction phase, or request rework with specific corrections.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve: ai-functional-design
+    on_rework:
+      next_node: ai-workflow-planning
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # PHASE 3 — Construction  (aidlc-development-flow@1.0)
+  # ════════════════════════════════════════════════════════════════════════════
+
+  # ── Step 3.1: Functional Design ───────────────────────────────────────────
+
+  - id: ai-functional-design
+    title: Design business logic and domain model
+    type: ai
+    checkpoint_before_run: false
+    execution_context: []
+    instruction: |
+      Load inception artifacts from the project:
+        - aidlc-docs/inception/requirements/requirements.md              ← REQUIRED
+        - aidlc-docs/inception/plans/execution-plan.md                  ← REQUIRED
+        - aidlc-docs/inception/application-design/application-design.md ← if available
+        - aidlc-docs/inception/application-design/unit-of-work.md       ← if available
+        - aidlc-docs/inception/user-stories/stories.md                  ← if available
+        - aidlc-docs/inception/reverse-engineering/                     ← if available (brownfield)
+
+      Read execution-plan.md to determine which unit to work on and confirm
+      that the Functional Design stage is marked EXECUTE.
+
       Produce a detailed, technology-agnostic functional design for the primary
-      unit following the attached skill. Create in aidlc-docs/construction/main-unit/functional-design/:
-        - domain-entities.md (attributes, types, relationships, invariants)
-        - business-rules.md (BR-* with pre/post conditions and error cases)
+      unit of work following the attached skill:
+        - domain-entities.md (entity attributes, types, relationships, invariants)
+        - business-rules.md (BR-* entries with pre/post conditions and error cases)
         - data-flow.md (per-operation input → transform → output)
-      Use the unit name from unit-of-work.md; default to "main-unit" if only one unit.
+
+      Save in aidlc-docs/construction/{unit-name}/functional-design/.
+      Use "main-unit" as the unit name folder if execution-plan.md does not
+      specify a different name.
+
+      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-functional-design@1.0
     produced_artifacts:
@@ -602,18 +660,22 @@ nodes:
     type: human_approval
     execution_context: []
     instruction: |
-      Review aidlc-docs/construction/main-unit/functional-design/.
-      Verify domain entities, business rules, and data flows are accurate and
-      complete. Approve to proceed to NFR requirements.
+      Review aidlc-docs/construction/main-unit/functional-design/:
+        - domain-entities.md
+        - business-rules.md
+        - data-flow.md
+
+      Verify that domain entities are accurate, business rules are complete with
+      pre/post conditions and error cases, and data flows correctly model the
+      required behaviour.
+      Approve to proceed to NFR requirements, or request rework with corrections.
     produced_artifacts: []
     expected_mutations: []
     on_approve: ai-nfr-requirements
     on_rework:
       next_node: ai-functional-design
 
-  # ════════════════════════════════════════════════════════════════════════════
-  # CONSTRUCTION PHASE — NFR Requirements
-  # ════════════════════════════════════════════════════════════════════════════
+  # ── Step 3.2: NFR Requirements ────────────────────────────────────────────
 
   - id: ai-nfr-requirements
     title: Assess non-functional requirements and technology stack
@@ -621,17 +683,37 @@ nodes:
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
-        node_id: ai-generate-requirements
-        path: aidlc-docs/inception/requirements/requirements.md
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/domain-entities.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
         scope: project
         required: true
         transfer_mode: by_value
     instruction: |
-      Assess NFR for main-unit following the attached skill. Evaluate all categories
-      (scalability, performance, availability, security, reliability, maintainability)
-      and make explicit technology stack decisions with rationale. Save:
-        - aidlc-docs/construction/main-unit/nfr-requirements/nfr-requirements.md
-        - aidlc-docs/construction/main-unit/nfr-requirements/tech-stack-decisions.md
+      Also load from project:
+        - aidlc-docs/inception/requirements/requirements.md (for NFR mentions)
+        - aidlc-docs/inception/reverse-engineering/technology-stack.md (if brownfield)
+
+      Assess non-functional requirements for the unit following the attached skill:
+      scalability, performance, availability, security, reliability, and
+      maintainability. Make explicit technology stack decisions with rationale.
+
+      Save in aidlc-docs/construction/main-unit/nfr-requirements/:
+        - nfr-requirements.md
+        - tech-stack-decisions.md
+
+      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-nfr-requirements@1.0
     produced_artifacts:
@@ -653,18 +735,20 @@ nodes:
     type: human_approval
     execution_context: []
     instruction: |
-      Review aidlc-docs/construction/main-unit/nfr-requirements/.
-      Confirm scalability targets, performance SLAs, security posture, and technology
-      choices. Approve to proceed to code generation planning.
+      Review aidlc-docs/construction/main-unit/nfr-requirements/:
+        - nfr-requirements.md
+        - tech-stack-decisions.md
+
+      Confirm that scalability, performance, security targets and technology
+      choices are correct for your environment.
+      Approve to proceed to code generation planning, or request rework.
     produced_artifacts: []
     expected_mutations: []
     on_approve: ai-code-generation-plan
     on_rework:
       next_node: ai-nfr-requirements
 
-  # ════════════════════════════════════════════════════════════════════════════
-  # CONSTRUCTION PHASE — Code Generation
-  # ════════════════════════════════════════════════════════════════════════════
+  # ── Step 3.3: Code Generation Plan ───────────────────────────────────────
 
   - id: ai-code-generation-plan
     title: Create code generation plan
@@ -672,23 +756,44 @@ nodes:
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
-        node_id: ai-generate-requirements
-        path: aidlc-docs/inception/requirements/requirements.md
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/domain-entities.md
         scope: project
         required: true
         transfer_mode: by_value
       - type: artifact_ref
-        node_id: ai-units-decomposition-artifacts
-        path: aidlc-docs/inception/application-design/unit-of-work.md
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/business-rules.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-functional-design
+        path: aidlc-docs/construction/main-unit/functional-design/data-flow.md
+        scope: project
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-nfr-requirements
+        path: aidlc-docs/construction/main-unit/nfr-requirements/tech-stack-decisions.md
         scope: project
         required: true
         transfer_mode: by_value
     instruction: |
-      Load all design artifacts for main-unit (functional design, NFR, application
-      design) and produce a numbered checkbox-driven code generation plan following
-      the attached skill. Specify exact file paths, Create vs Modify (brownfield),
-      layer execution order, verification commands, and story traceability.
+      Also load from project:
+        - aidlc-docs/inception/requirements/requirements.md (for DM-* and API-* sections)
+        - aidlc-docs/inception/application-design/unit-of-work.md (unit boundary)
+        - aidlc-docs/inception/application-design/unit-of-work-story-map.md (story mapping)
+        - aidlc-docs/inception/reverse-engineering/code-structure.md (brownfield — existing files)
+
+      Produce a numbered, checkbox-driven code generation plan following the
+      attached skill. The plan must specify: exact file paths, Create vs Modify
+      (brownfield), layer execution order (migrations → entities → repositories
+      → services → controllers → tests → configuration), and story traceability.
+
       Save as aidlc-docs/construction/plans/main-unit-code-generation-plan.md.
+
+      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-code-generation-plan@1.0
     produced_artifacts:
@@ -707,16 +812,20 @@ nodes:
     execution_context: []
     instruction: |
       Review aidlc-docs/construction/plans/main-unit-code-generation-plan.md.
-      Verify all files are listed, layer order is correct, and the plan covers
-      all requirements. Approve to start code generation.
+      Verify that every file to be created or modified is listed, the layer order
+      is correct (migrations first, tests after each layer), and the plan covers
+      all requirements and stories.
+      Approve to start code generation, or request rework.
     produced_artifacts: []
     expected_mutations: []
     on_approve: ai-code-generation-execute
     on_rework:
       next_node: ai-code-generation-plan
 
+  # ── Step 3.4: Code Generation ─────────────────────────────────────────────
+
   - id: ai-code-generation-execute
-    title: Execute code generation plan
+    title: Generate code per approved plan
     type: ai
     checkpoint_before_run: true
     execution_context:
@@ -727,12 +836,17 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
-      Execute the approved code generation plan step by step per the attached skill:
+      Execute the approved code generation plan step by step, following the
+      attached skill precisely:
         - Find the first unchecked [ ] step and execute it.
-        - Modify files in-place for brownfield; never create _modified copies.
-        - Verify each step (compile/test) before marking [x].
-        - Update plan checkboxes immediately after each step.
-        - Run the full build and all tests on completion.
+        - Brownfield: modify files in-place; never create _modified copies.
+        - Verify each step compiles/passes tests before marking [x].
+        - Update aidlc-docs/construction/plans/main-unit-code-generation-plan.md
+          with [x] marks immediately after each step.
+        - Continue until all steps are [x].
+        - Run the full build and all tests when complete.
+
+      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-code-generation-execute@1.0
     produced_artifacts: []
@@ -747,17 +861,16 @@ nodes:
     execution_context: []
     instruction: |
       Review the changes made to the workspace.
-      Verify implementation matches requirements and plan, all tests pass, and
-      code quality meets standards. Approve to proceed to build and test.
+      Verify that the implementation matches the requirements and plan, all tests
+      pass, and code quality meets standards.
+      Approve to proceed to build and test instructions, or request rework.
     produced_artifacts: []
     expected_mutations: []
     on_approve: ai-build-and-test
     on_rework:
       next_node: ai-code-generation-execute
 
-  # ════════════════════════════════════════════════════════════════════════════
-  # CONSTRUCTION PHASE — Build and Test
-  # ════════════════════════════════════════════════════════════════════════════
+  # ── Step 3.5: Build and Test Instructions ────────────────────────────────
 
   - id: ai-build-and-test
     title: Generate build and test instructions
@@ -765,13 +878,22 @@ nodes:
     checkpoint_before_run: false
     execution_context: []
     instruction: |
-      Analyse all generated units and produce comprehensive build and test instructions
-      following the attached skill. Create:
+      Load from project:
+        - aidlc-docs/construction/plans/ (all code generation plans)
+        - aidlc-docs/construction/main-unit/nfr-requirements/nfr-requirements.md
+
+      Produce comprehensive build and test instruction files following the attached
+      skill:
         - aidlc-docs/construction/build-and-test/build-instructions.md
         - aidlc-docs/construction/build-and-test/unit-test-instructions.md
         - aidlc-docs/construction/build-and-test/integration-test-instructions.md
         - aidlc-docs/construction/build-and-test/build-and-test-summary.md
-      Include performance test instructions only if NFR specifies targets.
+
+      Include performance test instructions only if NFR targets were specified.
+      Determine the build system and workspace root by inspecting the actual
+      project structure.
+
+      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-build-and-test@1.0
     produced_artifacts:
@@ -789,9 +911,10 @@ nodes:
     type: human_approval
     execution_context: []
     instruction: |
-      Review aidlc-docs/construction/build-and-test/ files.
-      Confirm build steps are correct and test strategy is adequate for your
-      quality standards. Approve to complete the full AIDLC process.
+      Review aidlc-docs/construction/build-and-test/build-and-test-summary.md
+      and the accompanying instruction files.
+      Confirm that build steps are correct and test coverage is adequate.
+      Approve to complete the full AIDLC process flow.
     produced_artifacts: []
     expected_mutations: []
     on_approve: terminal-complete
@@ -803,7 +926,7 @@ nodes:
   # ════════════════════════════════════════════════════════════════════════════
 
   - id: terminal-complete
-    title: AIDLC full process complete
+    title: Full AIDLC process complete
     type: terminal
     execution_context: []
     produced_artifacts: []
