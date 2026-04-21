@@ -79,3 +79,4 @@ Rules: A/B/C options, X) Other always present, one `[Answer]:` per question, min
 - Do NOT generate unit artifacts — only decomposition questions.
 - Keep questions focused on unit boundaries and deployment decisions.
 - Reference actual components from application-design.md.
+- Every question MUST end with `[Answer]:` on its own line — never omit it.

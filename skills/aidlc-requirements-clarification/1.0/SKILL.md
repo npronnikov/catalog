@@ -116,3 +116,4 @@ X) Other (describe after [Answer]:)
 - Do NOT proceed to generate requirements until all `[Answer]:` tags are filled.
 - Reference real files/classes from reverse engineering artifacts when relevant.
 - If a clarification reveals a contradiction, add a follow-up question.
+- Every question MUST end with `[Answer]:` on its own line — never omit it.

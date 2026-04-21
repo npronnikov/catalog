@@ -101,3 +101,4 @@ X) Other (describe after [Answer]:)
 - Do NOT generate stories yet — only planning questions.
 - Do NOT proceed to story generation until all `[Answer]:` tags are filled.
 - Keep questions focused on story structure decisions, not technical implementation.
+- Every question MUST end with `[Answer]:` on its own line — never omit it.
