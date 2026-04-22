@@ -113,3 +113,4 @@ graph TD
 - Do NOT define detailed business rules — that is Functional Design's scope.
 - Brownfield: use existing class names and package structure from code-structure.md.
 - Diagram must use valid Mermaid syntax.
+**Important!** Generate all output in the language of the user request.

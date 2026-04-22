@@ -80,3 +80,6 @@ Rules: A/B/C options, X) Other always present, one `[Answer]:` per question, min
 - Keep questions focused on unit boundaries and deployment decisions.
 - Reference actual components from application-design.md.
 - Every question MUST end with `[Answer]:` on its own line — never omit it.
+- Leave `[Answer]:` completely blank — do NOT pre-fill it with a recommendation or rationale.
+- Options MUST use plain `A)` `B)` `C)` format — do NOT bold option labels.
+- **Important!** Generate questions in the language of the user request.

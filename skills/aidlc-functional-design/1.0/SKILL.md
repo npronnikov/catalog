@@ -136,3 +136,4 @@ Create files in `aidlc-docs/construction/{unit-name}/functional-design/`:
 - Do NOT write implementation code — only models, rules, and data flows.
 - Every entity attribute must have a type and nullability specified.
 - Every business rule must have a clear error case defined.
+**Important!** Generate all output in the language of the user request.

@@ -138,3 +138,4 @@ Save as `aidlc-docs/construction/plans/{unit-name}-code-generation-plan.md`:
 - Do NOT write actual code in this plan — only describe what to do, where, and why.
 - The plan is the single source of truth for the execution node; it must be complete
   enough to follow without re-reading design artifacts.
+**Important!** Generate all output in the language of the user request.

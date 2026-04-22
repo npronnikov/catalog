@@ -138,3 +138,4 @@ Save as `aidlc-docs/inception/requirements/requirements.md`:
 - If two answers contradict each other, surface it explicitly as a risk.
 - Do not add requirements that do not follow from the user's request.
 - Keep each FR, API-*, DM-*, AUTH-*, TEST-* entry numbered sequentially.
+**Important!** Generate all output in the language of the user request.

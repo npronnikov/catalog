@@ -289,3 +289,4 @@ Create `aidlc-docs/inception/reverse-engineering/code-quality-assessment.md`:
 - If a component type is absent (e.g., no infrastructure), note "N/A" rather than
   omitting the section.
 - Diagrams must use valid Mermaid syntax (test mentally before writing).
+**Important!** Generate all output in the language of the user request.

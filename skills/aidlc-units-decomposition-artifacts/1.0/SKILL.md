@@ -118,3 +118,4 @@ Save as `aidlc-docs/inception/application-design/unit-of-work-story-map.md`:
 - Do not create units without assigned stories — every unit must have work.
 - Dependency diagram must use valid Mermaid syntax.
 - Unit names must be filesystem-safe (lowercase, hyphens, no spaces).
+**Important!** Generate all output in the language of the user request.

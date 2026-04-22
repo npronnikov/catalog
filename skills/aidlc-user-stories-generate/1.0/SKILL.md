@@ -105,3 +105,4 @@ Save as `aidlc-docs/inception/user-stories/personas.md`:
   unless they have user-visible impact.
 - Follow the format and breakdown approach specified in the planning answers exactly.
 - Do not invent personas or story dimensions not grounded in the answers and requirements.
+**Important!** Generate all output in the language of the user request.

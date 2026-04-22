@@ -23,9 +23,7 @@ nodes:
     title: Analyse request and generate clarifying questions
     type: ai
     checkpoint_before_run: false
-    execution_context:
-      - type: user_request
-        required: true
+    execution_context: []
     instruction: |
       Analyse the user request and the existing codebase. Load reverse-engineering
       context if available (brownfield project):
@@ -148,9 +146,7 @@ nodes:
     title: Generate user story planning questions
     type: ai
     checkpoint_before_run: false
-    execution_context:
-      - type: user_request
-        required: true
+    execution_context: []
     instruction: |
       Analyse the requirements and existing codebase context to generate user
       story planning questions.
@@ -225,8 +221,6 @@ nodes:
       Save:
         - aidlc-docs/inception/user-stories/stories.md
         - aidlc-docs/inception/user-stories/personas.md
-
-      Do NOT update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-user-stories-generate@1.0
     produced_artifacts:
@@ -355,7 +349,6 @@ nodes:
       layer orchestration patterns, Mermaid dependency diagram, and design decisions.
 
       Save as aidlc-docs/inception/application-design/application-design.md.
-      Do NOT update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-application-design-artifacts@1.0
     produced_artifacts:
@@ -485,7 +478,6 @@ nodes:
 
       Constraints: no unassigned stories, no units without work, unit names must
       be filesystem-safe (lowercase, hyphens, no spaces).
-      Do NOT update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-units-decomposition-artifacts@1.0
     produced_artifacts:
@@ -562,9 +554,6 @@ nodes:
       risk assessment (Low / Medium / High / Critical), and determine which
       Construction-phase stages to EXECUTE vs SKIP with explicit rationale.
       Include Mermaid workflow visualisation.
-
-      Note: there is no aidlc-state.md — skip Step 1 of the skill that loads it.
-      Do NOT update aidlc-state.md or audit.md.
 
       Save as aidlc-docs/inception/plans/execution-plan.md.
     skill_refs:

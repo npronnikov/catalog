@@ -160,3 +160,4 @@ flowchart TD
 - Do not skip Code Generation or Build and Test — they always execute.
 - Apply styling: always-execute nodes in green `#4CAF50`, skipped in grey `#BDBDBD`,
   conditional-execute in orange `#FFA726`.
+**Important!** Generate all output in the language of the user request.

@@ -197,3 +197,4 @@ Create `aidlc-docs/construction/build-and-test/build-and-test-summary.md`:
 - Do not write new test code — these are instructions for running tests already
   generated during code generation.
 - Mark inapplicable test types clearly as N/A with a brief reason.
+**Important!** Generate all output in the language of the user request.

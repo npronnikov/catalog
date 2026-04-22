@@ -146,3 +146,4 @@ Save `aidlc-docs/construction/{unit-name}/nfr-requirements/tech-stack-decisions.
   justified reason to introduce a new dependency.
 - Mark any NFR category as N/A only if it genuinely does not apply to this unit,
   with a brief explanation.
+**Important!** Generate all output in the language of the user request.

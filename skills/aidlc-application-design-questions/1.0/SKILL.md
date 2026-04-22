@@ -79,3 +79,6 @@ Minimum 5 questions.
 - Focus on structural decisions, not detailed business logic (that comes in Functional Design).
 - Reference actual files/classes from reverse engineering when relevant.
 - Every question MUST end with `[Answer]:` on its own line — never omit it.
+- Leave `[Answer]:` completely blank — do NOT pre-fill it with a recommendation or rationale.
+- Options MUST use plain `A)` `B)` `C)` format — do NOT bold option labels.
+- **Important!** Generate questions in the language of the user request.

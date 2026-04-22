@@ -102,3 +102,6 @@ X) Other (describe after [Answer]:)
 - Do NOT proceed to story generation until all `[Answer]:` tags are filled.
 - Keep questions focused on story structure decisions, not technical implementation.
 - Every question MUST end with `[Answer]:` on its own line — never omit it.
+- Leave `[Answer]:` completely blank — do NOT pre-fill it with a recommendation or rationale.
+- Options MUST use plain `A)` `B)` `C)` format — do NOT bold option labels.
+- **Important!** Generate questions in the language of the user request.

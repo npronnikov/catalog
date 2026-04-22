@@ -18,9 +18,7 @@ nodes:
     title: Analyse request and generate clarifying questions
     type: ai
     checkpoint_before_run: false
-    execution_context:
-      - type: user_request
-        required: true
+    execution_context: []
     instruction: |
       Analyse the user request and the existing codebase. Load reverse-engineering
       context if available (brownfield project):
