@@ -69,6 +69,8 @@ nodes:
         required: true
     expected_mutations: []
     on_submit: ai-generate-requirements
+    on_rework:
+      next_node: ai-analyze-and-questions
 
   # ── Step 2: Generate requirements document ────────────────────────────────
   - id: ai-generate-requirements

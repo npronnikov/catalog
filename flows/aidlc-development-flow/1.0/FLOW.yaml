@@ -47,7 +47,6 @@ nodes:
       Use "main-unit" as the unit name folder if execution-plan.md does not
       specify a different name.
 
-      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-functional-design@1.0
     produced_artifacts:
@@ -128,7 +127,6 @@ nodes:
         - nfr-requirements.md
         - tech-stack-decisions.md
 
-      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-nfr-requirements@1.0
     produced_artifacts:
@@ -210,7 +208,6 @@ nodes:
 
       Save as aidlc-docs/construction/plans/main-unit-code-generation-plan.md.
 
-      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-code-generation-plan@1.0
     produced_artifacts:
@@ -265,7 +262,6 @@ nodes:
         - Continue until all steps are [x].
         - Run the full build and all tests when complete.
 
-      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-code-generation-execute@1.0
     produced_artifacts: []
@@ -314,7 +310,6 @@ nodes:
       Determine the build system and workspace root by inspecting the actual
       project structure.
 
-      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-build-and-test@1.0
     produced_artifacts:

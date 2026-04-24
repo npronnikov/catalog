@@ -74,6 +74,8 @@ nodes:
         required: true
     expected_mutations: []
     on_submit: ai-generate-requirements
+    on_rework:
+      next_node: ai-analyze-and-questions
 
   # ── Step 2: Generate requirements document ────────────────────────────────
   - id: ai-generate-requirements
@@ -198,6 +200,8 @@ nodes:
         required: true
     expected_mutations: []
     on_submit: ai-user-stories-generate
+    on_rework:
+      next_node: ai-user-stories-questions
 
   - id: ai-user-stories-generate
     title: Generate user stories and personas
@@ -323,6 +327,8 @@ nodes:
         required: true
     expected_mutations: []
     on_submit: ai-application-design-artifacts
+    on_rework:
+      next_node: ai-application-design-questions
 
   - id: ai-application-design-artifacts
     title: Generate application design document
@@ -446,6 +452,8 @@ nodes:
         required: true
     expected_mutations: []
     on_submit: ai-units-decomposition-artifacts
+    on_rework:
+      next_node: ai-units-decomposition-questions
 
   - id: ai-units-decomposition-artifacts
     title: Generate units decomposition artifacts
@@ -623,7 +631,6 @@ nodes:
       Use "main-unit" as the unit name folder if execution-plan.md does not
       specify a different name.
 
-      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-functional-design@1.0
     produced_artifacts:
@@ -702,7 +709,6 @@ nodes:
         - nfr-requirements.md
         - tech-stack-decisions.md
 
-      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-nfr-requirements@1.0
     produced_artifacts:
@@ -782,7 +788,6 @@ nodes:
 
       Save as aidlc-docs/construction/plans/main-unit-code-generation-plan.md.
 
-      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-code-generation-plan@1.0
     produced_artifacts:
@@ -835,7 +840,6 @@ nodes:
         - Continue until all steps are [x].
         - Run the full build and all tests when complete.
 
-      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-code-generation-execute@1.0
     produced_artifacts: []
@@ -882,7 +886,6 @@ nodes:
       Determine the build system and workspace root by inspecting the actual
       project structure.
 
-      Do NOT read, create, or update aidlc-state.md or audit.md.
     skill_refs:
       - aidlc-build-and-test@1.0
     produced_artifacts:
