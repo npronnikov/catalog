@@ -22,7 +22,7 @@ nodes:
     execution_context: []
     instruction: |
       Изучи кодовую базу проекта и запрос пользователя.
-      Следуй приложенному скилу: сформулируй 10–15 уточняющих вопросов,
+      Сформулируй 10–15 уточняющих вопросов,
       которые напрямую влияют на выбор решения.
       Каждый вопрос должен содержать ровно один вариант, помеченный
       как (рекомендуемый). Сохрани результат в questions.md.
@@ -85,9 +85,7 @@ nodes:
       Изучи запрос пользователя и ответы на уточняющие вопросы из questions.md.
       Исследуй кодовую базу проекта: структуру пакетов, существующие паттерны,
       миграции, тесты.
-      Следуй приложенному скилу: сформируй пронумерованный план с чекбоксами,
-      где каждый шаг соответствует одному файловому действию или команде
-      верификации. Сохрани результат в implementation-plan.md.
+      Сохрани результат в implementation-plan.md.
     skill_refs:
       - hgdlc-implementation-plan@1.0
     produced_artifacts:
@@ -156,7 +154,6 @@ nodes:
           затем убедись, что план по-прежнему выполнен.
         - Не создавай копии файлов с суффиксами _modified, _new и т.п. —
           изменяй файлы непосредственно.
-        - После выполнения всех шагов запусти полный билд и тесты.
     skill_refs: []
     produced_artifacts: []
     expected_mutations: []
@@ -184,46 +181,23 @@ nodes:
       (корректность, читаемость, архитектура, безопасность, производительность).
       Сохрани отчёт в code-review-report.md.
 
-      После завершения ревью вынеси вердикт и запиши step-summary в следующем формате:
+      После завершения ревью вынеси вердикт и заполни step-summary.
+      Добавь в step-summary для этой ноды:
+      - verdict: одно из значений "approve" или "rework"
+      - actions: непустой массив выполненных действий ревью
+      - issues: массив замечаний (пустой для approve; для rework — минимум одно замечание)
+      - rework_instruction: обязательно, если verdict="rework"; конкретный нумерованный список исправлений по файлам/строкам
 
-      Если вердикт approve (нет Critical и Required замечаний):
-      ```json
-      {
-        "step_id": "ai-code-review",
-        "attempt": {attempt_no},
-        "status": "completed",
-        "verdict": "approve",
-        "actions": ["провёл ревью кода по пяти осям", "вердикт: approve"],
-        "output_files": ["code-review-report.md"],
-        "project_changes": [],
-        "issues": []
-      }
-      ```
-
-      Если вердикт rework (есть хотя бы одно Critical или Required замечание):
-      ```json
-      {
-        "step_id": "ai-code-review",
-        "attempt": {attempt_no},
-        "status": "completed",
-        "verdict": "rework",
-        "actions": ["провёл ревью кода по пяти осям", "вердикт: rework"],
-        "output_files": ["code-review-report.md"],
-        "project_changes": [],
-        "issues": [
-          {"severity": "critical", "file": "path/to/File.java", "line": 42, "message": "описание проблемы"},
-          {"severity": "major",    "file": "path/to/File.java",            "message": "описание проблемы"}
-        ],
-        "rework_instruction": "Конкретный список исправлений:\n1. {файл:строка — что именно исправить}\n2. ..."
-      }
-      ```
+      Примеры заполнения:
+      - actions: ["провёл ревью кода по пяти осям", "выполнил оценку на наличие критических и требуемых замечаний"]
+      - issues: [
+        {"severity": "critical", "file": "path/to/File.java", "line": 42, "message": "описание проблемы"},
+        {"severity": "major", "file": "path/to/File.java", "message": "описание проблемы"}
+        ]
+      - rework_instruction: "Конкретный список исправлений:\n1. {файл:строка — что именно исправить}\n2. ..."
 
       Правило вердикта: severity "critical" или "major" → rework; только "minor" / "info" → approve.
 
-      Runtime прочитает verdict из step-summary:
-        - verdict=approve → on_success → финальный апрув человеком
-        - verdict=rework  → on_rework  → нода разработки получит rework_instruction
-          как задачу на доработку без отката чекпоинта (код остаётся, правится поверх)
     skill_refs:
       - hgdlc-code-review@1.0
     produced_artifacts:
@@ -256,7 +230,7 @@ nodes:
       - Все Critical и Required замечания ревью устранены
       - Билд проходит, тесты зелёные
 
-      Апруй для завершения флоу или верни на доработку с конкретными замечаниями.
+      Апрувь для завершения флоу или верни на доработку с конкретными замечаниями.
     produced_artifacts: []
     expected_mutations: []
     on_approve: terminal-complete

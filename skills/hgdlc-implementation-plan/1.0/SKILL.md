@@ -6,7 +6,7 @@ description: >
   plan that Claude Code can execute step by step without re-reading artifacts.
 ---
 
-# Implementation Plan for Claude Code
+# Implementation Plan
 
 ## Goal
 Produce a numbered, checkbox-driven `implementation-plan.md` that is concrete
