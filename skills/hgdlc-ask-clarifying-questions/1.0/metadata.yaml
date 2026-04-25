@@ -1,0 +1,22 @@
+entity_type: skill
+id: hgdlc-ask-clarifying-questions
+version: "1.0"
+canonical_name: hgdlc-ask-clarifying-questions@1.0
+display_name: "Анализ проекта и генерация уточняющих вопросов с рекомендуемыми вариантами"
+description: >
+  Изучает кодовую базу проекта и запрос пользователя, затем формирует
+  10-15 уточняющих вопросов с вариантами ответа. Каждый вопрос содержит
+  рекомендуемый вариант — если ответ не выбран, используется он.
+  Результат сохраняется в questions.md.
+coding_agent: qwen
+team_code: Demo
+platform_code: BACK
+tags:
+  - clarification
+  - requirements
+  - analysis
+  - planning
+skill_kind: analysis
+scope: organization
+approval_status: draft
+lifecycle_status: active
