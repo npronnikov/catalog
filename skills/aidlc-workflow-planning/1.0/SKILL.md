@@ -1,5 +1,5 @@
 ---
-name: AIDLC Workflow Planning
+name: aidlc-workflow-planning
 description: >
   Load all prior AIDLC context (reverse engineering, requirements, user stories),
   perform detailed impact and risk analysis, determine which construction-phase

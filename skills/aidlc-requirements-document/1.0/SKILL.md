@@ -1,5 +1,5 @@
 ---
-name: AIDLC Requirements Document
+name: aidlc-requirements-document
 description: >
   Read the answered clarification questions and produce a complete, structured
   requirements.md covering functional requirements, API requirements, data model

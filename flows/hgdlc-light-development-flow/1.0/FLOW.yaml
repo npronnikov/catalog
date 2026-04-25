@@ -169,6 +169,7 @@ nodes:
     title: Ревью кода и вынесение вердикта
     type: ai
     checkpoint_before_run: false
+    max_rework_iterations: 3
     execution_context:
       - type: artifact_ref
         node_id: ai-implementation-plan
@@ -183,37 +184,46 @@ nodes:
       (корректность, читаемость, архитектура, безопасность, производительность).
       Сохрани отчёт в code-review-report.md.
 
-      После завершения ревью вынеси вердикт и запиши step-summary следующим образом:
+      После завершения ревью вынеси вердикт и запиши step-summary в следующем формате:
 
-      Если вердикт APPROVE (нет Critical и Required замечаний):
+      Если вердикт approve (нет Critical и Required замечаний):
       ```json
       {
         "step_id": "ai-code-review",
         "attempt": {attempt_no},
-        "status": "done",
-        "actions": ["провёл ревью кода", "вердикт: APPROVE"],
+        "status": "completed",
+        "verdict": "approve",
+        "actions": ["провёл ревью кода по пяти осям", "вердикт: approve"],
         "output_files": ["code-review-report.md"],
         "project_changes": [],
         "issues": []
       }
       ```
 
-      Если вердикт REWORK (есть хотя бы одно Critical или Required замечание):
+      Если вердикт rework (есть хотя бы одно Critical или Required замечание):
       ```json
       {
         "step_id": "ai-code-review",
         "attempt": {attempt_no},
-        "status": "rework",
-        "actions": ["провёл ревью кода", "вердикт: REWORK"],
+        "status": "completed",
+        "verdict": "rework",
+        "actions": ["провёл ревью кода по пяти осям", "вердикт: rework"],
         "output_files": ["code-review-report.md"],
         "project_changes": [],
-        "rework_task": "Устрани замечания из code-review-report.md:\n1. {замечание 1}\n2. {замечание 2}\n...",
-        "issues": ["{краткое описание каждого Critical/Required замечания}"]
+        "issues": [
+          {"severity": "critical", "file": "path/to/File.java", "line": 42, "message": "описание проблемы"},
+          {"severity": "major",    "file": "path/to/File.java",            "message": "описание проблемы"}
+        ],
+        "rework_instruction": "Конкретный список исправлений:\n1. {файл:строка — что именно исправить}\n2. ..."
       }
       ```
 
-      При статусе rework runtime автоматически направит задачу обратно на ноду
-      разработки без отката чекпоинта, передав rework_task как задачу на доработку.
+      Правило вердикта: severity "critical" или "major" → rework; только "minor" / "info" → approve.
+
+      Runtime прочитает verdict из step-summary:
+        - verdict=approve → on_success → финальный апрув человеком
+        - verdict=rework  → on_rework  → нода разработки получит rework_instruction
+          как задачу на доработку без отката чекпоинта (код остаётся, правится поверх)
     skill_refs:
       - hgdlc-code-review@1.0
     produced_artifacts:

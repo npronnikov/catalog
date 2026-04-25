@@ -1,5 +1,5 @@
 ---
-name: AIDLC Reverse Engineering
+name: aidlc-reverse-engineering
 description: >
   Perform a comprehensive analysis of an existing codebase and generate the full
   set of AIDLC reverse-engineering artifacts: business overview, architecture,

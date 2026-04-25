@@ -1,5 +1,5 @@
 ---
-name: Code Review and Quality
+name: hgdlc-code-review
 description: >
   Conducts multi-axis code review across five dimensions: correctness,
   readability, architecture, security, and performance. Use before merging

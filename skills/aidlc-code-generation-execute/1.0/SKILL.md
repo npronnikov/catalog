@@ -1,5 +1,5 @@
 ---
-name: AIDLC Code Generation — Execute
+name: aidlc-code-generation-execute
 description: >
   Read the approved code-generation-plan.md for the current unit and execute it
   step by step: create or modify source files, write tests, apply schema

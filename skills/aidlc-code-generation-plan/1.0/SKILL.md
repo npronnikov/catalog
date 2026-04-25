@@ -1,5 +1,5 @@
 ---
-name: AIDLC Code Generation — Plan
+name: aidlc-code-generation-plan
 description: >
   Analyse all design artifacts for a unit of work and produce a numbered,
   checkbox-driven code-generation-plan.md that lists every file to create or

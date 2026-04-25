@@ -1,5 +1,5 @@
 ---
-name: AIDLC User Stories — Planning Questions
+name: aidlc-user-stories-questions
 description: >
   Review the approved requirements and generate a story-planning question file
   that covers user personas, story granularity, acceptance criteria format,

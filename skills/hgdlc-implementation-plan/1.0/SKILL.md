@@ -1,5 +1,5 @@
 ---
-name: Implementation Plan for Сoding Agent
+name: hgdlc-implementation-plan
 description: >
   Analyse available context (requirements, design docs, task description) and
   the current codebase, then produce a concrete checkbox-driven implementation

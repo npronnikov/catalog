@@ -1,5 +1,5 @@
 ---
-name: AIDLC Application Design — Artifacts
+name: aidlc-application-design-artifacts
 description: >
   Read the answered design-questions.md and produce a consolidated application
   design document covering component definitions, method signatures, service

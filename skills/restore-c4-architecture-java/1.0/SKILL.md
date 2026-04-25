@@ -1,5 +1,5 @@
 ---
-name: Restore C4 architecture diagrams for Java project
+name: restore-c4-architecture-java
 description: >
   Analyze a Java/Spring Boot project and produce C4 model architecture
   documentation with Mermaid diagrams: System Context, Container, and

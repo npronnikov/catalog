@@ -1,5 +1,5 @@
 ---
-name: AIDLC Units Decomposition — Questions
+name: aidlc-units-decomposition-questions
 description: >
   Review the application design and requirements to generate decomposition-planning
   questions covering story grouping, unit boundaries, inter-unit dependencies,

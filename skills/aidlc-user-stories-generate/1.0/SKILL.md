@@ -1,5 +1,5 @@
 ---
-name: AIDLC User Stories — Generate
+name: aidlc-user-stories-generate
 description: >
   Read the answered story-questions.md planning document and generate a complete
   set of INVEST-compliant user stories (stories.md) and a user personas catalogue

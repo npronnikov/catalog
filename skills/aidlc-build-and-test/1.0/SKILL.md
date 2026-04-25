@@ -1,5 +1,5 @@
 ---
-name: AIDLC Build and Test
+name: aidlc-build-and-test
 description: >
   Analyse all generated units and produce comprehensive build and test instruction
   files: build-instructions.md, unit-test-instructions.md,

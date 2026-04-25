@@ -1,5 +1,5 @@
 ---
-name: AIDLC NFR Requirements
+name: aidlc-nfr-requirements
 description: >
   Assess non-functional requirements for a single unit of work — scalability,
   performance, availability, security, reliability, maintainability — and make

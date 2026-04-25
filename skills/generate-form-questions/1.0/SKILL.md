@@ -1,5 +1,5 @@
 ---
-name: Генерация уточняющих вопросов в формате human-form
+name: generate-form-questions
 description: >
   Изучи запрос пользователя и сгенерируй уточняющие вопросы в виде
   файла questions.form.json (kind: human-form). Файл откроется в gate UI

@@ -1,5 +1,5 @@
 ---
-name: AIDLC Requirements Clarification
+name: aidlc-requirements-clarification
 description: >
   Analyze the user's request and the existing codebase (if brownfield), classify
   request type and complexity, then produce a structured clarifying-questions file

@@ -1,5 +1,5 @@
 ---
-name: AIDLC Functional Design
+name: aidlc-functional-design
 description: >
   Perform detailed, technology-agnostic business logic design for a single unit
   of work: domain entities, business rules, validation logic, data flow, and

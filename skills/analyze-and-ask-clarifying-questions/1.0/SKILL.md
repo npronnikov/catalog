@@ -1,5 +1,5 @@
 ---
-name: Analyze project and generate clarifying questions
+name: analyze-and-ask-clarifying-questions
 description: >
   Study the project codebase and the user request, then generate 10–15
   targeted clarifying questions with answer options. Use before any

@@ -1,5 +1,5 @@
 ---
-name: AIDLC Units Decomposition — Artifacts
+name: aidlc-units-decomposition-artifacts
 description: >
   Read the answered units-questions.md and produce the three unit-of-work
   documents: unit definitions (unit-of-work.md), dependency matrix

@@ -1,5 +1,5 @@
 ---
-name: AIDLC Application Design — Questions
+name: aidlc-application-design-questions
 description: >
   Review requirements and user stories to generate design-clarification questions
   covering component boundaries, method interfaces, service layer design, and
