@@ -8,7 +8,7 @@ description: >
   кодовую базу, затем формирует пронумерованный план с чекбоксами, который
   Claude Code может выполнять механически шаг за шагом.
   Результат сохраняется в implementation-plan.md.
-coding_agent: claude-code
+coding_agent: qwen
 team_code: Demo
 platform_code: BACK
 tags:
