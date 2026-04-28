@@ -23,9 +23,7 @@ nodes:
     instruction: |
       Изучи кодовую базу проекта и запрос пользователя.
       Сформулируй 10–15 уточняющих вопросов,
-      которые напрямую влияют на выбор решения.
-      Каждый вопрос должен содержать ровно один вариант, помеченный
-      как (рекомендуемый). Сохрани результат в questions.md.
+      которые напрямую влияют на выбор решения. Строго следуй скилу.
     skill_refs:
       - hgdlc-ask-clarifying-questions@1.0
     produced_artifacts:
@@ -175,6 +173,13 @@ nodes:
         required: true
         modifiable: false
         transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: human-answer-questions
+        path: questions.md
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
     instruction: |
       Проведи ревью всех изменений, внесённых на шаге разработки.
       Следуй приложенному скилу hgdlc-code-review: оцени изменения по пяти осям
@@ -207,7 +212,7 @@ nodes:
         modifiable: false
     expected_mutations: []
     on_success: approve-final-code
-    on_failure: terminal-complete
+    on_failure: approve-final-code
     on_rework:
       next_node: ai-develop
     allow_retry: true
