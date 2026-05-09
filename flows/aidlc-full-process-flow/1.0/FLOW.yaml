@@ -47,8 +47,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: human-answer-questions
-    on_failure: terminal-complete
+    on_success:
+      transition: human-answer-questions
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   # ── Gate: User answers clarifying questions ───────────────────────────────
@@ -73,9 +75,11 @@ nodes:
         path: aidlc-docs/inception/requirements/requirement-questions.md
         required: true
     expected_mutations: []
-    on_submit: ai-generate-requirements
+    on_submit:
+      transition: ai-generate-requirements
     on_rework:
-      next_node: ai-analyze-and-questions
+      transition: ai-analyze-and-questions
+      max_loop_count: 3
 
   # ── Step 2: Generate requirements document ────────────────────────────────
   - id: ai-generate-requirements
@@ -110,8 +114,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-requirements
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-requirements
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   # ── Gate: Review and approve requirements ─────────────────────────────────
@@ -134,9 +140,11 @@ nodes:
       Approve to proceed to Inception Design, or request rework with specific corrections.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-user-stories-questions
+    on_approve:
+      transition: ai-user-stories-questions
     on_rework:
-      next_node: ai-generate-requirements
+      transition: ai-generate-requirements
+      max_loop_count: 3
 
   # ════════════════════════════════════════════════════════════════════════════
   # PHASE 2 — Inception Design  (aidlc-inception-design-flow@1.0)
@@ -174,8 +182,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: human-answer-story-questions
-    on_failure: terminal-complete
+    on_success:
+      transition: human-answer-story-questions
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: human-answer-story-questions
@@ -199,9 +209,11 @@ nodes:
         path: aidlc-docs/inception/plans/story-questions.md
         required: true
     expected_mutations: []
-    on_submit: ai-user-stories-generate
+    on_submit:
+      transition: ai-user-stories-generate
     on_rework:
-      next_node: ai-user-stories-questions
+      transition: ai-user-stories-questions
+      max_loop_count: 3
 
   - id: ai-user-stories-generate
     title: Generate user stories and personas
@@ -237,8 +249,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-user-stories
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-user-stories
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: approve-user-stories
@@ -260,9 +274,11 @@ nodes:
       Approve to proceed to Application Design, or request rework with corrections.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-application-design-questions
+    on_approve:
+      transition: ai-application-design-questions
     on_rework:
-      next_node: ai-user-stories-generate
+      transition: ai-user-stories-generate
+      max_loop_count: 3
 
   # ── Phase 2.2: Application Design ────────────────────────────────────────
 
@@ -302,8 +318,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: human-answer-design-questions
-    on_failure: terminal-complete
+    on_success:
+      transition: human-answer-design-questions
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: human-answer-design-questions
@@ -326,9 +344,11 @@ nodes:
         path: aidlc-docs/inception/plans/design-questions.md
         required: true
     expected_mutations: []
-    on_submit: ai-application-design-artifacts
+    on_submit:
+      transition: ai-application-design-artifacts
     on_rework:
-      next_node: ai-application-design-questions
+      transition: ai-application-design-questions
+      max_loop_count: 3
 
   - id: ai-application-design-artifacts
     title: Generate application design document
@@ -363,8 +383,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-application-design
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-application-design
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: approve-application-design
@@ -385,9 +407,11 @@ nodes:
       Approve to proceed to Units Decomposition, or request rework with corrections.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-units-decomposition-questions
+    on_approve:
+      transition: ai-units-decomposition-questions
     on_rework:
-      next_node: ai-application-design-artifacts
+      transition: ai-application-design-artifacts
+      max_loop_count: 3
 
   # ── Phase 2.3: Units Decomposition ───────────────────────────────────────
 
@@ -426,8 +450,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: human-answer-units-questions
-    on_failure: terminal-complete
+    on_success:
+      transition: human-answer-units-questions
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: human-answer-units-questions
@@ -451,9 +477,11 @@ nodes:
         path: aidlc-docs/inception/plans/units-questions.md
         required: true
     expected_mutations: []
-    on_submit: ai-units-decomposition-artifacts
+    on_submit:
+      transition: ai-units-decomposition-artifacts
     on_rework:
-      next_node: ai-units-decomposition-questions
+      transition: ai-units-decomposition-questions
+      max_loop_count: 3
 
   - id: ai-units-decomposition-artifacts
     title: Generate units decomposition artifacts
@@ -502,8 +530,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-units
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-units
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: approve-units
@@ -526,9 +556,11 @@ nodes:
       Approve to proceed to Workflow Planning, or request rework with corrections.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-workflow-planning
+    on_approve:
+      transition: ai-workflow-planning
     on_rework:
-      next_node: ai-units-decomposition-artifacts
+      transition: ai-units-decomposition-artifacts
+      max_loop_count: 3
 
   # ── Phase 2.4: Workflow Planning ──────────────────────────────────────────
 
@@ -572,8 +604,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-workflow-plan
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-workflow-plan
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: approve-workflow-plan
@@ -594,9 +628,11 @@ nodes:
       Approve to proceed to Construction phase, or request rework with specific corrections.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-functional-design
+    on_approve:
+      transition: ai-functional-design
     on_rework:
-      next_node: ai-workflow-planning
+      transition: ai-workflow-planning
+      max_loop_count: 3
 
   # ════════════════════════════════════════════════════════════════════════════
   # PHASE 3 — Construction  (aidlc-development-flow@1.0)
@@ -647,8 +683,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-functional-design
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-functional-design
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: approve-functional-design
@@ -667,9 +705,11 @@ nodes:
       Approve to proceed to NFR requirements, or request rework with corrections.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-nfr-requirements
+    on_approve:
+      transition: ai-nfr-requirements
     on_rework:
-      next_node: ai-functional-design
+      transition: ai-functional-design
+      max_loop_count: 3
 
   # ── Step 3.2: NFR Requirements ────────────────────────────────────────────
 
@@ -721,8 +761,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-nfr
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-nfr
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: approve-nfr
@@ -739,9 +781,11 @@ nodes:
       Approve to proceed to code generation planning, or request rework.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-code-generation-plan
+    on_approve:
+      transition: ai-code-generation-plan
     on_rework:
-      next_node: ai-nfr-requirements
+      transition: ai-nfr-requirements
+      max_loop_count: 3
 
   # ── Step 3.3: Code Generation Plan ───────────────────────────────────────
 
@@ -796,8 +840,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-code-plan
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-code-plan
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: approve-code-plan
@@ -812,9 +858,11 @@ nodes:
       Approve to start code generation, or request rework.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-code-generation-execute
+    on_approve:
+      transition: ai-code-generation-execute
     on_rework:
-      next_node: ai-code-generation-plan
+      transition: ai-code-generation-plan
+      max_loop_count: 3
 
   # ── Step 3.4: Code Generation ─────────────────────────────────────────────
 
@@ -844,8 +892,10 @@ nodes:
       - aidlc-code-generation-execute@1.0
     produced_artifacts: []
     expected_mutations: []
-    on_success: approve-code
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-code
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: approve-code
@@ -859,9 +909,11 @@ nodes:
       Approve to proceed to build and test instructions, or request rework.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-build-and-test
+    on_approve:
+      transition: ai-build-and-test
     on_rework:
-      next_node: ai-code-generation-execute
+      transition: ai-code-generation-execute
+      max_loop_count: 3
 
   # ── Step 3.5: Build and Test Instructions ────────────────────────────────
 
@@ -894,8 +946,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-build-and-test
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-build-and-test
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   - id: approve-build-and-test
@@ -909,9 +963,11 @@ nodes:
       Approve to complete the full AIDLC process flow.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: terminal-complete
+    on_approve:
+      transition: terminal-complete
     on_rework:
-      next_node: ai-build-and-test
+      transition: ai-build-and-test
+      max_loop_count: 3
 
   # ════════════════════════════════════════════════════════════════════════════
   # Terminal

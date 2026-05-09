@@ -70,8 +70,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-reverse-engineering
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-reverse-engineering
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   # ── Gate: Review reverse engineering artifacts ────────────────────────────
@@ -93,9 +95,11 @@ nodes:
       Approve to complete this flow, or request rework with specific corrections.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: terminal-complete
+    on_approve:
+      transition: terminal-complete
     on_rework:
-      next_node: ai-reverse-engineering
+      transition: ai-reverse-engineering
+      max_loop_count: 3
 
   # ── Terminal ──────────────────────────────────────────────────────────────
   - id: terminal-complete

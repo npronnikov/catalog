@@ -32,8 +32,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: human-answer-questions
-    on_failure: terminal-complete
+    on_success:
+      transition: human-answer-questions
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
     retry_policy:
       attempts: 3
@@ -62,9 +64,11 @@ nodes:
         path: questions.md
         required: true
     expected_mutations: []
-    on_submit: ai-implementation-plan
+    on_submit:
+      transition: ai-implementation-plan
     on_rework:
-      next_node: ai-clarifying-questions
+      transition: ai-clarifying-questions
+      max_loop_count: 3
 
   # ── Шаг 3: Построение плана имплементации ────────────────────────────────
   - id: ai-implementation-plan
@@ -92,8 +96,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-implementation-plan
-    on_failure: terminal-complete
+    on_success:
+      transition: approve-implementation-plan
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
     retry_policy:
       attempts: 3
@@ -118,9 +124,11 @@ nodes:
       Апруй для начала разработки или верни на доработку с конкретными замечаниями.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: ai-develop
+    on_approve:
+      transition: ai-develop
     on_rework:
-      next_node: ai-implementation-plan
+      transition: ai-implementation-plan
+      max_loop_count: 3
 
   # ── Шаг 5: Разработка ─────────────────────────────────────────────────────
   - id: ai-develop
@@ -155,8 +163,10 @@ nodes:
     skill_refs: []
     produced_artifacts: []
     expected_mutations: []
-    on_success: ai-code-review
-    on_failure: terminal-complete
+    on_success:
+      transition: ai-code-review
+    on_failure:
+      transition: terminal-complete
     allow_retry: true
 
   # ── Шаг 6: Ревью кода ─────────────────────────────────────────────────────
@@ -164,7 +174,6 @@ nodes:
     title: Ревью кода и вынесение вердикта
     type: ai
     checkpoint_before_run: false
-    max_rework_iterations: 3
     execution_context:
       - type: artifact_ref
         node_id: ai-implementation-plan
@@ -211,10 +220,13 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: approve-final-code
-    on_failure: approve-final-code
+    on_success:
+      transition: approve-final-code
+    on_failure:
+      transition: approve-final-code
     on_rework:
-      next_node: ai-develop
+      transition: ai-develop
+      max_loop_count: 3
     allow_retry: true
     retry_policy:
       attempts: 3
@@ -238,9 +250,11 @@ nodes:
       Апрувь для завершения флоу или верни на доработку с конкретными замечаниями.
     produced_artifacts: []
     expected_mutations: []
-    on_approve: terminal-complete
+    on_approve:
+      transition: terminal-complete
     on_rework:
-      next_node: ai-develop
+      transition: ai-develop
+      max_loop_count: 3
 
   # ── Терминальная нода ─────────────────────────────────────────────────────
   - id: terminal-complete

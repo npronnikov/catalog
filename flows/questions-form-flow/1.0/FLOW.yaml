@@ -32,8 +32,10 @@ nodes:
         required: true
         modifiable: false
     expected_mutations: []
-    on_success: human-fill-form
-    on_failure: terminal-complete
+    on_success:
+      transition: human-fill-form
+    on_failure:
+      transition: terminal-complete
 
   # ── Gate: Пользователь заполняет форму ───────────────────────────────────
   # questions.form.json заходит с modifiable: true.
@@ -57,9 +59,11 @@ nodes:
         path: questions.form.json
         required: true
     expected_mutations: []
-    on_submit: terminal-complete
+    on_submit:
+      transition: terminal-complete
     on_rework:
-      next_node: ai-generate-questions
+      transition: ai-generate-questions
+      max_loop_count: 3
 
   # ── Terminal ──────────────────────────────────────────────────────────────
   - id: terminal-complete

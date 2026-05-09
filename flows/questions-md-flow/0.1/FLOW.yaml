@@ -29,8 +29,10 @@ nodes:
         path: questions.md
         required: true
     expected_mutations: []
-    on_success: human-fill-form
-    on_failure: terminal-complete
+    on_success:
+      transition: human-fill-form
+    on_failure:
+      transition: terminal-complete
   - id: human-fill-form
     title: Заполнить форму с вопросами
     type: human_input
@@ -53,9 +55,11 @@ nodes:
         path: questions.md
         required: true
     expected_mutations: []
-    on_submit: terminal-complete
+    on_submit:
+      transition: terminal-complete
     on_rework:
-      next_node: ai-generate-questions
+      transition: ai-generate-questions
+      max_loop_count: 3
   - id: terminal-complete
     title: Завершение
     type: terminal
