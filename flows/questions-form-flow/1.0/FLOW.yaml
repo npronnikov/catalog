@@ -63,7 +63,6 @@ nodes:
       transition: terminal-complete
     on_rework:
       transition: ai-generate-questions
-      max_loop_count: 3
 
   # ── Terminal ──────────────────────────────────────────────────────────────
   - id: terminal-complete

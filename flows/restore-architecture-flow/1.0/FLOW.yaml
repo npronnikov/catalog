@@ -52,7 +52,6 @@ nodes:
       transition: terminal-complete
     on_rework:
       transition: ai-analyze-architecture
-      max_loop_count: 3
 
   - id: terminal-complete
     title: Complete

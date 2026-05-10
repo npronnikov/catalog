@@ -68,7 +68,6 @@ nodes:
       transition: ai-implementation-plan
     on_rework:
       transition: ai-clarifying-questions
-      max_loop_count: 3
 
   # ── Шаг 3: Построение плана имплементации ────────────────────────────────
   - id: ai-implementation-plan
@@ -128,7 +127,6 @@ nodes:
       transition: ai-develop
     on_rework:
       transition: ai-implementation-plan
-      max_loop_count: 3
 
   # ── Шаг 5: Разработка ─────────────────────────────────────────────────────
   - id: ai-develop
@@ -151,15 +149,15 @@ nodes:
         modifiable: false
         transfer_mode: by_ref
     instruction: |
+      <#if (step["ai-code-review"])?? && (step["ai-code-review"]["rework_instruction"])??>${step["ai-code-review"]["rework_instruction"]}
+      <#else>
       Выполни план имплементации из implementation-plan.md шаг за шагом:
         - Находи первый невыполненный шаг [ ] и реализуй его.
         - После выполнения помечай шаг [x] и обновляй implementation-plan.md.
         - После каждого слоя запускай команду верификации из плана.
-        - Если присутствует code-review-report.md — это доработка по замечаниям
-          ревью: сначала устрани все Critical и Required замечания из отчёта,
-          затем убедись, что план по-прежнему выполнен.
         - Не создавай копии файлов с суффиксами _modified, _new и т.п. —
           изменяй файлы непосредственно.
+      </#if>
     skill_refs: []
     produced_artifacts: []
     expected_mutations: []
@@ -200,7 +198,7 @@ nodes:
       - verdict: одно из значений "approve" или "rework"
       - actions: непустой массив выполненных действий ревью
       - issues: массив замечаний (пустой для approve; для rework — минимум одно замечание)
-      - rework_instruction: обязательно, если verdict="rework"; конкретный нумерованный список исправлений по файлам/строкам
+      - rework_instruction: строка, обязательна если verdict="rework"; конкретный нумерованный список исправлений по файлам/строкам (читается FTL-шаблоном на шаге разработки)
 
       Примеры заполнения:
       - actions: ["провёл ревью кода по пяти осям", "выполнил оценку на наличие критических и требуемых замечаний"]
@@ -254,7 +252,6 @@ nodes:
       transition: terminal-complete
     on_rework:
       transition: ai-develop
-      max_loop_count: 3
 
   # ── Терминальная нода ─────────────────────────────────────────────────────
   - id: terminal-complete

@@ -99,7 +99,6 @@ nodes:
       transition: terminal-complete
     on_rework:
       transition: ai-reverse-engineering
-      max_loop_count: 3
 
   # ── Terminal ──────────────────────────────────────────────────────────────
   - id: terminal-complete
