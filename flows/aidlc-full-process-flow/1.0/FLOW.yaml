@@ -25,6 +25,11 @@ nodes:
     checkpoint_before_run: false
     execution_context: []
     instruction: |
+      <#if (run.feature_request)?? && run.feature_request?has_content>
+      User request:
+      ${run.feature_request}
+      </#if>
+
       Analyse the user request and the existing codebase. Load reverse-engineering
       context if available (brownfield project):
         - aidlc-docs/inception/reverse-engineering/architecture.md

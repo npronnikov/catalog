@@ -21,6 +21,11 @@ nodes:
     checkpoint_before_run: false
     execution_context: []
     instruction: |
+      <#if (run.feature_request)?? && run.feature_request?has_content>
+      Запрос пользователя:
+      ${run.feature_request}
+      </#if>
+
       Изучи кодовую базу проекта и запрос пользователя.
       Сформулируй 10–15 уточняющих вопросов,
       которые напрямую влияют на выбор решения. Строго следуй скилу.
@@ -202,6 +207,7 @@ nodes:
 
       Примеры заполнения:
       - actions: ["провёл ревью кода по пяти осям", "выполнил оценку на наличие критических и требуемых замечаний"]
+      - route: "on_rework"
       - issues: [
         {"severity": "critical", "file": "path/to/File.java", "line": 42, "message": "описание проблемы"},
         {"severity": "major", "file": "path/to/File.java", "message": "описание проблемы"}

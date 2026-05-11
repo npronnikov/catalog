@@ -21,6 +21,11 @@ nodes:
       - type: user_request
         required: true
     instruction: |
+      <#if (run.feature_request)?? && run.feature_request?has_content>
+      Запрос пользователя:
+      ${run.feature_request}
+      </#if>
+
       Прочитай запрос пользователя.
       Строго следуй подключённому скиллу: сформулируй уточняющие вопросы
       и сохрани их в файл questions.form.json в рабочей директории.
