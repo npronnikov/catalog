@@ -174,7 +174,7 @@ nodes:
   - id: ai-code-review
     title: Ревью кода
     type: ai
-    routing_type: static
+    routing_type: dynamic
     checkpoint_before_run: false
     execution_context:
       - type: artifact_ref
