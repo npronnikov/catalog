@@ -74,7 +74,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-reverse-engineering
-    allow_retry: true
 
   # ── Gate: Review reverse engineering artifacts ────────────────────────────
   - id: approve-reverse-engineering

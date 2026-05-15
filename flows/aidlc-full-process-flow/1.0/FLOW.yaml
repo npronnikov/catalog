@@ -56,7 +56,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-answer-questions
-    allow_retry: true
 
   # ── Gate: User answers clarifying questions ───────────────────────────────
   - id: human-answer-questions
@@ -121,7 +120,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-requirements
-    allow_retry: true
 
   # ── Gate: Review and approve requirements ─────────────────────────────────
   - id: approve-requirements
@@ -187,7 +185,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-answer-story-questions
-    allow_retry: true
 
   - id: human-answer-story-questions
     title: Answer user story planning questions
@@ -252,7 +249,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-user-stories
-    allow_retry: true
 
   - id: approve-user-stories
     title: Review and approve user stories
@@ -319,7 +315,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-answer-design-questions
-    allow_retry: true
 
   - id: human-answer-design-questions
     title: Answer application design questions
@@ -382,7 +377,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-application-design
-    allow_retry: true
 
   - id: approve-application-design
     title: Review and approve application design
@@ -447,7 +441,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-answer-units-questions
-    allow_retry: true
 
   - id: human-answer-units-questions
     title: Answer units decomposition questions
@@ -525,7 +518,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-units
-    allow_retry: true
 
   - id: approve-units
     title: Review and approve units decomposition
@@ -597,7 +589,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-workflow-plan
-    allow_retry: true
 
   - id: approve-workflow-plan
     title: Review and approve workflow execution plan
@@ -674,7 +665,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-functional-design
-    allow_retry: true
 
   - id: approve-functional-design
     title: Review and approve functional design
@@ -750,7 +740,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-nfr
-    allow_retry: true
 
   - id: approve-nfr
     title: Review and approve NFR requirements
@@ -827,7 +816,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-code-plan
-    allow_retry: true
 
   - id: approve-code-plan
     title: Review and approve code generation plan
@@ -877,7 +865,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-code
-    allow_retry: true
 
   - id: approve-code
     title: Review and approve implementation
@@ -929,7 +916,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-build-and-test
-    allow_retry: true
 
   - id: approve-build-and-test
     title: Review and approve build and test instructions

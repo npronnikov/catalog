@@ -41,7 +41,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-answer-questions
-    allow_retry: true
     retry_policy:
       attempts: 3
       on_errors:
@@ -103,7 +102,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-implementation-plan
-    allow_retry: true
     retry_policy:
       attempts: 3
       on_errors:
@@ -168,7 +166,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: ai-code-review
-    allow_retry: true
 
   # ── Шаг 6: Ревью кода ─────────────────────────────────────────────────────
   - id: ai-code-review
@@ -226,7 +223,6 @@ nodes:
     on_rework:
       transition: ai-develop
       max_loop_count: 3
-    allow_retry: true
     retry_policy:
       attempts: 3
       on_errors:
