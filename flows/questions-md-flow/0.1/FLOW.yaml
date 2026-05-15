@@ -6,6 +6,7 @@ description: |
   Минимальный тестовый флоу для проверки функционала human-form: AI генерирует questions.form.json, пользователь заполняет форму в gate UI, заполненный файл сохраняется с выбранными ответами.
   
 start_node_id: ai-generate-questions
+failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
 rule_refs: []
@@ -14,6 +15,7 @@ nodes:
   - id: ai-generate-questions
     title: Генерация уточняющих вопросов
     type: ai
+    routing_type: static
     execution_context: []
     instruction: |
       <#if (run.feature_request)?? && run.feature_request?has_content>
@@ -36,8 +38,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-fill-form
-    on_failure:
-      transition: terminal-complete
   - id: human-fill-form
     title: Заполнить форму с вопросами
     type: human_input

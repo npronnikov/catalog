@@ -10,6 +10,7 @@ description: >
   The human gate ensures the artifacts are accurate before any subsequent
   development flow starts.
 start_node_id: ai-reverse-engineering
+failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
 
@@ -19,6 +20,7 @@ nodes:
   - id: ai-reverse-engineering
     title: Reverse-engineer existing codebase
     type: ai
+    routing_type: static
     checkpoint_before_run: false
     execution_context: []
     instruction: |
@@ -72,8 +74,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-reverse-engineering
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   # ── Gate: Review reverse engineering artifacts ────────────────────────────

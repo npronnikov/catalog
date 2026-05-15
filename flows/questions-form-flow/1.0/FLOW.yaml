@@ -7,6 +7,7 @@ description: >
   AI генерирует questions.form.json, пользователь заполняет форму в gate UI,
   заполненный файл сохраняется с выбранными ответами.
 start_node_id: ai-generate-questions
+failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
 
@@ -16,6 +17,7 @@ nodes:
   - id: ai-generate-questions
     title: Генерация уточняющих вопросов
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: user_request
@@ -39,8 +41,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-fill-form
-    on_failure:
-      transition: terminal-complete
 
   # ── Gate: Пользователь заполняет форму ───────────────────────────────────
   # questions.form.json заходит с modifiable: true.

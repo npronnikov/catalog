@@ -9,6 +9,7 @@ description: >
   апрув итогового кода.
 coding_agent: qwen
 start_node_id: ai-clarifying-questions
+failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
 
@@ -18,6 +19,7 @@ nodes:
   - id: ai-clarifying-questions
     title: Генерация уточняющих вопросов
     type: ai
+    routing_type: static
     checkpoint_before_run: false
     execution_context: []
     instruction: |
@@ -39,8 +41,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-answer-questions
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
     retry_policy:
       attempts: 3
@@ -78,6 +78,7 @@ nodes:
   - id: ai-implementation-plan
     title: Построение плана имплементации
     type: ai
+    routing_type: static
     checkpoint_before_run: false
     execution_context:
       - type: artifact_ref
@@ -102,8 +103,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-implementation-plan
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
     retry_policy:
       attempts: 3
@@ -137,6 +136,7 @@ nodes:
   - id: ai-develop
     title: Реализация по плану
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -168,14 +168,13 @@ nodes:
     expected_mutations: []
     on_success:
       transition: ai-code-review
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   # ── Шаг 6: Ревью кода ─────────────────────────────────────────────────────
   - id: ai-code-review
     title: Ревью кода
     type: ai
+    routing_type: static
     checkpoint_before_run: false
     execution_context:
       - type: artifact_ref
@@ -223,8 +222,6 @@ nodes:
         modifiable: false
     expected_mutations: []
     on_success:
-      transition: approve-final-code
-    on_failure:
       transition: approve-final-code
     on_rework:
       transition: ai-develop

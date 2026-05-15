@@ -7,6 +7,7 @@ description: >
   documentation with Mermaid diagrams (Context, Container, Component).
   Human reviews and approves or requests corrections.
 start_node_id: ai-analyze-architecture
+failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
 rule_refs:
@@ -16,6 +17,7 @@ nodes:
   - id: ai-analyze-architecture
     title: Analyze project and generate C4 architecture
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context: []
     instruction: |
@@ -34,8 +36,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-architecture
-    on_failure:
-      transition: terminal-complete
 
   - id: approve-architecture
     title: Review and approve architecture documentation

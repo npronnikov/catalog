@@ -9,6 +9,7 @@ description: >
   3. aidlc-development-flow 1.0            — functional design, NFR, code gen plan, code gen, build & test
   Each stage has human Q&A and/or an approval gate with rework capability.
 start_node_id: ai-analyze-and-questions
+failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
 
@@ -22,6 +23,7 @@ nodes:
   - id: ai-analyze-and-questions
     title: Analyse request and generate clarifying questions
     type: ai
+    routing_type: static
     checkpoint_before_run: false
     execution_context: []
     instruction: |
@@ -54,8 +56,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-answer-questions
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   # ── Gate: User answers clarifying questions ───────────────────────────────
@@ -89,6 +89,7 @@ nodes:
   - id: ai-generate-requirements
     title: Generate requirements document
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -120,8 +121,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-requirements
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   # ── Gate: Review and approve requirements ─────────────────────────────────
@@ -158,6 +157,7 @@ nodes:
   - id: ai-user-stories-questions
     title: Generate user story planning questions
     type: ai
+    routing_type: static
     checkpoint_before_run: false
     execution_context: []
     instruction: |
@@ -187,8 +187,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-answer-story-questions
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: human-answer-story-questions
@@ -220,6 +218,7 @@ nodes:
   - id: ai-user-stories-generate
     title: Generate user stories and personas
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -253,8 +252,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-user-stories
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: approve-user-stories
@@ -286,6 +283,7 @@ nodes:
   - id: ai-application-design-questions
     title: Generate application design clarification questions
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -321,8 +319,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-answer-design-questions
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: human-answer-design-questions
@@ -353,6 +349,7 @@ nodes:
   - id: ai-application-design-artifacts
     title: Generate application design document
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -385,8 +382,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-application-design
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: approve-application-design
@@ -417,6 +412,7 @@ nodes:
   - id: ai-units-decomposition-questions
     title: Generate units decomposition questions
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -451,8 +447,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: human-answer-units-questions
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: human-answer-units-questions
@@ -484,6 +478,7 @@ nodes:
   - id: ai-units-decomposition-artifacts
     title: Generate units decomposition artifacts
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -530,8 +525,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-units
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: approve-units
@@ -564,6 +557,7 @@ nodes:
   - id: ai-workflow-planning
     title: Create workflow execution plan
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -603,8 +597,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-workflow-plan
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: approve-workflow-plan
@@ -639,6 +631,7 @@ nodes:
   - id: ai-functional-design
     title: Design business logic and domain model
     type: ai
+    routing_type: static
     checkpoint_before_run: false
     execution_context: []
     instruction: |
@@ -681,8 +674,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-functional-design
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: approve-functional-design
@@ -711,6 +702,7 @@ nodes:
   - id: ai-nfr-requirements
     title: Assess non-functional requirements and technology stack
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -758,8 +750,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-nfr
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: approve-nfr
@@ -786,6 +776,7 @@ nodes:
   - id: ai-code-generation-plan
     title: Create code generation plan
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -836,8 +827,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-code-plan
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: approve-code-plan
@@ -862,6 +851,7 @@ nodes:
   - id: ai-code-generation-execute
     title: Generate code per approved plan
     type: ai
+    routing_type: static
     checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
@@ -887,8 +877,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-code
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: approve-code
@@ -912,6 +900,7 @@ nodes:
   - id: ai-build-and-test
     title: Generate build and test instructions
     type: ai
+    routing_type: static
     checkpoint_before_run: false
     execution_context: []
     instruction: |
@@ -940,8 +929,6 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-build-and-test
-    on_failure:
-      transition: terminal-complete
     allow_retry: true
 
   - id: approve-build-and-test
