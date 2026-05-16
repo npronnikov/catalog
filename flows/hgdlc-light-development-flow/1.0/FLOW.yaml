@@ -20,9 +20,11 @@ nodes:
     title: Генерация уточняющих вопросов
     type: ai
     routing_type: static
-    checkpoint_before_run: false
     execution_context: []
     instruction: |
+      <#if (step["human-answer-questions"])?? && (step["human-answer-questions"]["rework_instruction"])?? && step["human-answer-questions"]["rework_instruction"]?has_content && (step["human-answer-questions"]["keep_changes"])?? && step["human-answer-questions"]["keep_changes"] == true>
+      Исправь ${step["human-answer-questions"]["rework_instruction"]}
+      <#else>
       <#if (run.feature_request)?? && run.feature_request?has_content>
       Запрос пользователя:
       ${run.feature_request}
@@ -31,6 +33,11 @@ nodes:
       Изучи кодовую базу проекта и запрос пользователя.
       Сформулируй 10–15 уточняющих вопросов,
       которые напрямую влияют на выбор решения. Строго следуй скилу.
+
+      <#if (step["human-answer-questions"])?? && (step["human-answer-questions"]["rework_instruction"])?? && step["human-answer-questions"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["human-answer-questions"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - hgdlc-ask-clarifying-questions@1.0
     produced_artifacts:
@@ -78,7 +85,6 @@ nodes:
     title: Построение плана имплементации
     type: ai
     routing_type: static
-    checkpoint_before_run: false
     execution_context:
       - type: artifact_ref
         node_id: human-answer-questions
@@ -88,10 +94,18 @@ nodes:
         modifiable: false
         transfer_mode: by_ref
     instruction: |
+      <#if (step["approve-implementation-plan"])?? && (step["approve-implementation-plan"]["rework_instruction"])?? && step["approve-implementation-plan"]["rework_instruction"]?has_content && (step["approve-implementation-plan"]["keep_changes"])?? && step["approve-implementation-plan"]["keep_changes"] == true>
+      Исправь ${step["approve-implementation-plan"]["rework_instruction"]}
+      <#else>
       Изучи запрос пользователя и ответы на уточняющие вопросы из questions.md.
       Исследуй кодовую базу проекта: структуру пакетов, существующие паттерны,
       миграции, тесты.
       Сохрани результат в implementation-plan.md.
+
+      <#if (step["approve-implementation-plan"])?? && (step["approve-implementation-plan"]["rework_instruction"])?? && step["approve-implementation-plan"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-implementation-plan"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - hgdlc-implementation-plan@1.0
     produced_artifacts:
@@ -135,7 +149,6 @@ nodes:
     title: Реализация по плану
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: ai-implementation-plan
@@ -172,7 +185,6 @@ nodes:
     title: Ревью кода
     type: ai
     routing_type: dynamic
-    checkpoint_before_run: false
     execution_context:
       - type: artifact_ref
         node_id: ai-implementation-plan
@@ -222,6 +234,8 @@ nodes:
       transition: approve-final-code
     on_rework:
       transition: ai-develop
+      keep_changes: true
+      session_policy: resume_previous_session
       max_loop_count: 3
     retry_policy:
       attempts: 3

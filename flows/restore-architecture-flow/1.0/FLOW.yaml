@@ -21,11 +21,19 @@ nodes:
     checkpoint_before_run: true
     execution_context: []
     instruction: |
+      <#if (step["approve-architecture"])?? && (step["approve-architecture"]["rework_instruction"])?? && step["approve-architecture"]["rework_instruction"]?has_content && (step["approve-architecture"]["keep_changes"])?? && step["approve-architecture"]["keep_changes"] == true>
+      Исправь ${step["approve-architecture"]["rework_instruction"]}
+      <#else>
       Изучи весь код проекта и подготовь архитектурную документацию
       в нотации модели C4 с использованием диаграмм Mermaid.
 
       Строго следуй подключенному skill.
       Сохрани результат в `docs/architecture.md` в директории проекта.
+
+      <#if (step["approve-architecture"])?? && (step["approve-architecture"]["rework_instruction"])?? && step["approve-architecture"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-architecture"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - restore-c4-architecture-java@1.0
     produced_artifacts:

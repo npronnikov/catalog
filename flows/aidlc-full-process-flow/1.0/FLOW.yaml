@@ -27,6 +27,9 @@ nodes:
     checkpoint_before_run: false
     execution_context: []
     instruction: |
+      <#if (step["human-answer-questions"])?? && (step["human-answer-questions"]["rework_instruction"])?? && step["human-answer-questions"]["rework_instruction"]?has_content && (step["human-answer-questions"]["keep_changes"])?? && step["human-answer-questions"]["keep_changes"] == true>
+      Исправь ${step["human-answer-questions"]["rework_instruction"]}
+      <#else>
       <#if (run.feature_request)?? && run.feature_request?has_content>
       User request:
       ${run.feature_request}
@@ -46,6 +49,11 @@ nodes:
         3. Generate comprehensive clarifying questions with [Answer]: tags.
 
       Save as requirement-questions.md.
+
+      <#if (step["human-answer-questions"])?? && (step["human-answer-questions"]["rework_instruction"])?? && step["human-answer-questions"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["human-answer-questions"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-requirements-clarification@1.0
     produced_artifacts:
@@ -98,6 +106,9 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
+      <#if (step["approve-requirements"])?? && (step["approve-requirements"]["rework_instruction"])?? && step["approve-requirements"]["rework_instruction"]?has_content && (step["approve-requirements"]["keep_changes"])?? && step["approve-requirements"]["keep_changes"] == true>
+      Исправь ${step["approve-requirements"]["rework_instruction"]}
+      <#else>
       Read the answered requirement-questions.md and produce a complete requirements
       document following the attached skill.
 
@@ -110,6 +121,11 @@ nodes:
       DM-*, AUTH-*, TEST-*, constraints, and acceptance criteria.
 
       Save as aidlc-docs/inception/requirements/requirements.md.
+
+      <#if (step["approve-requirements"])?? && (step["approve-requirements"]["rework_instruction"])?? && step["approve-requirements"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-requirements"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-requirements-document@1.0
     produced_artifacts:
@@ -159,6 +175,9 @@ nodes:
     checkpoint_before_run: false
     execution_context: []
     instruction: |
+      <#if (step["human-answer-story-questions"])?? && (step["human-answer-story-questions"]["rework_instruction"])?? && step["human-answer-story-questions"]["rework_instruction"]?has_content && (step["human-answer-story-questions"]["keep_changes"])?? && step["human-answer-story-questions"]["keep_changes"] == true>
+      Исправь ${step["human-answer-story-questions"]["rework_instruction"]}
+      <#else>
       Analyse the requirements and existing codebase context to generate user
       story planning questions.
 
@@ -175,6 +194,11 @@ nodes:
 
       Save as story-questions.md.
       Do NOT generate stories yet.
+
+      <#if (step["human-answer-story-questions"])?? && (step["human-answer-story-questions"]["rework_instruction"])?? && step["human-answer-story-questions"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["human-answer-story-questions"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-user-stories-questions@1.0
     produced_artifacts:
@@ -225,6 +249,9 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
+      <#if (step["approve-user-stories"])?? && (step["approve-user-stories"]["rework_instruction"])?? && step["approve-user-stories"]["rework_instruction"]?has_content && (step["approve-user-stories"]["keep_changes"])?? && step["approve-user-stories"]["keep_changes"] == true>
+      Исправь ${step["approve-user-stories"]["rework_instruction"]}
+      <#else>
       Read the answered story-questions.md and generate INVEST-compliant user
       stories and user personas following the attached skill.
 
@@ -235,6 +262,11 @@ nodes:
       Save:
         - aidlc-docs/inception/user-stories/stories.md
         - aidlc-docs/inception/user-stories/personas.md
+
+      <#if (step["approve-user-stories"])?? && (step["approve-user-stories"]["rework_instruction"])?? && step["approve-user-stories"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-user-stories"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-user-stories-generate@1.0
     produced_artifacts:
@@ -289,6 +321,9 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
+      <#if (step["human-answer-design-questions"])?? && (step["human-answer-design-questions"]["rework_instruction"])?? && step["human-answer-design-questions"]["rework_instruction"]?has_content && (step["human-answer-design-questions"]["keep_changes"])?? && step["human-answer-design-questions"]["keep_changes"] == true>
+      Исправь ${step["human-answer-design-questions"]["rework_instruction"]}
+      <#else>
       Review requirements and user stories to generate design clarification
       questions covering all architectural decisions.
 
@@ -305,6 +340,11 @@ nodes:
 
       Save as design-questions.md.
       Do NOT generate design artifacts yet.
+
+      <#if (step["human-answer-design-questions"])?? && (step["human-answer-design-questions"]["rework_instruction"])?? && step["human-answer-design-questions"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["human-answer-design-questions"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-application-design-questions@1.0
     produced_artifacts:
@@ -354,6 +394,9 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
+      <#if (step["approve-application-design"])?? && (step["approve-application-design"]["rework_instruction"])?? && step["approve-application-design"]["rework_instruction"]?has_content && (step["approve-application-design"]["keep_changes"])?? && step["approve-application-design"]["keep_changes"] == true>
+      Исправь ${step["approve-application-design"]["rework_instruction"]}
+      <#else>
       Read the answered design-questions.md and produce the consolidated application
       design document following the attached skill.
 
@@ -367,6 +410,11 @@ nodes:
       layer orchestration patterns, Mermaid dependency diagram, and design decisions.
 
       Save as aidlc-docs/inception/application-design/application-design.md.
+
+      <#if (step["approve-application-design"])?? && (step["approve-application-design"]["rework_instruction"])?? && step["approve-application-design"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-application-design"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-application-design-artifacts@1.0
     produced_artifacts:
@@ -416,6 +464,9 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
+      <#if (step["human-answer-units-questions"])?? && (step["human-answer-units-questions"]["rework_instruction"])?? && step["human-answer-units-questions"]["rework_instruction"]?has_content && (step["human-answer-units-questions"]["keep_changes"])?? && step["human-answer-units-questions"]["keep_changes"] == true>
+      Исправь ${step["human-answer-units-questions"]["rework_instruction"]}
+      <#else>
       Review the application design and generate decomposition planning questions.
 
       Also load from project:
@@ -431,6 +482,11 @@ nodes:
 
       Save as units-questions.md.
       Do NOT generate unit artifacts yet.
+
+      <#if (step["human-answer-units-questions"])?? && (step["human-answer-units-questions"]["rework_instruction"])?? && step["human-answer-units-questions"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["human-answer-units-questions"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-units-decomposition-questions@1.0
     produced_artifacts:
@@ -487,6 +543,9 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
+      <#if (step["approve-units"])?? && (step["approve-units"]["rework_instruction"])?? && step["approve-units"]["rework_instruction"]?has_content && (step["approve-units"]["keep_changes"])?? && step["approve-units"]["keep_changes"] == true>
+      Исправь ${step["approve-units"]["rework_instruction"]}
+      <#else>
       Read the answered units-questions.md and application-design.md, then produce
       the three unit-of-work artifacts following the attached skill.
 
@@ -500,6 +559,11 @@ nodes:
 
       Constraints: no unassigned stories, no units without work, unit names must
       be filesystem-safe (lowercase, hyphens, no spaces).
+
+      <#if (step["approve-units"])?? && (step["approve-units"]["rework_instruction"])?? && step["approve-units"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-units"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-units-decomposition-artifacts@1.0
     produced_artifacts:
@@ -565,6 +629,9 @@ nodes:
         required: false
         transfer_mode: by_value
     instruction: |
+      <#if (step["approve-workflow-plan"])?? && (step["approve-workflow-plan"]["rework_instruction"])?? && step["approve-workflow-plan"]["rework_instruction"]?has_content && (step["approve-workflow-plan"]["keep_changes"])?? && step["approve-workflow-plan"]["keep_changes"] == true>
+      Исправь ${step["approve-workflow-plan"]["rework_instruction"]}
+      <#else>
       Load all prior inception context and produce a comprehensive workflow execution
       plan following the attached skill.
 
@@ -579,6 +646,11 @@ nodes:
       Include Mermaid workflow visualisation.
 
       Save as aidlc-docs/inception/plans/execution-plan.md.
+
+      <#if (step["approve-workflow-plan"])?? && (step["approve-workflow-plan"]["rework_instruction"])?? && step["approve-workflow-plan"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-workflow-plan"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-workflow-planning@1.0
     produced_artifacts:
@@ -626,6 +698,9 @@ nodes:
     checkpoint_before_run: false
     execution_context: []
     instruction: |
+      <#if (step["approve-functional-design"])?? && (step["approve-functional-design"]["rework_instruction"])?? && step["approve-functional-design"]["rework_instruction"]?has_content && (step["approve-functional-design"]["keep_changes"])?? && step["approve-functional-design"]["keep_changes"] == true>
+      Исправь ${step["approve-functional-design"]["rework_instruction"]}
+      <#else>
       Load inception artifacts from the project:
         - aidlc-docs/inception/requirements/requirements.md              ← REQUIRED
         - aidlc-docs/inception/plans/execution-plan.md                  ← REQUIRED
@@ -647,6 +722,11 @@ nodes:
       Use "main-unit" as the unit name folder if execution-plan.md does not
       specify a different name.
 
+
+      <#if (step["approve-functional-design"])?? && (step["approve-functional-design"]["rework_instruction"])?? && step["approve-functional-design"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-functional-design"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-functional-design@1.0
     produced_artifacts:
@@ -714,6 +794,9 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
+      <#if (step["approve-nfr"])?? && (step["approve-nfr"]["rework_instruction"])?? && step["approve-nfr"]["rework_instruction"]?has_content && (step["approve-nfr"]["keep_changes"])?? && step["approve-nfr"]["keep_changes"] == true>
+      Исправь ${step["approve-nfr"]["rework_instruction"]}
+      <#else>
       Also load from project:
         - aidlc-docs/inception/requirements/requirements.md (for NFR mentions)
         - aidlc-docs/inception/reverse-engineering/technology-stack.md (if brownfield)
@@ -726,6 +809,11 @@ nodes:
         - nfr-requirements.md
         - tech-stack-decisions.md
 
+
+      <#if (step["approve-nfr"])?? && (step["approve-nfr"]["rework_instruction"])?? && step["approve-nfr"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-nfr"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-nfr-requirements@1.0
     produced_artifacts:
@@ -793,6 +881,9 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
+      <#if (step["approve-code-plan"])?? && (step["approve-code-plan"]["rework_instruction"])?? && step["approve-code-plan"]["rework_instruction"]?has_content && (step["approve-code-plan"]["keep_changes"])?? && step["approve-code-plan"]["keep_changes"] == true>
+      Исправь ${step["approve-code-plan"]["rework_instruction"]}
+      <#else>
       Also load from project:
         - aidlc-docs/inception/requirements/requirements.md (for DM-* and API-* sections)
         - aidlc-docs/inception/application-design/unit-of-work.md (unit boundary)
@@ -806,6 +897,11 @@ nodes:
 
       Save as aidlc-docs/construction/plans/main-unit-code-generation-plan.md.
 
+
+      <#if (step["approve-code-plan"])?? && (step["approve-code-plan"]["rework_instruction"])?? && step["approve-code-plan"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-code-plan"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-code-generation-plan@1.0
     produced_artifacts:
@@ -849,6 +945,9 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
+      <#if (step["approve-code"])?? && (step["approve-code"]["rework_instruction"])?? && step["approve-code"]["rework_instruction"]?has_content && (step["approve-code"]["keep_changes"])?? && step["approve-code"]["keep_changes"] == true>
+      Исправь ${step["approve-code"]["rework_instruction"]}
+      <#else>
       Execute the approved code generation plan step by step, following the
       attached skill precisely:
         - Find the first unchecked [ ] step and execute it.
@@ -859,6 +958,11 @@ nodes:
         - Continue until all steps are [x].
         - Run the full build and all tests when complete.
 
+
+      <#if (step["approve-code"])?? && (step["approve-code"]["rework_instruction"])?? && step["approve-code"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-code"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-code-generation-execute@1.0
     produced_artifacts: []
@@ -891,6 +995,9 @@ nodes:
     checkpoint_before_run: false
     execution_context: []
     instruction: |
+      <#if (step["approve-build-and-test"])?? && (step["approve-build-and-test"]["rework_instruction"])?? && step["approve-build-and-test"]["rework_instruction"]?has_content && (step["approve-build-and-test"]["keep_changes"])?? && step["approve-build-and-test"]["keep_changes"] == true>
+      Исправь ${step["approve-build-and-test"]["rework_instruction"]}
+      <#else>
       Load from project:
         - aidlc-docs/construction/plans/ (all code generation plans)
         - aidlc-docs/construction/main-unit/nfr-requirements/nfr-requirements.md
@@ -906,6 +1013,11 @@ nodes:
       Determine the build system and workspace root by inspecting the actual
       project structure.
 
+
+      <#if (step["approve-build-and-test"])?? && (step["approve-build-and-test"]["rework_instruction"])?? && step["approve-build-and-test"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-build-and-test"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-build-and-test@1.0
     produced_artifacts:

@@ -24,6 +24,9 @@ nodes:
     checkpoint_before_run: false
     execution_context: []
     instruction: |
+      <#if (step["approve-reverse-engineering"])?? && (step["approve-reverse-engineering"]["rework_instruction"])?? && step["approve-reverse-engineering"]["rework_instruction"]?has_content && (step["approve-reverse-engineering"]["keep_changes"])?? && step["approve-reverse-engineering"]["keep_changes"] == true>
+      Исправь ${step["approve-reverse-engineering"]["rework_instruction"]}
+      <#else>
       Perform a comprehensive reverse-engineering analysis of the existing codebase.
 
       Follow the attached skill precisely to produce ALL of the following artifacts
@@ -36,6 +39,11 @@ nodes:
         - technology-stack.md
         - dependencies.md
         - code-quality-assessment.md
+
+      <#if (step["approve-reverse-engineering"])?? && (step["approve-reverse-engineering"]["rework_instruction"])?? && step["approve-reverse-engineering"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["approve-reverse-engineering"]["rework_instruction"]}
+      </#if>
+      </#if>
     skill_refs:
       - aidlc-reverse-engineering@1.0
     produced_artifacts:

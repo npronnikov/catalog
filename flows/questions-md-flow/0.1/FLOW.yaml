@@ -18,6 +18,9 @@ nodes:
     routing_type: static
     execution_context: []
     instruction: |
+      <#if (step["human-fill-form"])?? && (step["human-fill-form"]["rework_instruction"])?? && step["human-fill-form"]["rework_instruction"]?has_content && (step["human-fill-form"]["keep_changes"])?? && step["human-fill-form"]["keep_changes"] == true>
+      Исправь ${step["human-fill-form"]["rework_instruction"]}
+      <#else>
       <#if (run.feature_request)?? && run.feature_request?has_content>
       Запрос пользователя:
       ${run.feature_request}
@@ -27,6 +30,11 @@ nodes:
       Строго следуй подключённому скиллу: сформулируй уточняющие вопросы
       и сохрани их в файл questions.form.json в рабочей директории.
       
+
+      <#if (step["human-fill-form"])?? && (step["human-fill-form"]["rework_instruction"])?? && step["human-fill-form"]["rework_instruction"]?has_content>
+      Важно: при выполнении инструкции учти следующее: ${step["human-fill-form"]["rework_instruction"]}
+      </#if>
+      </#if>
     checkpoint_before_run: true
     skill_refs:
       - analyze-and-ask-clarifying-questions@1.0
