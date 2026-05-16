@@ -21,8 +21,9 @@ nodes:
     checkpoint_before_run: true
     execution_context: []
     instruction: |
-      <#if (step["approve-architecture"])?? && (step["approve-architecture"]["rework_instruction"])?? && step["approve-architecture"]["rework_instruction"]?has_content && (step["approve-architecture"]["keep_changes"])?? && step["approve-architecture"]["keep_changes"] == true>
-      Исправь ${step["approve-architecture"]["rework_instruction"]}
+      <#assign approveArchitecture = step["approve-architecture"]!{} />
+      <#if approveArchitecture.rework_instruction?has_content && (approveArchitecture.keep_changes!false)>
+      Исправь ${approveArchitecture.rework_instruction}
       <#else>
       Изучи весь код проекта и подготовь архитектурную документацию
       в нотации модели C4 с использованием диаграмм Mermaid.
@@ -30,8 +31,8 @@ nodes:
       Строго следуй подключенному skill.
       Сохрани результат в `docs/architecture.md` в директории проекта.
 
-      <#if (step["approve-architecture"])?? && (step["approve-architecture"]["rework_instruction"])?? && step["approve-architecture"]["rework_instruction"]?has_content>
-      Важно: при выполнении инструкции учти следующее: ${step["approve-architecture"]["rework_instruction"]}
+      <#if approveArchitecture.rework_instruction?has_content>
+      Важно: при выполнении инструкции учти следующее: ${approveArchitecture.rework_instruction}
       </#if>
       </#if>
     skill_refs:

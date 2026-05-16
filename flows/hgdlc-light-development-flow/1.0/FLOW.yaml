@@ -22,8 +22,9 @@ nodes:
     routing_type: static
     execution_context: []
     instruction: |
-      <#if (step["human-answer-questions"])?? && (step["human-answer-questions"]["rework_instruction"])?? && step["human-answer-questions"]["rework_instruction"]?has_content && (step["human-answer-questions"]["keep_changes"])?? && step["human-answer-questions"]["keep_changes"] == true>
-      Исправь ${step["human-answer-questions"]["rework_instruction"]}
+      <#assign humanAnswerQuestions = step["human-answer-questions"]!{} />
+      <#if humanAnswerQuestions.rework_instruction?has_content && (humanAnswerQuestions.keep_changes!false)>
+      Исправь ${humanAnswerQuestions.rework_instruction}
       <#else>
       <#if (run.feature_request)?? && run.feature_request?has_content>
       Запрос пользователя:
@@ -34,8 +35,8 @@ nodes:
       Сформулируй 10–15 уточняющих вопросов,
       которые напрямую влияют на выбор решения. Строго следуй скилу.
 
-      <#if (step["human-answer-questions"])?? && (step["human-answer-questions"]["rework_instruction"])?? && step["human-answer-questions"]["rework_instruction"]?has_content>
-      Важно: при выполнении инструкции учти следующее: ${step["human-answer-questions"]["rework_instruction"]}
+      <#if humanAnswerQuestions.rework_instruction?has_content>
+      Важно: при выполнении инструкции учти следующее: ${humanAnswerQuestions.rework_instruction}
       </#if>
       </#if>
     skill_refs:
@@ -94,16 +95,17 @@ nodes:
         modifiable: false
         transfer_mode: by_ref
     instruction: |
-      <#if (step["approve-implementation-plan"])?? && (step["approve-implementation-plan"]["rework_instruction"])?? && step["approve-implementation-plan"]["rework_instruction"]?has_content && (step["approve-implementation-plan"]["keep_changes"])?? && step["approve-implementation-plan"]["keep_changes"] == true>
-      Исправь ${step["approve-implementation-plan"]["rework_instruction"]}
+      <#assign approveImplementationPlan = step["approve-implementation-plan"]!{} />
+      <#if approveImplementationPlan.rework_instruction?has_content && (approveImplementationPlan.keep_changes!false)>
+      Исправь ${approveImplementationPlan.rework_instruction}
       <#else>
       Изучи запрос пользователя и ответы на уточняющие вопросы из questions.md.
       Исследуй кодовую базу проекта: структуру пакетов, существующие паттерны,
       миграции, тесты.
       Сохрани результат в implementation-plan.md.
 
-      <#if (step["approve-implementation-plan"])?? && (step["approve-implementation-plan"]["rework_instruction"])?? && step["approve-implementation-plan"]["rework_instruction"]?has_content>
-      Важно: при выполнении инструкции учти следующее: ${step["approve-implementation-plan"]["rework_instruction"]}
+      <#if approveImplementationPlan.rework_instruction?has_content>
+      Важно: при выполнении инструкции учти следующее: ${approveImplementationPlan.rework_instruction}
       </#if>
       </#if>
     skill_refs:
@@ -165,7 +167,8 @@ nodes:
         modifiable: false
         transfer_mode: by_ref
     instruction: |
-      <#if (step["ai-code-review"])?? && (step["ai-code-review"]["rework_instruction"])??>${step["ai-code-review"]["rework_instruction"]}
+      <#assign aiCodeReview = step["ai-code-review"]!{} />
+      <#if aiCodeReview.rework_instruction??>${aiCodeReview.rework_instruction}
       <#else>
       Выполни план имплементации из implementation-plan.md шаг за шагом:
         - Находи первый невыполненный шаг [ ] и реализуй его.

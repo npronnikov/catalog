@@ -24,8 +24,9 @@ nodes:
     checkpoint_before_run: false
     execution_context: []
     instruction: |
-      <#if (step["approve-reverse-engineering"])?? && (step["approve-reverse-engineering"]["rework_instruction"])?? && step["approve-reverse-engineering"]["rework_instruction"]?has_content && (step["approve-reverse-engineering"]["keep_changes"])?? && step["approve-reverse-engineering"]["keep_changes"] == true>
-      Исправь ${step["approve-reverse-engineering"]["rework_instruction"]}
+      <#assign approveReverseEngineering = step["approve-reverse-engineering"]!{} />
+      <#if approveReverseEngineering.rework_instruction?has_content && (approveReverseEngineering.keep_changes!false)>
+      Исправь ${approveReverseEngineering.rework_instruction}
       <#else>
       Perform a comprehensive reverse-engineering analysis of the existing codebase.
 
@@ -40,8 +41,8 @@ nodes:
         - dependencies.md
         - code-quality-assessment.md
 
-      <#if (step["approve-reverse-engineering"])?? && (step["approve-reverse-engineering"]["rework_instruction"])?? && step["approve-reverse-engineering"]["rework_instruction"]?has_content>
-      Важно: при выполнении инструкции учти следующее: ${step["approve-reverse-engineering"]["rework_instruction"]}
+      <#if approveReverseEngineering.rework_instruction?has_content>
+      Важно: при выполнении инструкции учти следующее: ${approveReverseEngineering.rework_instruction}
       </#if>
       </#if>
     skill_refs:
