@@ -27,7 +27,6 @@ nodes:
       Исправь ${humanAnswerQuestions.rework_instruction}
       <#else>
       <#if (run.feature_request)?? && run.feature_request?has_content>
-      Запрос пользователя:
       ${run.feature_request}
       </#if>
 
@@ -36,7 +35,7 @@ nodes:
       которые напрямую влияют на выбор решения. Строго следуй скилу.
 
       <#if humanAnswerQuestions.rework_instruction?has_content>
-      Важно: при выполнении инструкции учти следующее: ${humanAnswerQuestions.rework_instruction}
+      ВАЖНО! При выполнении инструкции учти следующее: ${humanAnswerQuestions.rework_instruction}
       </#if>
       </#if>
     skill_refs:
@@ -132,13 +131,13 @@ nodes:
       Проверь план имплементации в файле implementation-plan.md.
 
       Убедись, что:
-      - Все затронутые файлы перечислены с пометкой Create или Modify
+      - Все затронутые файлы перечислены с пометкой Create или Modify 
       - Порядок слоёв корректен (миграции → сущности → репозитории → сервисы →
         контроллеры → тесты → конфигурация)
       - Каждый шаг содержит конкретное описание изменения
       - Команды верификации реалистичны для данного проекта
 
-      Апруй для начала разработки или верни на доработку с конкретными замечаниями.
+      Утверди для начала разработки или верни на доработку с конкретными замечаниями.
     produced_artifacts: []
     expected_mutations: []
     on_approve:
@@ -168,7 +167,8 @@ nodes:
         transfer_mode: by_ref
     instruction: |
       <#assign aiCodeReview = step["ai-code-review"]!{} />
-      <#if aiCodeReview.rework_instruction??>${aiCodeReview.rework_instruction}
+      <#if aiCodeReview.rework_instruction??>
+      ${aiCodeReview.rework_instruction}
       <#else>
       Выполни план имплементации из implementation-plan.md шаг за шагом:
         - Находи первый невыполненный шаг [ ] и реализуй его.

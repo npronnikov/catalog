@@ -1,0 +1,498 @@
+id: bmad-quick-dev-flow
+version: "1.0"
+canonical_name: bmad-quick-dev-flow@1.0
+title: BMAD Quick Dev — Clarify, Plan, Implement, Review, Present
+description: >
+  HGSDLC representation of the bmad-quick-dev workflow for full-cycle code development.
+  Full cycle: intent clarification → spec planning with human approval →
+  implementation → adversarial review (3 sub-agents) → rework routing →
+  final presentation. Each stage has a human gate with rework capability.
+  For zero-blast-radius changes use bmad-quick-dev-oneshot-flow instead.
+start_node_id: ai-clarify-and-route
+failure_node_id: terminal-complete
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+rule_refs: []
+
+nodes:
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STEP 1 — Clarify and Route
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-clarify-and-route
+    title: Clarify intent and check VCS state
+    type: ai
+    routing_type: static
+    checkpoint_before_run: false
+    execution_context: []
+    instruction: |
+      Analyze the user intent. Perform these checks in order:
+
+      1. Planning artifacts scan. Read implementation_artifacts and
+         planning_artifacts from _bmad/bmm/config.yaml if it exists (defaults:
+         _bmad-output/implementation-artifacts and _bmad-output/planning-artifacts).
+         Scan planning_artifacts for files matching:
+           - *prd*        — product requirements and success criteria
+           - *architecture* — technical design decisions and constraints
+           - *ux*         — UX and interaction design
+           - *epic*       — feature breakdown into stories
+           - *brief*      — project vision and scope
+         Load selectively — only files relevant to the current intent.
+         Record which docs were loaded under "Planning context" in clarification.md.
+
+      2. Active spec scan. List implementation artifacts (draft / ready-for-dev /
+         in-progress / in-review specs). If found, list them in clarification.md
+         and ask the user which to resume (or [N] for new intent).
+
+      3. Multi-goal check. If the intent contains >= 2 independently shippable
+         goals (each could be reviewed, tested, and merged as a separate PR),
+         list them and ask the user to choose one to tackle first. Append deferred
+         goals to clarification.md under "Deferred goals".
+
+      4. VCS sanity check. Is the working tree clean? Does the current branch
+         name match the intent? Record findings under "VCS state" in clarification.md.
+
+      5. Questions. If anything in the intent is ambiguous, write questions
+         under "Questions" in clarification.md using this format:
+
+         **N. <question text>**
+         - [ ] <option A>
+         - [ ] <option B>
+         - [ ] Свой вариант: ___/
+
+         Always include "Свой вариант: ___" as the last option for every question.
+         If intent is already clear, write "No questions — ready to plan." instead.
+
+      Save clarification.md in the run artifact scope.
+    skill_refs: []
+    produced_artifacts:
+      - scope: run
+        path: clarification.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - AGENT_EXECUTION_FAILED
+        - AGENT_SESSION_RESUME_FAILED
+        - NODE_VALIDATION_FAILED
+    on_success:
+      transition: human-clarify-intent
+
+  - id: human-clarify-intent
+    title: Answer clarification questions and confirm intent
+    type: human_input
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-clarify-and-route
+        path: clarification.md
+        scope: run
+        required: true
+        modifiable: true
+        transfer_mode: by_ref
+    instruction: |
+      Open clarification.md and review the AI's output.
+
+      - If questions are listed: fill in your answers directly in the file.
+      - If active specs were listed: indicate which to resume (or write "new").
+      - If multiple goals were detected: confirm the first goal to tackle.
+      - If VCS concerns were raised: confirm or explain the branch state.
+      - If "No questions": just click Submit.
+
+      You may also add constraints or context the AI missed.
+    produced_artifacts:
+      - scope: run
+        path: clarification.md
+        required: true
+    expected_mutations: []
+    on_submit:
+      transition: ai-plan
+    on_rework:
+      transition: ai-clarify-and-route
+    allowed_roles:
+      - FLOW_CONFIGURATOR
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STEP 2 — Plan
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-plan
+    title: Investigate codebase and write implementation spec
+    type: ai
+    routing_type: static
+    checkpoint_before_run: true
+    execution_context:
+      - type: artifact_ref
+        node_id: human-clarify-intent
+        path: clarification.md
+        scope: run
+        required: true
+        transfer_mode: by_value
+    instruction: |
+      Investigate the codebase to understand the impact area.
+      Isolate deep exploration in sub-agents to prevent context snowballing.
+
+      Load planning docs referenced in clarification.md under "Planning context".
+      Use them to extract constraints, requirements, and design decisions relevant
+      to the current intent — prefer these over guessing from code alone.
+
+      Fill the spec template and write it to spec.md:
+        Frontmatter:
+          - title, type, created, status: draft
+          - context: list of planning docs referenced (PRD, architecture, etc.)
+        ## Intent
+          - Problem: one sentence
+          - Approach: one paragraph
+          - Constraints: from clarification.md and codebase
+        ## Tasks & Acceptance
+          - Ordered by dependency (migrations first, tests after each layer)
+          - Each task: file path, action (Create/Modify), Given/When/Then ACs
+        ## Code Map
+          - Files to create or modify with one-line descriptions
+        ## Design Notes
+          - Key decisions and trade-offs
+        ## Spec Change Log
+          - Empty initially
+
+      Self-review against Ready-for-Dev standard:
+        - Actionable: every task has file path and specific action
+        - Logical: tasks ordered by dependency
+        - Testable: all ACs use Given/When/Then
+        - Complete: no placeholders or TBDs
+
+      Token count: target 900–1600 tokens. If over 1600, scope down to the
+      primary goal and append deferred goals to the project deferred-work file.
+      Read implementation_artifacts from _bmad/bmm/config.yaml if the file
+      exists; otherwise use docs/dev. Append deferred goals to
+      <implementation_artifacts>/deferred-work.md.
+
+      Save spec.md in the run artifact scope.
+    skill_refs: []
+    produced_artifacts:
+      - scope: run
+        path: spec.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - AGENT_EXECUTION_FAILED
+        - AGENT_SESSION_RESUME_FAILED
+        - NODE_VALIDATION_FAILED
+    on_success:
+      transition: human-approve-plan
+
+  - id: human-approve-plan
+    title: Review and approve implementation spec
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-plan
+        path: spec.md
+        scope: run
+        required: true
+        transfer_mode: by_ref
+    instruction: |
+      Review spec.md. Verify:
+        - Intent is captured correctly (will be frozen after approval)
+        - All tasks have file paths and clear Create/Modify actions
+        - Acceptance criteria are testable (Given/When/Then)
+        - No TBDs or placeholders remain
+        - Scope looks right (900–1600 token range)
+
+      You may open spec.md in an editor and edit it directly before approving.
+      Consider running bmad-code-review or bmad-advanced-elicitation in a
+      separate session to avoid context bloat.
+
+      Approve to start implementation, or request rework with corrections.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-implement
+    on_rework:
+      transition: ai-plan
+    allowed_roles:
+      - FLOW_CONFIGURATOR
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STEP 3 — Implement
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-implement
+    title: Implement per approved spec
+    type: ai
+    routing_type: static
+    checkpoint_before_run: true
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-plan
+        path: spec.md
+        scope: run
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-review
+        path: review-report.md
+        scope: run
+        required: false
+        transfer_mode: by_ref
+    instruction: |
+      Read spec.md. If spec.md has a non-empty context: list in its frontmatter,
+      load those files before starting. When handing to a sub-agent, include them
+      in the sub-agent prompt so it has access to the referenced constraints.
+
+      Record baseline_commit (current HEAD, or NO_VCS) in spec.md frontmatter
+      before making any changes.
+
+      Change spec.md status to in-progress.
+
+      Hand spec.md to a sub-agent for implementation.
+      If no sub-agents available, implement directly.
+
+      Rules:
+        - Content inside <frozen-after-approval> in spec.md is read-only.
+        - Execute tasks in order. Mark each finished task [x] immediately.
+        - Brownfield: modify files in-place; never create _modified copies.
+        - Verify each step before marking [x].
+        - Do NOT push to remote.
+
+      Self-check before finishing: every task in ## Tasks & Acceptance must be [x].
+      If any is not done, finish it before proceeding.
+    skill_refs: []
+    produced_artifacts: []
+    expected_mutations: []
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - AGENT_EXECUTION_FAILED
+        - AGENT_SESSION_RESUME_FAILED
+    on_success:
+      transition: ai-review
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STEP 4 — Review
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-review
+    title: Adversarial review — 3 sub-agents
+    type: ai
+    routing_type: static
+    checkpoint_before_run: false
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-plan
+        path: spec.md
+        scope: run
+        required: true
+        transfer_mode: by_value
+    instruction: |
+      Change spec.md status to in-review.
+
+      Construct diff (tracked + untracked) since baseline_commit from spec.md
+      frontmatter. If baseline_commit is missing or NO_VCS, use best effort.
+      Do NOT run git add.
+
+      Run three reviews without conversation context. If sub-agents are available,
+      launch them in parallel (same model capability as current session);
+      otherwise perform each review inline sequentially in isolated reasoning
+      passes — in either case, no shared context between reviewers:
+        1. Blind hunter — diff only, no spec, no project access.
+           Invoke via bmad-review-adversarial-general skill.
+        2. Edge case hunter — diff + read access to project.
+           Invoke via bmad-review-edge-case-hunter skill.
+        3. Acceptance auditor — diff + spec.md + project access.
+           Must read planning docs listed in spec.md frontmatter context.
+           Checks violations of ACs, rules, and principles.
+
+      Classify all findings (deduplicated):
+        - intent_gap: caused by change, spec intent incomplete — requires re-plan
+        - bad_spec: caused by change, spec should have been clearer — requires spec amend + re-implement
+        - patch: trivially fixable without human input — auto-fix now
+        - defer: pre-existing issue not caused by this change
+        - reject: noise — drop silently
+
+      Auto-apply all patch findings.
+      Append defer findings to <implementation_artifacts>/deferred-work.md
+      (same value read above).
+
+      Write review-report.md with:
+        - Finding classification table (finding | category | action)
+        - Patches applied
+        - Items deferred
+        - Recommendation: approve | rework-spec | rework-intent
+
+      If intent_gap or bad_spec findings exist: recommendation is rework-* even
+      if patches were auto-applied. If specLoopIteration > 5, HALT and escalate.
+
+      Save review-report.md in the run artifact scope.
+    skill_refs: []
+    produced_artifacts:
+      - scope: run
+        path: review-report.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - AGENT_EXECUTION_FAILED
+        - AGENT_SESSION_RESUME_FAILED
+        - NODE_VALIDATION_FAILED
+    on_success:
+      transition: human-approve-review
+
+  - id: human-approve-review
+    title: Review findings and approve
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-review
+        path: review-report.md
+        scope: run
+        required: true
+        transfer_mode: by_ref
+    instruction: |
+      Open review-report.md. The AI has:
+        - Applied trivial patches automatically
+        - Deferred pre-existing issues to deferred-work.md
+        - Classified remaining findings
+
+      Recommendation legend:
+        "approve"        — no blocking issues. Approve to proceed to presentation.
+        "rework-spec"    — bad_spec findings: spec sections outside the frozen block
+                           will be amended and code re-derived. Request rework.
+        "rework-intent"  — intent_gap findings: code will be reverted, re-planning
+                           starts from scratch. Add corrections in rework comment.
+
+      Approve to proceed to final presentation, or request rework.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-present
+    on_rework:
+      transition: ai-route-rework
+    allowed_roles:
+      - FLOW_CONFIGURATOR
+
+  - id: ai-route-rework
+    title: Route rework — bad_spec vs intent_gap
+    type: ai
+    routing_type: dynamic
+    checkpoint_before_run: true
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-review
+        path: review-report.md
+        scope: run
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-plan
+        path: spec.md
+        scope: run
+        required: true
+        transfer_mode: by_value
+    instruction: |
+      Read review-report.md and determine the blocking finding category.
+
+      PATH A — "rework-spec" (bad_spec findings):
+        1. Revert all code changes made since baseline_commit (git checkout HEAD -- .
+           or equivalent). Do NOT revert spec.md itself.
+        2. Extract KEEP instructions from the diff: positive elements that worked well
+           and must survive re-derivation.
+        3. Read ## Spec Change Log in spec.md. Amend ONLY the non-frozen sections that
+           contain the root cause (never touch anything inside <frozen-after-approval>).
+           Append a Spec Change Log entry: triggering finding, what was amended, the
+           known-bad state avoided, and KEEP instructions.
+        4. In step-summary.json set: route = "on_bad_spec"
+
+      PATH B — "rework-intent" (intent_gap findings):
+        1. Revert all code changes made since baseline_commit.
+        2. In step-summary.json set: route = "on_bad_intent"
+
+      Do not mix the two paths. The recommendation in review-report.md is authoritative.
+    skill_refs: []
+    produced_artifacts: []
+    expected_mutations: []
+    on_bad_spec:
+      transition: ai-implement
+      max_loop_count: 10
+      keep_changes: true
+      session_policy: new_session
+    on_bad_intent:
+      transition: ai-plan
+      max_loop_count: 10
+      keep_changes: true
+      session_policy: new_session
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STEP 5 — Present
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-present
+    title: Generate review order, commit, and present
+    type: ai
+    routing_type: static
+    checkpoint_before_run: false
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-plan
+        path: spec.md
+        scope: run
+        required: true
+        transfer_mode: by_value
+      - type: artifact_ref
+        node_id: ai-review
+        path: review-report.md
+        scope: run
+        required: true
+        transfer_mode: by_value
+    instruction: |
+      Change spec.md status to done.
+
+      Construct diff since baseline_commit. Append "## Suggested Review Order"
+      to spec.md after the last existing section:
+        - Order stops by concern, not by file
+        - Lead with the single highest-leverage entry point
+        - Inside each concern: most important → supporting
+        - End with peripherals (tests, config, types)
+        - Each stop: spec-file-relative clickable link (path:line format) +
+          one ultra-concise framing line (≤15 words)
+        - Format: framing first, link on next indented line
+
+      Commit: if VCS available and tree is dirty, create a local commit with
+      a conventional message derived from the spec title.
+
+      Open spec in editor:
+        code -r "{repo-root}" "{spec-file}"
+        If code is unavailable, print the CWD-relative spec file path instead.
+
+      Display summary in conversation output:
+        - Commit hash (if created)
+        - List of changed files with one-line descriptions (CWD-relative :line format)
+        - Review findings breakdown: patches applied / deferred / rejected
+        - Note that spec is open in editor with Suggested Review Order
+        - Navigation tip: "Ctrl+click (Cmd+click on macOS) links in Suggested Review Order"
+
+      Offer to push and/or create a pull request.
+
+      Do NOT auto-push.
+    skill_refs: []
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: terminal-complete
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Terminal
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: terminal-complete
+    title: Workflow complete
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
