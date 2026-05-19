@@ -17,54 +17,68 @@ rule_refs: []
 nodes:
 
   # ════════════════════════════════════════════════════════════════════════════
-  # STEP 1 — Clarify and Route
+  # ШАГ 1 — Уточнение намерения
   # ════════════════════════════════════════════════════════════════════════════
 
   - id: ai-clarify-and-route
-    title: Clarify intent and check VCS state
+    title: Уточнить намерение и проверить состояние VCS
     type: ai
     routing_type: static
     checkpoint_before_run: false
     execution_context: []
     instruction: |
-      Analyze the user intent. Perform these checks in order:
+      <#assign humanClarifyIntent = step["human-clarify-intent"]!{} />
+      <#if humanClarifyIntent.rework_instruction?has_content && (humanClarifyIntent.keep_changes!false)>
+        Исправь: ${humanClarifyIntent.rework_instruction}
+      <#else>
+     
 
-      1. Planning artifacts scan. Read implementation_artifacts and
-         planning_artifacts from _bmad/bmm/config.yaml if it exists (defaults:
-         _bmad-output/implementation-artifacts and _bmad-output/planning-artifacts).
-         Scan planning_artifacts for files matching:
-           - *prd*        — product requirements and success criteria
-           - *architecture* — technical design decisions and constraints
-           - *ux*         — UX and interaction design
-           - *epic*       — feature breakdown into stories
-           - *brief*      — project vision and scope
-         Load selectively — only files relevant to the current intent.
-         Record which docs were loaded under "Planning context" in clarification.md.
+      Проанализируй намерение пользователя ( <#if (run.feature_request)?? && run.feature_request?has_content>
+      ${run.feature_request}
+      </#if>). 
+      Выполни проверки по порядку:
 
-      2. Active spec scan. List implementation artifacts (draft / ready-for-dev /
-         in-progress / in-review specs). If found, list them in clarification.md
-         and ask the user which to resume (or [N] for new intent).
+      1. Сканирование артефактов планирования. Прочитай implementation_artifacts и
+         planning_artifacts из _bmad/bmm/config.yaml, если файл существует (по умолчанию:
+         _bmad-output/implementation-artifacts и _bmad-output/planning-artifacts).
+         Найди в planning_artifacts файлы, соответствующие:
+           - *prd*          — требования к продукту и критерии успеха
+           - *architecture* — технические решения и ограничения
+           - *ux*           — UX и дизайн взаимодействия
+           - *epic*         — разбивка фич на истории
+           - *brief*        — видение и скоп проекта
+         Загружай избирательно — только документы, релевантные текущему намерению.
+         Зафиксируй загруженные документы в clarification.md в разделе "Контекст планирования".
 
-      3. Multi-goal check. If the intent contains >= 2 independently shippable
-         goals (each could be reviewed, tested, and merged as a separate PR),
-         list them and ask the user to choose one to tackle first. Append deferred
-         goals to clarification.md under "Deferred goals".
+      2. Сканирование активных спеков. Найди артефакты реализации (спеки со статусом
+         draft / ready-for-dev / in-progress / in-review). Если найдены — перечисли их
+         в clarification.md и спроси пользователя, какой возобновить (или [N] для новой задачи).
 
-      4. VCS sanity check. Is the working tree clean? Does the current branch
-         name match the intent? Record findings under "VCS state" in clarification.md.
+      3. Проверка нескольких целей. Если намерение содержит >= 2 независимо поставляемые
+         цели (каждую можно проревьювить, протестировать и смержить отдельным PR) —
+         перечисли их и попроси пользователя выбрать первую для реализации.
+         Отложенные цели добавь в clarification.md в раздел "Отложенные цели".
 
-      5. Questions. If anything in the intent is ambiguous, write questions
-         under "Questions" in clarification.md using this format:
+      4. Проверка VCS. Чистое ли рабочее дерево? Соответствует ли имя текущей ветки
+         намерению? Зафиксируй выводы в clarification.md в разделе "Состояние VCS".
 
-         **N. <question text>**
-         - [ ] <option A>
-         - [ ] <option B>
-         - [ ] Свой вариант: ___/
+      5. Вопросы. Если что-то в намерении неоднозначно, запиши вопросы в clarification.md
+         в разделе "Вопросы" в следующем формате:
 
-         Always include "Свой вариант: ___" as the last option for every question.
-         If intent is already clear, write "No questions — ready to plan." instead.
+         **N. <текст вопроса>**
+         - [ ] <вариант А>
+         - [ ] <вариант Б>
+         - [ ] Свой вариант: ___
 
-      Save clarification.md in the run artifact scope.
+         Всегда добавляй "Свой вариант: ___" как последний вариант для каждого вопроса.
+         Если намерение уже понятно — напиши "Вопросов нет — готов к планированию."
+
+      Сохрани clarification.md в скопе артефактов run.
+
+      <#if humanClarifyIntent.rework_instruction?has_content>
+      ВАЖНО! При выполнении инструкции учти следующее: ${humanClarifyIntent.rework_instruction}
+      </#if>
+      </#if>
     skill_refs: []
     produced_artifacts:
       - scope: run
@@ -82,7 +96,7 @@ nodes:
       transition: human-clarify-intent
 
   - id: human-clarify-intent
-    title: Answer clarification questions and confirm intent
+    title: Ответить на уточняющие вопросы и подтвердить намерение
     type: human_input
     execution_context:
       - type: artifact_ref
@@ -93,15 +107,15 @@ nodes:
         modifiable: true
         transfer_mode: by_ref
     instruction: |
-      Open clarification.md and review the AI's output.
+      Открой clarification.md и ознакомься с выводами ИИ.
 
-      - If questions are listed: fill in your answers directly in the file.
-      - If active specs were listed: indicate which to resume (or write "new").
-      - If multiple goals were detected: confirm the first goal to tackle.
-      - If VCS concerns were raised: confirm or explain the branch state.
-      - If "No questions": just click Submit.
+      - Если есть вопросы — заполни ответы прямо в файле.
+      - Если найдены активные спеки — укажи, какой возобновить (или напиши "новый").
+      - Если обнаружено несколько целей — подтверди первую для реализации.
+      - Если есть замечания по VCS — подтверди или объясни состояние ветки.
+      - Если "Вопросов нет" — просто нажми Submit.
 
-      You may also add constraints or context the AI missed.
+      Можешь добавить ограничения или контекст, который ИИ упустил.
     produced_artifacts:
       - scope: run
         path: clarification.md
@@ -111,15 +125,13 @@ nodes:
       transition: ai-plan
     on_rework:
       transition: ai-clarify-and-route
-    allowed_roles:
-      - FLOW_CONFIGURATOR
 
   # ════════════════════════════════════════════════════════════════════════════
-  # STEP 2 — Plan
+  # ШАГ 2 — Планирование
   # ════════════════════════════════════════════════════════════════════════════
 
   - id: ai-plan
-    title: Investigate codebase and write implementation spec
+    title: Исследовать кодовую базу и написать спек реализации
     type: ai
     routing_type: static
     checkpoint_before_run: true
@@ -131,44 +143,52 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
-      Investigate the codebase to understand the impact area.
-      Isolate deep exploration in sub-agents to prevent context snowballing.
+      <#assign humanApprovePlan = step["human-approve-plan"]!{} />
+      <#if humanApprovePlan.rework_instruction?has_content && (humanApprovePlan.keep_changes!false)>
+      Исправь: ${humanApprovePlan.rework_instruction}
+      <#else>
+      Исследуй кодовую базу, чтобы понять зону влияния изменений.
+      Глубокое исследование выноси в суб-агентов, чтобы избежать раздувания контекста.
 
-      Load planning docs referenced in clarification.md under "Planning context".
-      Use them to extract constraints, requirements, and design decisions relevant
-      to the current intent — prefer these over guessing from code alone.
+      Загрузи документы планирования, указанные в clarification.md в разделе "Контекст планирования".
+      Извлеки из них ограничения, требования и архитектурные решения, релевантные текущему намерению —
+      опирайся на них, а не угадывай из кода.
 
-      Fill the spec template and write it to spec.md:
+      Заполни шаблон спека и сохрани в spec.md:
         Frontmatter:
           - title, type, created, status: draft
-          - context: list of planning docs referenced (PRD, architecture, etc.)
-        ## Intent
-          - Problem: one sentence
-          - Approach: one paragraph
-          - Constraints: from clarification.md and codebase
-        ## Tasks & Acceptance
-          - Ordered by dependency (migrations first, tests after each layer)
-          - Each task: file path, action (Create/Modify), Given/When/Then ACs
-        ## Code Map
-          - Files to create or modify with one-line descriptions
-        ## Design Notes
-          - Key decisions and trade-offs
-        ## Spec Change Log
-          - Empty initially
+          - context: список документов планирования (PRD, архитектура и т.д.)
+        ## Намерение
+          - Проблема: одно предложение
+          - Подход: один абзац
+          - Ограничения: из clarification.md и кодовой базы
+        ## Задачи и критерии приёмки
+          - Упорядочены по зависимостям (миграции первыми, тесты после каждого слоя)
+          - Каждая задача: путь к файлу, действие (Create/Modify), критерии Given/When/Then
+        ## Карта кода
+          - Файлы для создания или изменения с однострочными описаниями
+        ## Технические решения
+          - Ключевые решения и компромиссы
+        ## Журнал изменений спека
+          - Изначально пустой
 
-      Self-review against Ready-for-Dev standard:
-        - Actionable: every task has file path and specific action
-        - Logical: tasks ordered by dependency
-        - Testable: all ACs use Given/When/Then
-        - Complete: no placeholders or TBDs
+      Самопроверка по стандарту "Готов к разработке":
+        - Actionable: у каждой задачи есть путь к файлу и конкретное действие
+        - Логичность: задачи упорядочены по зависимостям
+        - Проверяемость: все критерии используют Given/When/Then
+        - Полнота: нет плейсхолдеров и TBD
 
-      Token count: target 900–1600 tokens. If over 1600, scope down to the
-      primary goal and append deferred goals to the project deferred-work file.
-      Read implementation_artifacts from _bmad/bmm/config.yaml if the file
-      exists; otherwise use docs/dev. Append deferred goals to
-      <implementation_artifacts>/deferred-work.md.
+      Целевой объём: 900–1600 токенов. Если больше 1600 — сократи до основной цели
+      и добавь отложенные цели в файл deferred-work проекта.
+      Путь к implementation_artifacts читай из _bmad/bmm/config.yaml, если файл есть;
+      иначе используй docs/dev. Добавляй отложенные цели в <implementation_artifacts>/deferred-work.md.
 
-      Save spec.md in the run artifact scope.
+      Сохрани spec.md в скопе артефактов run.
+
+      <#if humanApprovePlan.rework_instruction?has_content>
+      ВАЖНО! При выполнении инструкции учти следующее: ${humanApprovePlan.rework_instruction}
+      </#if>
+      </#if>
     skill_refs: []
     produced_artifacts:
       - scope: run
@@ -186,7 +206,7 @@ nodes:
       transition: human-approve-plan
 
   - id: human-approve-plan
-    title: Review and approve implementation spec
+    title: Проверить и утвердить спек реализации
     type: human_approval
     execution_context:
       - type: artifact_ref
@@ -196,33 +216,31 @@ nodes:
         required: true
         transfer_mode: by_ref
     instruction: |
-      Review spec.md. Verify:
-        - Intent is captured correctly (will be frozen after approval)
-        - All tasks have file paths and clear Create/Modify actions
-        - Acceptance criteria are testable (Given/When/Then)
-        - No TBDs or placeholders remain
-        - Scope looks right (900–1600 token range)
+      Проверь spec.md. Убедись, что:
+        - Намерение зафиксировано корректно (после апрува будет заморожено)
+        - У всех задач есть пути к файлам и чёткие действия Create/Modify
+        - Критерии приёмки проверяемы (Given/When/Then)
+        - Нет TBD и плейсхолдеров
+        - Скоп разумный (диапазон 900–1600 токенов)
 
-      You may open spec.md in an editor and edit it directly before approving.
-      Consider running bmad-code-review or bmad-advanced-elicitation in a
-      separate session to avoid context bloat.
+      Можешь открыть spec.md в редакторе и отредактировать напрямую перед апрувом.
+      Для глубокой проверки запусти bmad-code-review или bmad-advanced-elicitation
+      в отдельной сессии, чтобы не раздувать контекст.
 
-      Approve to start implementation, or request rework with corrections.
+      Апрувь для начала реализации или верни на доработку с конкретными замечаниями.
     produced_artifacts: []
     expected_mutations: []
     on_approve:
       transition: ai-implement
     on_rework:
       transition: ai-plan
-    allowed_roles:
-      - FLOW_CONFIGURATOR
 
   # ════════════════════════════════════════════════════════════════════════════
-  # STEP 3 — Implement
+  # ШАГ 3 — Реализация
   # ════════════════════════════════════════════════════════════════════════════
 
   - id: ai-implement
-    title: Implement per approved spec
+    title: Реализовать по утверждённому спеку
     type: ai
     routing_type: static
     checkpoint_before_run: true
@@ -240,27 +258,27 @@ nodes:
         required: false
         transfer_mode: by_ref
     instruction: |
-      Read spec.md. If spec.md has a non-empty context: list in its frontmatter,
-      load those files before starting. When handing to a sub-agent, include them
-      in the sub-agent prompt so it has access to the referenced constraints.
+      Прочитай spec.md. Если в frontmatter spec.md есть непустой context — загрузи
+      эти файлы перед началом. При передаче суб-агенту включи их в промпт, чтобы
+      суб-агент имел доступ к зафиксированным ограничениям.
 
-      Record baseline_commit (current HEAD, or NO_VCS) in spec.md frontmatter
-      before making any changes.
+      Запиши baseline_commit (текущий HEAD или NO_VCS) во frontmatter spec.md
+      до внесения любых изменений.
 
-      Change spec.md status to in-progress.
+      Измени статус spec.md на in-progress.
 
-      Hand spec.md to a sub-agent for implementation.
-      If no sub-agents available, implement directly.
+      Передай spec.md суб-агенту для реализации.
+      Если суб-агенты недоступны — реализуй напрямую.
 
-      Rules:
-        - Content inside <frozen-after-approval> in spec.md is read-only.
-        - Execute tasks in order. Mark each finished task [x] immediately.
-        - Brownfield: modify files in-place; never create _modified copies.
-        - Verify each step before marking [x].
-        - Do NOT push to remote.
+      Правила:
+        - Содержимое внутри <frozen-after-approval> в spec.md — только для чтения.
+        - Выполняй задачи по порядку. Отмечай каждую выполненную задачу [x] сразу.
+        - Brownfield: изменяй файлы на месте; никогда не создавай копии с суффиксами _modified и т.п.
+        - Проверяй каждый шаг перед тем, как отметить [x].
+        - НЕ пушь в remote.
 
-      Self-check before finishing: every task in ## Tasks & Acceptance must be [x].
-      If any is not done, finish it before proceeding.
+      Самопроверка перед завершением: все задачи в ## Задачи и критерии приёмки
+      должны быть [x]. Если что-то не выполнено — доделай перед продолжением.
     skill_refs: []
     produced_artifacts: []
     expected_mutations: []
@@ -273,11 +291,11 @@ nodes:
       transition: ai-review
 
   # ════════════════════════════════════════════════════════════════════════════
-  # STEP 4 — Review
+  # ШАГ 4 — Ревью
   # ════════════════════════════════════════════════════════════════════════════
 
   - id: ai-review
-    title: Adversarial review — 3 sub-agents
+    title: Adversarial ревью — 3 суб-агента
     type: ai
     routing_type: static
     checkpoint_before_run: false
@@ -289,45 +307,44 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
-      Change spec.md status to in-review.
+      Измени статус spec.md на in-review.
 
-      Construct diff (tracked + untracked) since baseline_commit from spec.md
-      frontmatter. If baseline_commit is missing or NO_VCS, use best effort.
-      Do NOT run git add.
+      Построй diff (tracked + untracked) с момента baseline_commit из frontmatter spec.md.
+      Если baseline_commit отсутствует или NO_VCS — используй best effort.
+      НЕ запускай git add.
 
-      Run three reviews without conversation context. If sub-agents are available,
-      launch them in parallel (same model capability as current session);
-      otherwise perform each review inline sequentially in isolated reasoning
-      passes — in either case, no shared context between reviewers:
-        1. Blind hunter — diff only, no spec, no project access.
-           Invoke via bmad-review-adversarial-general skill.
-        2. Edge case hunter — diff + read access to project.
-           Invoke via bmad-review-edge-case-hunter skill.
-        3. Acceptance auditor — diff + spec.md + project access.
-           Must read planning docs listed in spec.md frontmatter context.
-           Checks violations of ACs, rules, and principles.
+      Запусти три ревью без общего контекста разговора. Если доступны суб-агенты —
+      запусти параллельно (той же мощности модели, что текущая сессия); иначе выполни
+      каждое ревью последовательно в изолированных reasoning-проходах. В обоих случаях
+      контекст между ревьюерами не разделяется:
+        1. Слепой охотник — только diff, без спека, без доступа к проекту.
+           Запустить через скил bmad-review-adversarial-general.
+        2. Охотник за граничными случаями — diff + доступ к проекту на чтение.
+           Запустить через скил bmad-review-edge-case-hunter.
+        3. Аудитор приёмки — diff + spec.md + доступ к проекту.
+           Обязан прочитать документы планирования из раздела context в frontmatter spec.md.
+           Проверяет нарушения критериев приёмки, правил и принципов.
 
-      Classify all findings (deduplicated):
-        - intent_gap: caused by change, spec intent incomplete — requires re-plan
-        - bad_spec: caused by change, spec should have been clearer — requires spec amend + re-implement
-        - patch: trivially fixable without human input — auto-fix now
-        - defer: pre-existing issue not caused by this change
-        - reject: noise — drop silently
+      Классифицируй все находки (дедуплицированные):
+        - intent_gap: вызвано изменением, намерение в спеке неполное — требует переплан
+        - bad_spec: вызвано изменением, спек должен был быть чётче — требует правки спека + перереализацию
+        - patch: тривиально исправимо без участия человека — исправь сейчас
+        - defer: существующая проблема, не вызванная этим изменением
+        - reject: шум — отбросить без упоминания
 
-      Auto-apply all patch findings.
-      Append defer findings to <implementation_artifacts>/deferred-work.md
-      (same value read above).
+      Авто-применяй все patch-находки.
+      Добавляй defer-находки в <implementation_artifacts>/deferred-work.md.
 
-      Write review-report.md with:
-        - Finding classification table (finding | category | action)
-        - Patches applied
-        - Items deferred
-        - Recommendation: approve | rework-spec | rework-intent
+      Запиши review-report.md с:
+        - Таблицей классификации находок (находка | категория | действие)
+        - Применёнными патчами
+        - Отложенными пунктами
+        - Рекомендацией: approve | rework-spec | rework-intent
 
-      If intent_gap or bad_spec findings exist: recommendation is rework-* even
-      if patches were auto-applied. If specLoopIteration > 5, HALT and escalate.
+      Если есть intent_gap или bad_spec находки — рекомендация rework-*, даже если патчи
+      уже применены. Если specLoopIteration > 5 — СТОП, эскалируй к человеку.
 
-      Save review-report.md in the run artifact scope.
+      Сохрани review-report.md в скопе артефактов run.
     skill_refs: []
     produced_artifacts:
       - scope: run
@@ -345,7 +362,7 @@ nodes:
       transition: human-approve-review
 
   - id: human-approve-review
-    title: Review findings and approve
+    title: Проверить находки ревью и принять решение
     type: human_approval
     execution_context:
       - type: artifact_ref
@@ -355,30 +372,28 @@ nodes:
         required: true
         transfer_mode: by_ref
     instruction: |
-      Open review-report.md. The AI has:
-        - Applied trivial patches automatically
-        - Deferred pre-existing issues to deferred-work.md
-        - Classified remaining findings
+      Открой review-report.md. ИИ уже:
+        - Применил тривиальные патчи автоматически
+        - Отложил существующие проблемы в deferred-work.md
+        - Классифицировал остальные находки
 
-      Recommendation legend:
-        "approve"        — no blocking issues. Approve to proceed to presentation.
-        "rework-spec"    — bad_spec findings: spec sections outside the frozen block
-                           will be amended and code re-derived. Request rework.
-        "rework-intent"  — intent_gap findings: code will be reverted, re-planning
-                           starts from scratch. Add corrections in rework comment.
+      Расшифровка рекомендаций:
+        "approve"        — блокирующих проблем нет. Апрувь для перехода к презентации.
+        "rework-spec"    — находки bad_spec: разделы спека вне замороженного блока
+                           будут исправлены, код перевыведен заново. Верни на доработку.
+        "rework-intent"  — находки intent_gap: код будет откачен, планирование начнётся
+                           с нуля. Добавь правки в комментарий к доработке.
 
-      Approve to proceed to final presentation, or request rework.
+      Апрувь для перехода к финальной презентации или верни на доработку.
     produced_artifacts: []
     expected_mutations: []
     on_approve:
       transition: ai-present
     on_rework:
       transition: ai-route-rework
-    allowed_roles:
-      - FLOW_CONFIGURATOR
 
   - id: ai-route-rework
-    title: Route rework — bad_spec vs intent_gap
+    title: Маршрутизация доработки — bad_spec или intent_gap
     type: ai
     routing_type: dynamic
     checkpoint_before_run: true
@@ -396,44 +411,45 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
-      Read review-report.md and determine the blocking finding category.
+      Прочитай review-report.md и определи категорию блокирующей находки.
 
-      PATH A — "rework-spec" (bad_spec findings):
-        1. Revert all code changes made since baseline_commit (git checkout HEAD -- .
-           or equivalent). Do NOT revert spec.md itself.
-        2. Extract KEEP instructions from the diff: positive elements that worked well
-           and must survive re-derivation.
-        3. Read ## Spec Change Log in spec.md. Amend ONLY the non-frozen sections that
-           contain the root cause (never touch anything inside <frozen-after-approval>).
-           Append a Spec Change Log entry: triggering finding, what was amended, the
-           known-bad state avoided, and KEEP instructions.
-        4. In step-summary.json set: route = "on_bad_spec"
+      ПУТЬ А — "rework-spec" (находки bad_spec):
+        1. Извлеки KEEP-инструкции из diff: положительные элементы, которые сработали
+           и должны сохраниться при перевыведении.
+        2. Прочитай ## Журнал изменений спека в spec.md. Исправь ТОЛЬКО незамороженные
+           разделы, содержащие первопричину (ничего внутри <frozen-after-approval> не трогать).
+           Добавь запись в журнал: triggering-находка, что исправлено, избегаемое плохое
+           состояние и KEEP-инструкции.
 
-      PATH B — "rework-intent" (intent_gap findings):
-        1. Revert all code changes made since baseline_commit.
-        2. In step-summary.json set: route = "on_bad_intent"
+      ПУТЬ Б — "rework-intent" (находки intent_gap):
 
-      Do not mix the two paths. The recommendation in review-report.md is authoritative.
+      Не смешивай пути. Рекомендация в review-report.md — авторитетна.
+
+      После выполнения выбранного пути добавь в step-summary.json:
+        ПУТЬ А: {  "route": "on_bad_spec",   "actions": ["откат изменений кода", "правка разделов спека", "запись в журнал изменений"] }
+        ПУТЬ Б: {  "route": "on_bad_intent", "actions": ["откат изменений кода"] }
+
+      Поле "route" в step-summary.json обязательно!
     skill_refs: []
     produced_artifacts: []
     expected_mutations: []
     on_bad_spec:
       transition: ai-implement
       max_loop_count: 10
-      keep_changes: true
+      keep_changes: false
       session_policy: new_session
     on_bad_intent:
       transition: ai-plan
       max_loop_count: 10
-      keep_changes: true
+      keep_changes: false
       session_policy: new_session
 
   # ════════════════════════════════════════════════════════════════════════════
-  # STEP 5 — Present
+  # ШАГ 5 — Презентация
   # ════════════════════════════════════════════════════════════════════════════
 
   - id: ai-present
-    title: Generate review order, commit, and present
+    title: Сформировать порядок ревью, закоммитить и презентовать
     type: ai
     routing_type: static
     checkpoint_before_run: false
@@ -451,35 +467,35 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
-      Change spec.md status to done.
+      Измени статус spec.md на done.
 
-      Construct diff since baseline_commit. Append "## Suggested Review Order"
-      to spec.md after the last existing section:
-        - Order stops by concern, not by file
-        - Lead with the single highest-leverage entry point
-        - Inside each concern: most important → supporting
-        - End with peripherals (tests, config, types)
-        - Each stop: spec-file-relative clickable link (path:line format) +
-          one ultra-concise framing line (≤15 words)
-        - Format: framing first, link on next indented line
+      Построй diff с момента baseline_commit. Добавь раздел "## Рекомендуемый порядок ревью"
+      в spec.md после последнего существующего раздела:
+        - Точки осмотра упорядочены по смыслу, не по файлу
+        - Начинай с самой важной точки входа
+        - Внутри каждой темы: самое важное → вспомогательное
+        - Заканчивай периферией (тесты, конфиг, типы)
+        - Каждая точка: кликабельная ссылка (формат path:line относительно директории спека) +
+          одна ультракраткая формулировка (≤15 слов)
+        - Формат: формулировка первой, ссылка на следующей строке с отступом
 
-      Commit: if VCS available and tree is dirty, create a local commit with
-      a conventional message derived from the spec title.
+      Коммит: если VCS доступен и дерево грязное — создай локальный коммит
+      с conventional-сообщением из заголовка спека.
 
-      Open spec in editor:
+      Открой спек в редакторе:
         code -r "{repo-root}" "{spec-file}"
-        If code is unavailable, print the CWD-relative spec file path instead.
+        Если code недоступен — выведи путь к спеку относительно CWD.
 
-      Display summary in conversation output:
-        - Commit hash (if created)
-        - List of changed files with one-line descriptions (CWD-relative :line format)
-        - Review findings breakdown: patches applied / deferred / rejected
-        - Note that spec is open in editor with Suggested Review Order
-        - Navigation tip: "Ctrl+click (Cmd+click on macOS) links in Suggested Review Order"
+      Выведи в чат:
+        - Хэш коммита (если создан)
+        - Список изменённых файлов с однострочными описаниями (формат CWD-relative :line)
+        - Разбивка находок ревью: применено патчей / отложено / отброшено
+        - Примечание, что спек открыт в редакторе с порядком ревью
+        - Подсказка по навигации: "Ctrl+click (Cmd+click на macOS) по ссылкам в порядке ревью"
 
-      Offer to push and/or create a pull request.
+      Предложи запушить и/или создать pull request.
 
-      Do NOT auto-push.
+      НЕ пушь автоматически.
     skill_refs: []
     produced_artifacts: []
     expected_mutations: []
@@ -487,11 +503,11 @@ nodes:
       transition: terminal-complete
 
   # ════════════════════════════════════════════════════════════════════════════
-  # Terminal
+  # Терминал
   # ════════════════════════════════════════════════════════════════════════════
 
   - id: terminal-complete
-    title: Workflow complete
+    title: Флоу завершён
     type: terminal
     execution_context: []
     produced_artifacts: []
