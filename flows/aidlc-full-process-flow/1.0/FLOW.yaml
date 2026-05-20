@@ -24,7 +24,6 @@ nodes:
     title: Analyse request and generate clarifying questions
     type: ai
     routing_type: static
-    checkpoint_before_run: false
     execution_context: []
     instruction: |
       <#assign humanAnswerQuestions = step["human-answer-questions"]!{} />
@@ -98,7 +97,6 @@ nodes:
     title: Generate requirements document
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: human-answer-questions
@@ -174,7 +172,6 @@ nodes:
     title: Generate user story planning questions
     type: ai
     routing_type: static
-    checkpoint_before_run: false
     execution_context: []
     instruction: |
       <#assign humanAnswerStoryQuestions = step["human-answer-story-questions"]!{} />
@@ -243,7 +240,6 @@ nodes:
     title: Generate user stories and personas
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: human-answer-story-questions
@@ -316,7 +312,6 @@ nodes:
     title: Generate application design clarification questions
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: ai-user-stories-generate
@@ -390,7 +385,6 @@ nodes:
     title: Generate application design document
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: human-answer-design-questions
@@ -461,7 +455,6 @@ nodes:
     title: Generate units decomposition questions
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: ai-application-design-artifacts
@@ -535,7 +528,6 @@ nodes:
     title: Generate units decomposition artifacts
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: human-answer-units-questions
@@ -622,7 +614,6 @@ nodes:
     title: Create workflow execution plan
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: ai-units-decomposition-artifacts
@@ -704,7 +695,6 @@ nodes:
     title: Design business logic and domain model
     type: ai
     routing_type: static
-    checkpoint_before_run: false
     execution_context: []
     instruction: |
       <#assign approveFunctionalDesign = step["approve-functional-design"]!{} />
@@ -783,7 +773,6 @@ nodes:
     title: Assess non-functional requirements and technology stack
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: ai-functional-design
@@ -865,7 +854,6 @@ nodes:
     title: Create code generation plan
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: ai-functional-design
@@ -948,7 +936,6 @@ nodes:
     title: Generate code per approved plan
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: ai-code-generation-plan
@@ -1005,7 +992,6 @@ nodes:
     title: Generate build and test instructions
     type: ai
     routing_type: static
-    checkpoint_before_run: false
     execution_context: []
     instruction: |
       <#assign approveBuildAndTest = step["approve-build-and-test"]!{} />

@@ -24,7 +24,6 @@ nodes:
     title: Уточнить намерение и проверить состояние VCS
     type: ai
     routing_type: static
-    checkpoint_before_run: false
     execution_context: []
     instruction: |
       <#assign humanClarifyIntent = step["human-clarify-intent"]!{} />
@@ -134,7 +133,6 @@ nodes:
     title: Исследовать кодовую базу и написать спек реализации
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: human-clarify-intent
@@ -243,7 +241,6 @@ nodes:
     title: Реализовать по утверждённому спеку
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: ai-plan
@@ -298,7 +295,6 @@ nodes:
     title: Adversarial ревью — 3 суб-агента
     type: ai
     routing_type: static
-    checkpoint_before_run: false
     execution_context:
       - type: artifact_ref
         node_id: ai-plan
@@ -396,7 +392,6 @@ nodes:
     title: Маршрутизация доработки — bad_spec или intent_gap
     type: ai
     routing_type: dynamic
-    checkpoint_before_run: true
     execution_context:
       - type: artifact_ref
         node_id: ai-review
@@ -452,7 +447,6 @@ nodes:
     title: Сформировать порядок ревью, закоммитить и презентовать
     type: ai
     routing_type: static
-    checkpoint_before_run: false
     execution_context:
       - type: artifact_ref
         node_id: ai-plan

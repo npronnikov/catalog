@@ -18,7 +18,6 @@ nodes:
     title: Генерация уточняющих вопросов
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context:
       - type: user_request
         required: true

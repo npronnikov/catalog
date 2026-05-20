@@ -18,7 +18,6 @@ nodes:
     title: Analyze project and generate C4 architecture
     type: ai
     routing_type: static
-    checkpoint_before_run: true
     execution_context: []
     instruction: |
       <#assign approveArchitecture = step["approve-architecture"]!{} />

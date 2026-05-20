@@ -36,7 +36,6 @@ nodes:
       Важно: при выполнении инструкции учти следующее: ${humanFillForm.rework_instruction}
       </#if>
       </#if>
-    checkpoint_before_run: true
     skill_refs:
       - generate-form-questions@1.0
     produced_artifacts:

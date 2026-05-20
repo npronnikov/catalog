@@ -21,7 +21,6 @@ nodes:
     title: Reverse-engineer existing codebase
     type: ai
     routing_type: static
-    checkpoint_before_run: false
     execution_context: []
     instruction: |
       <#assign approveReverseEngineering = step["approve-reverse-engineering"]!{} />
