@@ -1,0 +1,23 @@
+entity_type: skill
+id: speckit-tasks
+version: "1.0"
+canonical_name: speckit-tasks@1.0
+display_name: "SpecKit: Декомпозиция задач"
+description: >
+  Генерирует упорядоченный по зависимостям список задач на основе plan.md и spec.md.
+  Задачи организованы по пользовательским историям, имеют ID (T001…), метки [P]
+  для параллельных задач и метки [US1] по историям. Каждая фаза независимо
+  тестируема. Результат: tasks.md готовый к немедленному исполнению.
+coding_agent: claude
+team_code: SpecKit
+platform_code: BACK
+tags:
+  - speckit
+  - sdd
+  - tasks
+  - decomposition
+  - planning
+skill_kind: analysis
+scope: organization
+approval_status: draft
+lifecycle_status: active

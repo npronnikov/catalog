@@ -1,0 +1,23 @@
+entity_type: skill
+id: speckit-constitution
+version: "1.0"
+canonical_name: speckit-constitution@1.0
+display_name: "SpecKit: Конституция проекта"
+description: >
+  Создаёт или обновляет governance-документ проекта — конституцию с
+  неизменяемыми принципами разработки (library-first, test-first, simplicity).
+  Каждый принцип содержит декларативное правило и обоснование.
+  Конституция версионируется по semver и служит источником истины
+  для всех последующих артефактов SDD-цикла.
+coding_agent: claude
+team_code: SpecKit
+platform_code: BACK
+tags:
+  - speckit
+  - sdd
+  - governance
+  - constitution
+skill_kind: analysis
+scope: organization
+approval_status: draft
+lifecycle_status: active

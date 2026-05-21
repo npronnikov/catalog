@@ -1,0 +1,23 @@
+entity_type: skill
+id: speckit-checklist
+version: "1.0"
+canonical_name: speckit-checklist@1.0
+display_name: "SpecKit: Чеклист качества требований"
+description: >
+  Генерирует чеклист качества требований — "юнит-тесты для спецификации".
+  Проверяет полноту, чёткость, консистентность и измеримость требований,
+  а не поведение реализации. Результат: checklist.md с пунктами CHK001…CHKnnn
+  сгруппированными по измерениям качества.
+coding_agent: claude
+team_code: SpecKit
+platform_code: BACK
+tags:
+  - speckit
+  - sdd
+  - checklist
+  - quality
+  - requirements
+skill_kind: review
+scope: organization
+approval_status: draft
+lifecycle_status: active

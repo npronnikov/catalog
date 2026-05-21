@@ -1,0 +1,23 @@
+entity_type: skill
+id: speckit-analyze
+version: "1.0"
+canonical_name: speckit-analyze@1.0
+display_name: "SpecKit: Анализ консистентности артефактов"
+description: >
+  Кросс-артефактный анализ консистентности: spec.md ↔ plan.md ↔ tasks.md.
+  Обнаруживает дублирования, неоднозначности, пробелы покрытия требований,
+  нарушения конституции. Только чтение — не модифицирует файлы.
+  Результат: analysis-report.md с таблицей находок и метриками покрытия.
+coding_agent: claude
+team_code: SpecKit
+platform_code: BACK
+tags:
+  - speckit
+  - sdd
+  - analysis
+  - consistency
+  - quality
+skill_kind: review
+scope: organization
+approval_status: draft
+lifecycle_status: active
