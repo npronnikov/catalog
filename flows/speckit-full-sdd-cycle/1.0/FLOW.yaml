@@ -7,7 +7,7 @@ description: >
   спецификация → уточнение → анализ → чеклист → апрув спеки →
   технический план → декомпозиция задач → апрув задач →
   реализация → финальный акцепт.
-coding_agent: claude
+coding_agent: qwen
 start_node_id: ai-feature-input
 failure_node_id: terminal-complete
 fail_on_missing_declared_output: true

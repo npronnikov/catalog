@@ -8,7 +8,7 @@ description: >
   Задачи организованы по пользовательским историям, имеют ID (T001…), метки [P]
   для параллельных задач и метки [US1] по историям. Каждая фаза независимо
   тестируема. Результат: tasks.md готовый к немедленному исполнению.
-coding_agent: claude
+coding_agent: qwen
 team_code: SpecKit
 platform_code: BACK
 tags:

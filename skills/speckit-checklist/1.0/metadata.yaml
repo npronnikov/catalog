@@ -8,7 +8,7 @@ description: >
   Проверяет полноту, чёткость, консистентность и измеримость требований,
   а не поведение реализации. Результат: checklist.md с пунктами CHK001…CHKnnn
   сгруппированными по измерениям качества.
-coding_agent: claude
+coding_agent: qwen
 team_code: SpecKit
 platform_code: BACK
 tags:

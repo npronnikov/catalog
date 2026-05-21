@@ -8,7 +8,7 @@ description: >
   Обнаруживает дублирования, неоднозначности, пробелы покрытия требований,
   нарушения конституции. Только чтение — не модифицирует файлы.
   Результат: analysis-report.md с таблицей находок и метриками покрытия.
-coding_agent: claude
+coding_agent: qwen
 team_code: SpecKit
 platform_code: BACK
 tags:
