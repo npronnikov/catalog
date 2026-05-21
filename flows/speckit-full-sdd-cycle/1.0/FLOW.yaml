@@ -8,35 +8,40 @@ description: >
   технический план → декомпозиция задач → апрув задач →
   реализация → финальный акцепт.
 coding_agent: claude
-start_node_id: human-feature-input
+start_node_id: ai-feature-input
 failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
 
 nodes:
 
-  # ── Шаг 1: Описание фичи пользователем ───────────────────────────────────
-  - id: human-feature-input
-    title: Описание фичи
-    type: human_input
+  # ── Шаг 1: Формализация запроса фичи ─────────────────────────────────────
+  - id: ai-feature-input
+    title: Формализация описания фичи
+    type: ai
+    routing_type: static
     execution_context: []
     instruction: |
-      Опиши фичу, которую нужно разработать. Создай файл feature-request.md
-      и запиши в нём:
+      Изучи пользовательский запрос: ${run.feature_request}
+
+      Создай файл feature-request.md и запиши в нём:
 
       1. Что нужно сделать (краткое описание фичи)
       2. Зачем это нужно (бизнес-контекст, проблема которую решаем)
       3. Кто будет использовать (пользователи, роли, актёры)
       4. Любые известные ограничения, требования или исключения
-
-      Нажми Submit когда описание готово.
     produced_artifacts:
       - scope: run
         path: feature-request.md
         required: true
+        modifiable: false
     expected_mutations: []
-    on_submit:
+    on_success:
       transition: ai-constitution
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
 
   # ── Шаг 2: Создание конституции проекта ──────────────────────────────────
   - id: ai-constitution
@@ -45,7 +50,7 @@ nodes:
     routing_type: static
     execution_context:
       - type: artifact_ref
-        node_id: human-feature-input
+        node_id: ai-feature-input
         path: feature-request.md
         scope: run
         required: true
@@ -82,7 +87,7 @@ nodes:
     routing_type: static
     execution_context:
       - type: artifact_ref
-        node_id: human-feature-input
+        node_id: ai-feature-input
         path: feature-request.md
         scope: run
         required: true
