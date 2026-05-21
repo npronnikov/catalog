@@ -477,7 +477,11 @@ nodes:
     expected_mutations: []
     on_success:
       transition: approve-final
-
+    retry_policy:
+      attempts: 3
+      on_errors: 
+        - NODE_VALIDATION_FAILED
+        
   # ── Шаг 13: Финальный акцепт ──────────────────────────────────────────────
   - id: approve-final
     title: Финальный акцепт результата
@@ -500,9 +504,6 @@ nodes:
       transition: terminal-complete
     on_rework:
       transition: ai-implement
-      keep_changes: true
-      session_policy: resume_previous_session
-      max_loop_count: 3
 
   # ── Терминальная нода ─────────────────────────────────────────────────────
   - id: terminal-complete
