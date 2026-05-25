@@ -7,7 +7,7 @@ description: >
   и артефактов изменения → реализация → верификация → актуализация документации
   и архивирование. Каждый завершённый цикл оставляет актуальные openspec/specs/.
 coding_agent: claude
-start_node_id: human-describe-change
+start_node_id: ai-describe-change
 failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
@@ -19,16 +19,16 @@ nodes:
   # ШАГ 1 — Описание изменения
   # ════════════════════════════════════════════════════════════════════════════
 
-  - id: human-describe-change
-    title: Описание изменения
-    type: human_input
+  - id: ai-describe-change
+    title: Формализация описания изменения
+    type: ai
+    routing_type: static
     execution_context: []
     instruction: |
-      Опиши изменение которое хочешь сделать.
+      Изучи пользовательский запрос: ${run.feature_request}
 
-      Заполни файл change-request.md:
+      Создай файл change-request.md и запиши в нём:
 
-      ```markdown
       # Change Request
 
       ## Название изменения (kebab-case)
@@ -36,26 +36,25 @@ nodes:
       <change-name>:
 
       ## Что нужно сделать
-      <!-- Конкретное описание. Что добавить, изменить, исправить. -->
+      Конкретное описание из запроса пользователя.
 
       ## Зачем
-      <!-- Бизнес-контекст, проблема или возможность. -->
+      Бизнес-контекст, проблема или возможность из запроса.
 
       ## Дополнительный контекст
-      <!-- Ограничения, связанные компоненты, риски — всё что поможет агенту. -->
-      ```
-
-      Нажми Submit когда заполнишь.
+      Ограничения, связанные компоненты, риски — всё что упомянуто в запросе.
     produced_artifacts:
       - scope: run
         path: change-request.md
         required: true
         modifiable: false
     expected_mutations: []
-    on_submit:
+    on_success:
       transition: ai-explore
-    on_rework:
-      transition: human-describe-change
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
 
   # ════════════════════════════════════════════════════════════════════════════
   # ШАГ 2 — Исследование идеи и текущих спецификаций
@@ -67,7 +66,7 @@ nodes:
     routing_type: static
     execution_context:
       - type: artifact_ref
-        node_id: human-describe-change
+        node_id: ai-describe-change
         path: change-request.md
         scope: run
         required: true
@@ -151,7 +150,7 @@ nodes:
     routing_type: static
     execution_context:
       - type: artifact_ref
-        node_id: human-describe-change
+        node_id: ai-describe-change
         path: change-request.md
         scope: run
         required: true
