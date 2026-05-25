@@ -48,9 +48,17 @@ nodes:
       
     routing_type: static
     produced_artifacts:
-      -
-        scope: project
-        path: spec/*/*.md
+      - scope: project
+        path: spec/*/tasks.md
+        required: true
+      - scope: project
+        path: spec/*/notes.md
+        required: true
+      - scope: project
+        path: spec/*/config.md
+        required: true
+      - scope: project
+        path: spec/*/glossary.md
         required: true
     expected_mutations: []
     on_success:
@@ -63,7 +71,25 @@ nodes:
         required: true
         scope: project
         node_id: create-module1
-        path: spec/*/*.md
+        path: spec/*/tasks.md
+        transfer_mode: by_ref
+      - type: artifact_ref
+        required: true
+        scope: project
+        node_id: create-module1
+        path: spec/*/notes.md
+        transfer_mode: by_ref
+      - type: artifact_ref
+        required: true
+        scope: project
+        node_id: create-module1
+        path: spec/*/config.md
+        transfer_mode: by_ref
+      - type: artifact_ref
+        required: true
+        scope: project
+        node_id: create-module1
+        path: spec/*/glossary.md
         transfer_mode: by_ref
     instruction: |
       Проверь созданные файлы спецификации первого модуля в spec/<module1>/.
@@ -114,9 +140,17 @@ nodes:
       
     routing_type: static
     produced_artifacts:
-      -
-        scope: project
-        path: spec/*/*.md
+      - scope: project
+        path: spec/*/tasks.md
+        required: true
+      - scope: project
+        path: spec/*/notes.md
+        required: true
+      - scope: project
+        path: spec/*/config.md
+        required: true
+      - scope: project
+        path: spec/*/schema.md
         required: true
     expected_mutations: []
     on_success:
@@ -129,7 +163,25 @@ nodes:
         required: true
         scope: project
         node_id: create-module2
-        path: spec/*/*.md
+        path: spec/*/tasks.md
+        transfer_mode: by_ref
+      - type: artifact_ref
+        required: true
+        scope: project
+        node_id: create-module2
+        path: spec/*/notes.md
+        transfer_mode: by_ref
+      - type: artifact_ref
+        required: true
+        scope: project
+        node_id: create-module2
+        path: spec/*/config.md
+        transfer_mode: by_ref
+      - type: artifact_ref
+        required: true
+        scope: project
+        node_id: create-module2
+        path: spec/*/schema.md
         transfer_mode: by_ref
     instruction: |
       Проверь созданные файлы спецификации второго модуля в spec/<module2>/.
