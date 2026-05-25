@@ -309,6 +309,7 @@ nodes:
     expected_mutations:
       - scope: project
         path: "openspec/changes/*/tasks.md"
+        required: true
     on_success:
       transition: ai-verify
     retry_policy:
@@ -439,6 +440,7 @@ nodes:
     expected_mutations:
       - scope: project
         path: "openspec/specs/*/spec.md"
+        required: true
     on_success:
       transition: terminal-complete
     retry_policy:
