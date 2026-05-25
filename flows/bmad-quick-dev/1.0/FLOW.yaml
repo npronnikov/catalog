@@ -303,6 +303,14 @@ nodes:
         required: true
         transfer_mode: by_value
     instruction: |
+      <#assign humanApproveReview = step["human-approve-review"]!{} />
+      <#if humanApproveReview.rework_instruction?has_content>
+      ВАЖНО! Пользователь вернул ревью на доработку и указал, что ревью было сделано
+      некачественно. Его комментарий: ${humanApproveReview.rework_instruction}
+      Учти это замечание при проведении ревью ниже — устрани именно то, что пользователь
+      посчитал недостаточным или неверным.
+      </#if>
+
       Измени статус spec.md на in-review.
 
       Построй diff (tracked + untracked) с момента baseline_commit из frontmatter spec.md.
@@ -380,13 +388,17 @@ nodes:
         "rework-intent"  — находки intent_gap: код будет откачен, планирование начнётся
                            с нуля. Добавь правки в комментарий к доработке.
 
-      Апрувь для перехода к финальной презентации или верни на доработку.
+      Расшифровка действий:
+        Апруv (on_approve) — ревью проведено качественно; маршрутизатор сам решит,
+          идти на презентацию или на доработку кода/спека согласно рекомендации ревью.
+        Доработка (on_rework) — качество самого ревью недостаточно; укажи в комментарии,
+          что именно упущено, и ревью будет проведено заново с учётом твоего замечания.
     produced_artifacts: []
     expected_mutations: []
     on_approve:
-      transition: ai-present
-    on_rework:
       transition: ai-route-rework
+    on_rework:
+      transition: ai-review
 
   - id: ai-route-rework
     title: Маршрутизация доработки — bad_spec или intent_gap
@@ -417,12 +429,18 @@ nodes:
            состояние и KEEP-инструкции.
 
       ПУТЬ Б — "rework-intent" (находки intent_gap):
+        Откати все изменения кода до baseline_commit из frontmatter spec.md.
+        Планирование начнётся с нуля.
+
+      ПУТЬ В — "approve" (нет блокирующих находок):
+        Рекомендация в review-report.md — "approve". Переходи к презентации.
 
       Не смешивай пути. Рекомендация в review-report.md — авторитетна.
 
       После выполнения выбранного пути добавь в step-summary.json:
-        ПУТЬ А: {  "route": "on_bad_spec",   "actions": ["откат изменений кода", "правка разделов спека", "запись в журнал изменений"] }
-        ПУТЬ Б: {  "route": "on_bad_intent", "actions": ["откат изменений кода"] }
+        ПУТЬ А: { "route": "on_bad_spec",   "actions": ["откат изменений кода", "правка разделов спека", "запись в журнал изменений"] }
+        ПУТЬ Б: { "route": "on_bad_intent", "actions": ["откат изменений кода"] }
+        ПУТЬ В: { "route": "on_present",    "actions": ["переход к презентации"] }
 
       Поле "route" в step-summary.json обязательно!
     skill_refs: []
@@ -437,6 +455,11 @@ nodes:
       transition: ai-plan
       max_loop_count: 10
       keep_changes: false
+      session_policy: new_session
+    on_present:
+      transition: ai-present
+      max_loop_count: 10
+      keep_changes: true
       session_policy: new_session
 
   # ════════════════════════════════════════════════════════════════════════════

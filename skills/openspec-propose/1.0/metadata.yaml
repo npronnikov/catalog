@@ -1,0 +1,22 @@
+entity_type: skill
+id: openspec-propose
+version: "1.0"
+canonical_name: openspec-propose@1.0
+display_name: "OpenSpec: Создание артефактов изменения"
+description: >
+  Создаёт полный набор артефактов OpenSpec-изменения в openspec/changes/<name>/:
+  proposal.md (что и зачем), specs/<capability>/spec.md (delta-спецификации),
+  design.md (как), tasks.md (чеклист реализации). Артефакты становятся
+  источником истины для реализации и последующей актуализации документации.
+coding_agent: qwen
+team_code: Demo
+platform_code: BACK
+tags:
+  - openspec
+  - planning
+  - sdd
+  - specification
+skill_kind: planning
+scope: organization
+approval_status: draft
+lifecycle_status: active

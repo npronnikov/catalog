@@ -1,0 +1,175 @@
+id: glob-test
+version: "1.0"
+canonical_name: glob-test@1.0
+title: Glob Artifact Ref Test
+description: >
+  Тестовый флоу для проверки DB-based glob-разрешения артефактов.
+  Нода 1 и нода 2 независимо выводят названия модулей из feature_request
+  и создают файлы в spec/<module>/ (tasks.md, notes.md, config.md —
+  пересекаются по имени; glossary.md — только в первом; schema.md —
+  только во втором). Нода 3 получает tasks.md именно из ноды 1 и
+  schema.md именно из ноды 2 через DB-glob + node_id, затем создаёт
+  spec/combined/*.md.
+coding_agent: qwen
+start_node_id: create-module1
+failure_node_id: terminal-fail
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+rule_refs: []
+
+nodes:
+
+  # ── Нода 1: первый модуль ─────────────────────────────────────────────────
+  - id: create-module1
+    title: Создать спецификацию первого модуля
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      <#if (run.feature_request)?? && run.feature_request?has_content>
+      Запрос пользователя: ${run.feature_request}
+      </#if>
+
+      Из запроса пользователя выбери название ПЕРВОГО модуля — одно слово на английском в lowercase (например: orders, auth, catalog). Назовём его <module1>.
+
+      Создай ровно 4 файла, подставив выбранное название вместо <module1> в путях и заголовках:
+
+      spec/<module1>/tasks.md — список задач:
+        # Tasks — <module1>
+        - [ ] Задача 1
+        - [ ] Задача 2
+        - [ ] Задача 3
+
+      spec/<module1>/notes.md — заметки о модуле:
+        # Notes — <module1>
+        Краткое описание назначения модуля.
+
+      spec/<module1>/config.md — конфигурация:
+        # Config — <module1>
+        - param1: значение
+        - param2: значение
+
+      spec/<module1>/glossary.md — глоссарий (только этот файл уникален для первого модуля):
+        # Glossary — <module1>
+        Ключевые термины и определения модуля.
+
+      Не создавай никаких других файлов и папок.
+    skill_refs: []
+    produced_artifacts:
+      - scope: project
+        path: "spec/*/*.md"
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: create-module2
+
+  # ── Нода 2: второй модуль ─────────────────────────────────────────────────
+  - id: create-module2
+    title: Создать спецификацию второго модуля
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      <#if (run.feature_request)?? && run.feature_request?has_content>
+      Запрос пользователя: ${run.feature_request}
+      </#if>
+
+      Из запроса пользователя выбери название ВТОРОГО модуля — одно слово на английском в lowercase. Это должен быть другой модуль, не первый.
+
+      Создай ровно 4 файла, подставив выбранное название вместо <module2> в путях и заголовках:
+
+      spec/<module2>/tasks.md — список задач (файл с тем же именем tasks.md, что в первом модуле):
+        # Tasks — <module2>
+        - [ ] Задача 1
+        - [ ] Задача 2
+        - [ ] Задача 3
+
+      spec/<module2>/notes.md — заметки о модуле:
+        # Notes — <module2>
+        Краткое описание назначения модуля.
+
+      spec/<module2>/config.md — конфигурация:
+        # Config — <module2>
+        - param1: значение
+        - param2: значение
+
+      spec/<module2>/schema.md — схема данных (только этот файл уникален для второго модуля):
+        # Schema — <module2>
+        EntityName:
+          id: UUID
+          field1: string
+          field2: enum(a, b, c)
+          created_at: timestamp
+
+      Не создавай никаких других файлов и папок.
+    skill_refs: []
+    produced_artifacts:
+      - scope: project
+        path: "spec/*/*.md"
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: apply-spec
+
+  # ── Нода 3: сводная спецификация ─────────────────────────────────────────
+  - id: apply-spec
+    title: Собрать сводную спецификацию
+    type: ai
+    routing_type: static
+    execution_context:
+      # tasks.md есть в обоих модулях — DB-glob с node_id разрешает именно из первого модуля
+      - type: artifact_ref
+        node_id: create-module1
+        path: "spec/*/tasks.md"
+        scope: project
+        required: true
+        transfer_mode: by_value
+      # schema.md уникален для второго модуля — DB-glob с node_id гарантирует правильный модуль
+      - type: artifact_ref
+        node_id: create-module2
+        path: "spec/*/schema.md"
+        scope: project
+        required: true
+        transfer_mode: by_value
+    instruction: |
+      Тебе предоставлены два файла:
+      - tasks.md из первого модуля
+      - schema.md из второго модуля
+
+      Создай файл spec/combined/summary.md в следующем формате:
+
+      # Combined Spec Summary
+
+      ## Задачи первого модуля
+      <содержимое tasks.md>
+
+      ## Схема второго модуля
+      <содержимое schema.md>
+
+      ## Точки интеграции
+      Опиши 2–3 возможные точки интеграции между двумя модулями на основе задач и схемы.
+
+      Создай только spec/combined/summary.md. Не трогай другие файлы.
+    skill_refs: []
+    produced_artifacts:
+      - scope: project
+        path: "spec/combined/*.md"
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: terminal
+
+  # ── Терминальные ноды ─────────────────────────────────────────────────────
+  - id: terminal
+    title: Готово
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+
+  - id: terminal-fail
+    title: Ошибка
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

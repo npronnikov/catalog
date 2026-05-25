@@ -1,0 +1,20 @@
+entity_type: skill
+id: openspec-explore
+version: "1.0"
+canonical_name: openspec-explore@1.0
+display_name: "OpenSpec: Исследование идей и спецификаций"
+description: >
+  Режим свободного исследования: thinking partner для проработки идей,
+  изучения текущих спецификаций (openspec/specs/) и выявления скоупа
+  предстоящего изменения. Не реализует код — только помогает думать.
+coding_agent: qwen
+team_code: Demo
+platform_code: BACK
+tags:
+  - openspec
+  - planning
+  - analysis
+skill_kind: planning
+scope: organization
+approval_status: draft
+lifecycle_status: active
