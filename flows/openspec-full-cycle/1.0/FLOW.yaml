@@ -54,6 +54,8 @@ nodes:
     expected_mutations: []
     on_submit:
       transition: ai-explore
+    on_rework:
+      transition: human-describe-change
 
   # ════════════════════════════════════════════════════════════════════════════
   # ШАГ 2 — Исследование идеи и текущих спецификаций

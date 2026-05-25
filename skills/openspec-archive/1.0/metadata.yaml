@@ -15,7 +15,7 @@ tags:
   - openspec
   - sdd
   - documentation
-skill_kind: documentation
+skill_kind: analysis
 scope: organization
 approval_status: draft
 lifecycle_status: active
