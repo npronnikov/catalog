@@ -1,13 +1,28 @@
 ---
-globs:
-  - "backend/src/main/java/**/*.java"
-  - "backend/src/main/resources/**/*.yml"
-  - "backend/src/main/resources/**/*.yaml"
-  - "backend/src/main/resources/**/*.sql"
-  - "backend/src/test/**/*.java"
-  - "src/main/java/**/*.java"
-  - "src/main/resources/**/*.yml"
-  - "src/test/**/*.java"
+id: java-backend-coding-standards-codex
+version: "1.0"
+canonical_name: java-backend-coding-standards-codex@1.0
+title: Java Backend Coding Standards (Codex)
+description: >
+  Core coding rules for Java/Spring Boot backend development:
+  project structure, layering, naming, error handling, transactions,
+  testing, and API design.
+allowed_paths:
+  - backend/src/main/java
+  - backend/src/main/resources
+  - backend/src/test
+  - src/main/java
+  - src/main/resources
+  - src/test
+forbidden_paths:
+  - frontend/src
+  - .github
+allowed_commands:
+  - ./gradlew test
+  - ./gradlew build
+  - mvn test
+  - mvn package
+require_structured_response: true
 ---
 
 # Java Backend Coding Standards
