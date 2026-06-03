@@ -1,0 +1,25 @@
+entity_type: flow
+id: jira-task-development-flow
+version: "1.0"
+canonical_name: jira-task-development-flow@1.0
+display_name: "JIRA Task Development — Получить задачу, спланировать, реализовать"
+description: >
+  Полный цикл разработки по JIRA-задаче: поиск задачи по assignee и статусу To Do →
+  анализ description и создание плана → subtask с планом в JIRA → human approval →
+  resolve plan-subtask → реализация по плану → subtask с результатами в JIRA →
+  human approval → resolve impl-subtask.
+coding_agent: gigacode
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - hgdlc
+  - jira
+  - development
+  - mcp
+flow_kind: delivery
+risk_level: medium
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "flows/jira-task-development-flow/1.0"

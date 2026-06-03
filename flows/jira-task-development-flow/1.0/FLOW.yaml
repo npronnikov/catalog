@@ -1,0 +1,432 @@
+id: jira-task-development-flow
+version: "1.0"
+canonical_name: jira-task-development-flow@1.0
+title: JIRA Task Development — Получить задачу, спланировать, реализовать
+description: >
+  Полный цикл разработки по JIRA-задаче: поиск задачи по assignee и статусу To Do →
+  анализ description и создание плана → subtask с планом в JIRA → human approval →
+  resolve plan-subtask → реализация по плану → subtask с результатами в JIRA →
+  human approval → resolve impl-subtask.
+start_node_id: ai-fetch-task
+failure_node_id: terminal-complete
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+rule_refs: []
+
+nodes:
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 1 — Получить JIRA задачу
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-fetch-task
+    title: Получить одну JIRA задачу по assignee
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Выполни поиск задач в JIRA через подключённый скилл.
+      Аргументы для jira-issues:
+      - environment: ${env.environment}
+      - project: ${env.project}
+      - assignee: ${env.assignee}
+      - searchStatuses: ${(env.statuses)!''}
+      - maxResults: 1
+    skill_refs:
+      - jira-issues@1.0
+    produced_artifacts:
+      - scope: run
+        path: jira-task.json
+        required: true
+        modifiable: false
+    expected_mutations: []
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - AGENT_EXECUTION_FAILED
+        - AGENT_SESSION_RESUME_FAILED
+        - NODE_VALIDATION_FAILED
+    on_success:
+      transition: ai-analyze-and-plan
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 2 — Анализ description и создание плана
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-analyze-and-plan
+    title: Анализ задачи и создание плана имплементации
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign approvePlan = step["human-approve-plan"]!{} />
+      <#if approvePlan.rework_instruction?has_content && (approvePlan.keep_changes!false)>
+      Исправь: ${approvePlan.rework_instruction}
+      <#else>
+      Прочитай jira-task.json. Используй поле description как описание задачи,
+      поле summary как краткое название.
+      Исследуй кодовую базу проекта и создай план имплементации.
+      Сохрани результат в plan.md. Строго следуй подключённому скиллу,
+      но сохраняй результат в файл plan.md.
+
+      <#if approvePlan.rework_instruction?has_content>
+      ВАЖНО! При выполнении инструкции учти следующее: ${approvePlan.rework_instruction}
+      </#if>
+      </#if>
+    skill_refs:
+      - hgdlc-implementation-plan@1.0
+    produced_artifacts:
+      - scope: run
+        path: plan.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+    on_success:
+      transition: ai-create-plan-subtask
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 3 — Создать subtask с планом в JIRA
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-create-plan-subtask
+    title: Создать или обновить subtask с планом в JIRA
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-analyze-and-plan
+        path: plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-create-plan-subtask
+        path: jira-plan-subtask.json
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай plan.md и jira-task.json.
+
+      Проверь, есть ли файл jira-plan-subtask.json с непустым taskKey:
+      - Если taskKey есть — НЕ создавай новую subtask. Добавь комментарий к существующей:
+        Аргументы для jira-issues:
+        - environment: ${env.environment}
+        - taskKey: taskKey из jira-plan-subtask.json
+        - commentBody: содержимое plan.md
+      - Если taskKey нет — создай новую subtask как дочернюю к задаче из jira-task.json:
+        Аргументы для jira-issues:
+        - environment: ${env.environment}
+        - project: извлеки из taskKey parent-задачи в jira-task.json (часть до дефиса, например PROJ-42 → PROJ)
+        - summary: "Plan: " + summary из jira-task.json
+        - issueType: Sub-task
+        - description: ${env.baseUrl}/#/run-console?runId=${run.id}
+        - assignee: ${env.assignee}
+        - commentBody: содержимое plan.md
+        - additionalFields: parent с key = taskKey из jira-task.json
+
+      Сохрани результат в jira-plan-subtask.json.
+    skill_refs:
+      - jira-issues@1.0
+    produced_artifacts:
+      - scope: run
+        path: jira-plan-subtask.json
+        required: true
+        modifiable: false
+    expected_mutations: []
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - AGENT_EXECUTION_FAILED
+        - AGENT_SESSION_RESUME_FAILED
+        - NODE_VALIDATION_FAILED
+    on_success:
+      transition: human-approve-plan
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 4 — Утверждение плана
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: human-approve-plan
+    title: Проверка и утверждение плана имплементации
+    type: human_approval
+    execution_context: []
+    instruction: |
+      Проверь план имплементации в файле plan.md.
+
+      Убедись, что:
+      - Все затронутые файлы перечислены с пометкой Create или Modify
+      - Порядок слоёв корректен (миграции → сущности → репозитории → сервисы →
+        контроллеры → тесты → конфигурация)
+      - Каждый шаг содержит конкретное описание изменения
+      - Команды верификации реалистичны для данного проекта
+
+      Утверди для продолжения или верни на доработку с конкретными замечаниями.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-resolve-plan-subtask
+    on_rework:
+      transition: ai-analyze-and-plan
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 5 — Перевести plan-subtask в Resolved
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-resolve-plan-subtask
+    title: Перевести plan-subtask в статус resolved
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-create-plan-subtask
+        path: jira-plan-subtask.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Переведи plan-subtask в статус Resolved.
+      Аргументы для jira-issues:
+      - environment: ${env.environment}
+      - taskKey: taskKey из jira-plan-subtask.json
+      - transitionMode: resolved
+
+      Сохрани результат в jira-plan-subtask.json.
+    skill_refs:
+      - jira-issues@1.0
+    produced_artifacts:
+      - scope: run
+        path: jira-plan-subtask.json
+        required: true
+        modifiable: false
+    expected_mutations: []
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - AGENT_EXECUTION_FAILED
+        - AGENT_SESSION_RESUME_FAILED
+        - NODE_VALIDATION_FAILED
+    on_success:
+      transition: ai-implement
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 6 — Реализация
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-implement
+    title: Реализация по утверждённому плану
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-analyze-and-plan
+        path: plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign approveImpl = step["human-approve-impl"]!{} />
+      <#if approveImpl.rework_instruction?has_content && (approveImpl.keep_changes!false)>
+      Исправь: ${approveImpl.rework_instruction}
+      <#else>
+      Выполни план имплементации из plan.md шаг за шагом:
+        - Находи первый невыполненный шаг [ ] и реализуй его.
+        - После выполнения помечай шаг [x] и обновляй plan.md.
+        - После каждого слоя запускай команду верификации из плана.
+        - Не создавай копии файлов с суффиксами _modified, _new и т.п. —
+          изменяй файлы непосредственно.
+
+      <#if approveImpl.rework_instruction?has_content>
+      ВАЖНО! При выполнении инструкции учти следующее: ${approveImpl.rework_instruction}
+      </#if>
+      </#if>
+    skill_refs: []
+    produced_artifacts: []
+    expected_mutations: []
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - AGENT_EXECUTION_FAILED
+        - AGENT_SESSION_RESUME_FAILED
+    on_success:
+      transition: ai-create-impl-subtask
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 7 — Создать subtask с результатами реализации в JIRA
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-create-impl-subtask
+    title: Создать или обновить subtask с результатами реализации в JIRA
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-analyze-and-plan
+        path: plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-create-impl-subtask
+        path: jira-impl-subtask.json
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай plan.md и jira-task.json.
+      Определи выполненные шаги (помеченные [x]) и построй сводку изменений.
+
+      Формат сводки (Markdown):
+      ## Результаты реализации
+
+      ### Выполненные шаги
+      - [x] Описание шага 1
+      - [x] Описание шага 2
+
+      ### Изменённые файлы
+      | Файл | Действие | Описание |
+      |------|----------|----------|
+      | path/to/File.java | Modify | Добавлен метод X |
+
+      Проверь, есть ли файл jira-impl-subtask.json с непустым taskKey:
+      - Если taskKey есть — добавь комментарий к существующей subtask:
+        Аргументы для jira-issues:
+        - environment: ${env.environment}
+        - taskKey: taskKey из jira-impl-subtask.json
+        - commentBody: обновлённая Markdown-сводка
+      - Если taskKey нет — создай новую subtask как дочернюю к задаче из jira-task.json:
+        Аргументы для jira-issues:
+        - environment: ${env.environment}
+        - project: извлеки из taskKey parent-задачи в jira-task.json (часть до дефиса)
+        - summary: "Impl: " + summary из jira-task.json
+        - issueType: Sub-task
+        - description: ${env.baseUrl}/#/run-console?runId=${run.id}
+        - assignee: ${env.assignee}
+        - commentBody: Markdown-сводка
+        - additionalFields: parent с key = taskKey из jira-task.json
+
+      Сохрани результат в jira-impl-subtask.json.
+    skill_refs:
+      - jira-issues@1.0
+    produced_artifacts:
+      - scope: run
+        path: jira-impl-subtask.json
+        required: true
+        modifiable: false
+    expected_mutations: []
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - AGENT_EXECUTION_FAILED
+        - AGENT_SESSION_RESUME_FAILED
+        - NODE_VALIDATION_FAILED
+    on_success:
+      transition: human-approve-impl
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 8 — Проверка реализации
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: human-approve-impl
+    title: Проверка и утверждение реализации
+    type: human_approval
+    execution_context: []
+    instruction: |
+      Проверь итоговые изменения в кодовой базе.
+
+      Убедись, что:
+      - Реализация соответствует утверждённому плану
+      - Все шаги плана выполнены
+      - Билд проходит, тесты зелёные
+      - JIRA subtask с результатами заполнена корректно
+
+      Апрувь для завершения или верни на доработку с конкретными замечаниями.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-resolve-impl-subtask
+    on_rework:
+      transition: ai-implement
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 9 — Перевести impl-subtask в Resolved
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-resolve-impl-subtask
+    title: Перевести impl-subtask в статус resolved
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-create-impl-subtask
+        path: jira-impl-subtask.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Переведи impl-subtask в статус Resolved.
+      Аргументы для jira-issues:
+      - environment: ${env.environment}
+      - taskKey: taskKey из jira-impl-subtask.json
+      - transitionMode: resolved
+
+      Сохрани результат в jira-impl-subtask.json.
+    skill_refs:
+      - jira-issues@1.0
+    produced_artifacts:
+      - scope: run
+        path: jira-impl-subtask.json
+        required: true
+        modifiable: false
+    expected_mutations: []
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - AGENT_EXECUTION_FAILED
+        - AGENT_SESSION_RESUME_FAILED
+        - NODE_VALIDATION_FAILED
+    on_success:
+      transition: terminal-complete
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Терминал
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: terminal-complete
+    title: Flow завершён
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
