@@ -1,0 +1,28 @@
+entity_type: flow
+id: jira-questions-gate-flow
+version: "1.0"
+canonical_name: jira-questions-gate-flow@1.0
+display_name: "JIRA Questions Gate"
+description: >
+  Объединённый flow: AI генерирует уточняющие вопросы в формате human-form,
+  создаёт JIRA задачу с assignee на указанного человека, в указанном project
+  и контуре (SIGMA/DELTA/SBERTRACK) через MCP сервер Atlassian.
+  Пользователь заполняет вопросы в gate UI, результат связывается с задачей.
+
+coding_agent: gigacode
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - hgdlc
+  - jira
+  - human-form
+  - clarification
+  - mcp
+
+flow_kind: delivery
+risk_level: medium
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "flows/jira-questions-gate-flow/1.0"
