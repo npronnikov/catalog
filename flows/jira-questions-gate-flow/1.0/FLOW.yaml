@@ -126,7 +126,8 @@ nodes:
         transfer_mode: by_ref
         node_id: predefined-questions
         path: questions.form.json
-        modifiable: trueinstruction: |
+        modifiable: true
+    instruction: |
       Заполни форму с уточняющими вопросами и нажми Submit.
 
       Если есть замечания по вопросам — нажми Rework и укажи, что изменить.
