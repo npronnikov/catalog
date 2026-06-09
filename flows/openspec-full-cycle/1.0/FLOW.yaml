@@ -274,6 +274,13 @@ nodes:
         transfer_mode: by_ref
       - type: artifact_ref
         node_id: ai-propose
+        path: "openspec/changes/*/proposal.md"
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
         path: "openspec/changes/*/tasks.md"
         scope: project
         required: true
@@ -301,8 +308,10 @@ nodes:
       Прочитай proposal-summary.md чтобы найти название изменения и путь.
       Следуй приложенному скилу.
 
-      Загрузи контекст из openspec/changes/<name>/:
-      - proposal.md, specs-index.md, design.md — для понимания требований и решений
+      Используй уже переданные входные артефакты этого шага:
+      - proposal.md — что именно меняем и зачем
+      - specs-index.md — manifest активных delta-specs текущего change
+      - design.md — технические решения и ограничения
       - tasks.md — чеклист реализации
 
       Используй specs-index.md как единственный список активных delta-specs этого change.
@@ -343,7 +352,28 @@ nodes:
         transfer_mode: by_ref
       - type: artifact_ref
         node_id: ai-propose
+        path: "openspec/changes/*/proposal.md"
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
         path: "openspec/changes/*/specs-index.md"
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/design.md"
+        scope: project
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/tasks.md"
         scope: project
         required: true
         modifiable: false
@@ -419,6 +449,13 @@ nodes:
         node_id: ai-propose
         path: proposal-summary.md
         scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/tasks.md"
+        scope: project
         required: true
         modifiable: false
         transfer_mode: by_ref
