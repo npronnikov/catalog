@@ -180,6 +180,16 @@ nodes:
       - design.md — технические решения
       - tasks.md — чеклист реализации
 
+      Для tasks.md правило обязательное:
+      - В секцию Verification добавляй только завершающиеся команды проверки
+        (тесты, сборка, компиляция, линтеры).
+      - Не добавляй задачи на запуск системы или ручной smoke через долгоживущие процессы:
+        `./gradlew bootRun`, `npm run dev`, `vite`, `docker compose up` и аналоги.
+      - Не формулируй verification как "поднять backend/frontend и проверить руками".
+      - Для этого репозитория предпочитай команды вида:
+        `cd backend && ./gradlew test`, `cd backend && ./gradlew build`,
+        `cd backend && ./gradlew compileJava`, `cd frontend && npm run build`
+
       После создания всех файлов создай proposal-summary.md с кратким резюме:
       - Название изменения и путь
       - Список capabilities и что они специфицируют
