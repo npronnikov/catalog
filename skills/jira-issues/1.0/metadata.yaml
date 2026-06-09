@@ -1,0 +1,21 @@
+entity_type: skill
+id: jira-issues
+version: "1.0"
+canonical_name: jira-issues@1.0
+display_name: "JIRA Issues"
+description: >
+  Работа с задачами в JIRA через MCP сервер Atlassian. Получение информации,
+  создание, обновление задач, управление комментариями и вложениями.
+coding_agent: gigacode
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - hgdlc
+  - jira
+  - mcp
+skill_kind: ops
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/skills/jira-issues/1.0"

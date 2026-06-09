@@ -1,2 +1,6 @@
 hook-server/
 node_modules/
+.gigacode/
+.gigaide/
+.idea/
+.DS_Store
