@@ -23,7 +23,8 @@ description: >
 
 Прочитай:
 - `openspec/changes/<name>/proposal.md`
-- `openspec/changes/<name>/specs/<capability>/spec.md` — все delta-specs
+- `openspec/changes/<name>/specs-index.md`
+- spec-файлы, перечисленные в `specs-index.md` — все active delta-specs
 - `openspec/changes/<name>/design.md` (если существует)
 - `openspec/changes/<name>/tasks.md`
 

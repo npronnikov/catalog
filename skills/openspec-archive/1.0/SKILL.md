@@ -38,7 +38,10 @@ description: >
 
 Это ключевой шаг: **актуализация документации**.
 
-Для каждого файла в `openspec/changes/<name>/specs/<capability>/spec.md`:
+Прочитай `openspec/changes/<name>/specs-index.md` и используй его как единственный
+список active delta-specs текущего change.
+
+Для каждого файла, перечисленного в `specs-index.md`:
 
 **a. Определи операцию:**
 

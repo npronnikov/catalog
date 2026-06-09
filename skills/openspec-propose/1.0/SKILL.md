@@ -12,6 +12,7 @@ description: >
 **Что будет создано** в `openspec/changes/<name>/`:
 - `proposal.md` — что делаем и зачем
 - `specs/<capability>/spec.md` — delta-спецификации (изменения к документации)
+- `specs-index.md` — индекс активных delta-specs текущего change
 - `design.md` — как реализуем
 - `tasks.md` — чеклист реализации
 
@@ -35,6 +36,7 @@ openspec/
 └── changes/
     └── <name>/
         ├── proposal.md
+        ├── specs-index.md
         ├── design.md
         ├── tasks.md
         └── specs/
@@ -119,7 +121,38 @@ openspec/
 - Scenario: конкретный WHEN/THEN — тестируемый и проверяемый
 - Детали реализации (библиотеки, классы, методы) → в design.md, не в spec
 
-### 4. Создать design.md
+### 4. Создать specs-index.md
+
+После создания всех `specs/<capability>/spec.md` создай `openspec/changes/<name>/specs-index.md`.
+
+**Назначение:** это единственный индекс активных delta-specs данного change для downstream-шагов.
+
+**Структура:**
+
+```markdown
+# Specs Index: <name>
+
+Change name: <name>
+Change path: openspec/changes/<name>
+
+## Active Delta Specs
+
+1. Capability: `<capability-name>`
+   Path: `openspec/changes/<name>/specs/<capability-name>/spec.md`
+   Purpose: [что именно специфицирует этот delta-spec]
+
+## Usage Contract
+
+Для реализации, верификации и архивирования использовать только spec-файлы,
+перечисленные в этом документе, как активный набор delta-specs текущего change.
+```
+
+**Правила:**
+- Перечисли все созданные spec-файлы без пропусков
+- Для каждого spec укажи capability, path и краткое purpose
+- Не добавляй ссылки на spec-файлы из других changes
+
+### 5. Создать design.md
 
 **Структура:**
 
@@ -154,7 +187,7 @@ openspec/
 - Каждое нетривиальное решение — явно зафиксировать с обоснованием
 - Может быть кратким для маленьких изменений
 
-### 5. Создать tasks.md
+### 6. Создать tasks.md
 
 **Структура:**
 
@@ -188,6 +221,7 @@ openspec/
 
 - Читай exploration-notes.md перед созданием — там кристаллизованные решения
 - Читай текущие `openspec/specs/<capability>/spec.md` перед написанием delta
+- После создания delta-specs собери их в `specs-index.md`
 - Specs = поведение, Design = реализация, Tasks = чеклист
 - Если контекст недостаточно ясен — задай уточняющий вопрос, но предпочитай разумные решения вопросам
 - После создания всех файлов — кратко резюмируй что создано
@@ -201,6 +235,7 @@ openspec/
 
 📁 openspec/changes/<name>/
    ├── proposal.md      — [одна строка: суть изменения]
+   ├── specs-index.md   — [список active delta-specs текущего change]
    ├── design.md        — [одна строка: ключевое техническое решение]
    ├── tasks.md         — N задач в M фазах
    └── specs/

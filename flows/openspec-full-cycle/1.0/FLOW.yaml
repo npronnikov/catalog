@@ -176,6 +176,7 @@ nodes:
       Создай в openspec/changes/<name>/:
       - proposal.md — что делаем и зачем
       - specs/<capability>/spec.md — delta-спецификации для каждой capability
+      - specs-index.md — список активных delta-specs этого change
       - design.md — технические решения
       - tasks.md — чеклист реализации
 
@@ -202,6 +203,10 @@ nodes:
         modifiable: false
       - scope: project
         path: "openspec/changes/*/tasks.md"
+        required: true
+        modifiable: false
+      - scope: project
+        path: "openspec/changes/*/specs-index.md"
         required: true
         modifiable: false
       - scope: project
@@ -283,9 +288,9 @@ nodes:
         transfer_mode: by_ref
       - type: artifact_ref
         node_id: ai-propose
-        path: "openspec/changes/*/specs/*/spec.md"
+        path: "openspec/changes/*/specs-index.md"
         scope: project
-        required: false
+        required: true
         modifiable: false
         transfer_mode: by_ref
     instruction: |
@@ -297,8 +302,11 @@ nodes:
       Следуй приложенному скилу.
 
       Загрузи контекст из openspec/changes/<name>/:
-      - proposal.md, specs/, design.md — для понимания требований и решений
+      - proposal.md, specs-index.md, design.md — для понимания требований и решений
       - tasks.md — чеклист реализации
+
+      Используй specs-index.md как единственный список активных delta-specs этого change.
+      Читай только те spec-файлы, которые перечислены в specs-index.md.
 
       Реализуй все задачи из tasks.md последовательно.
       Помечай каждую задачу выполненной (- [ ] → - [x]) сразу после завершения.
@@ -330,6 +338,13 @@ nodes:
         node_id: ai-propose
         path: proposal-summary.md
         scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/specs-index.md"
+        scope: project
         required: true
         modifiable: false
         transfer_mode: by_ref
@@ -409,7 +424,7 @@ nodes:
         transfer_mode: by_ref
       - type: artifact_ref
         node_id: ai-propose
-        path: "openspec/changes/*/specs/*/spec.md"
+        path: "openspec/changes/*/specs-index.md"
         scope: project
         required: true
         modifiable: false
@@ -421,7 +436,8 @@ nodes:
       Выполни два действия:
 
       1. Синхронизировать delta-specs в основную документацию:
-         Для каждого openspec/changes/<name>/specs/<capability>/spec.md
+         Используй specs-index.md как источник списка delta-specs текущего change.
+         Для каждого spec-файла из specs-index.md
          примени изменения к openspec/specs/<capability>/spec.md
          (добавить/изменить/удалить требования согласно маркерам ADDED/MODIFIED/REMOVED).
 

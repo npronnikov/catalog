@@ -6,8 +6,9 @@ display_name: "OpenSpec: Создание артефактов изменени�
 description: >
   Создаёт полный набор артефактов OpenSpec-изменения в openspec/changes/<name>/:
   proposal.md (что и зачем), specs/<capability>/spec.md (delta-спецификации),
-  design.md (как), tasks.md (чеклист реализации). Артефакты становятся
-  источником истины для реализации и последующей актуализации документации.
+  specs-index.md (индекс активных delta-specs), design.md (как),
+  tasks.md (чеклист реализации). Артефакты становятся источником истины
+  для реализации и последующей актуализации документации.
 coding_agent: qwen
 team_code: Demo
 platform_code: BACK

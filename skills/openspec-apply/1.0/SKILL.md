@@ -24,9 +24,10 @@ description: >
 Прочитай все артефакты в следующем порядке:
 
 1. `openspec/changes/<name>/proposal.md` — ЧТО делаем и ЗАЧЕМ
-2. `openspec/changes/<name>/specs/<capability>/spec.md` — КАЖДЫЙ delta-spec (требования и сценарии)
-3. `openspec/changes/<name>/design.md` — КАК реализуем (решения и ограничения)
-4. `openspec/changes/<name>/tasks.md` — ЧЕКЛИСТ задач
+2. `openspec/changes/<name>/specs-index.md` — список активных delta-specs этого change
+3. spec-файлы, перечисленные в `specs-index.md` — КАЖДЫЙ delta-spec (требования и сценарии)
+4. `openspec/changes/<name>/design.md` — КАК реализуем (решения и ограничения)
+5. `openspec/changes/<name>/tasks.md` — ЧЕКЛИСТ задач
 
 ### 2. Показать текущий прогресс
 
@@ -98,6 +99,7 @@ description: >
 
 - Реализуй только то что в tasks.md — не добавляй "заодно"
 - Сверяйся со specs при любой неясности в поведении
+- Используй `specs-index.md` как единственный список активных delta-specs текущего change
 - Сверяйся с design.md при любой неясности в техническом выборе
 - Если spec и код расходятся — это проблема, сообщи
 - Помечай задачи выполненными СРАЗУ по завершению, не в конце пакетом
