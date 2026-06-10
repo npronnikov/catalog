@@ -1,0 +1,25 @@
+entity_type: flow
+id: hgdlc-light-development-flow-codex
+version: "1.0"
+canonical_name: hgdlc-light-development-flow-codex@1.0
+display_name: "HGDLC: Light Development Flow — Codex"
+description: >
+  Лёгкий цикл разработки с участием человека на каждом ключевом этапе.
+  Включает: уточняющие вопросы, план имплементации, разработку, ревью кода
+  и финальный апрув. Автоматический возврат на доработку при замечаниях ревью.
+coding_agent: codex
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - hgdlc
+  - development
+  - light
+  - review
+  - codex
+flow_kind: delivery
+risk_level: medium
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/flows/hgdlc-light-development-flow-codex/1.0"

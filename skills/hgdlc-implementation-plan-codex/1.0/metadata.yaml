@@ -1,0 +1,22 @@
+entity_type: skill
+id: hgdlc-implementation-plan-codex
+version: "1.0"
+canonical_name: hgdlc-implementation-plan-codex@1.0
+display_name: "Построение плана имплементации (Codex)"
+description: >
+  Анализирует доступный контекст (требования, дизайн, описание задачи) и
+  кодовую базу, затем формирует пронумерованный план с чекбоксами, который
+  кодинг-агент может выполнять механически шаг за шагом.
+  Результат сохраняется в implementation-plan.md.
+coding_agent: codex
+team_code: Demo
+platform_code: BACK
+tags:
+  - planning
+  - implementation
+  - construction
+  - codex
+skill_kind: analysis
+scope: organization
+approval_status: draft
+lifecycle_status: active
