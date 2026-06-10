@@ -96,7 +96,9 @@ Label every comment with its severity:
 ### Step 5 — Verify the Verification
 - What tests were run?
 - Did the build pass?
-- Was the change tested manually (if applicable)?
+- Were only terminating verification commands used (build / compile / test / lint)?
+- Reject verification that depends on starting backend/frontend services,
+  browser inspection, or `curl` against locally started endpoints.
 
 ---
 
@@ -189,7 +191,7 @@ Save the review report to `code-review-report.md` in the project root (or the pa
 ### Verification
 - Tests: [pass / fail / not run]
 - Build: [pass / fail / not run]
-- Manual: [verified / not applicable]
+- Runtime/manual checks: [not required | used incorrectly]
 ```
 
 ---
@@ -231,7 +233,8 @@ Save the review report to `code-review-report.md` in the project root (or the pa
 ### Verification
 - [ ] Tests pass
 - [ ] Build succeeds
-- [ ] Manual verification done (if applicable)
+- [ ] Only terminating verification commands were used
+- [ ] No verification depended on running frontend/backend services or browser checks
 
 ### Verdict
 - [ ] Approve — ready to merge / proceed

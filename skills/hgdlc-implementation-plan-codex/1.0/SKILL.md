@@ -71,6 +71,10 @@ Build the execution sequence from foundation to surface:
 | 9 | **Frontend** | Components, pages, API calls — after backend API is stable |
 
 Add a **Build & verify** step after every layer that produces compilable code.
+Verification must use only terminating commands such as build, compile, test,
+or lint. Do not plan long-running commands or manual checks such as
+`./gradlew bootRun`, `npm run dev`, `vite`, `docker compose up`, browser
+inspection, or `curl` against a locally started app.
 
 ---
 
@@ -85,6 +89,9 @@ specified in the node instruction). Follow the format below **exactly**.
 - For `Modify`: describe *what* to add/change, not the full file content.
 - For `Create`: describe the new class / function / schema with key fields.
 - Verification commands must be real commands runnable in the project shell.
+- Verification commands must be terminating build/compile/test/lint commands.
+- Do not include verification that requires starting backend/frontend services,
+  opening a browser, or probing localhost with `curl`.
 - Do NOT write actual code — only describe structure, fields, and behaviour.
 
 ---
@@ -111,7 +118,7 @@ specified in the node instruction). Follow the format below **exactly**.
 - [ ] Create / Modify `path/to/another.ext`
   - [specific description]
 
-**Verify**: `./gradlew compileJava` — must succeed with no errors
+**Verify**: `./gradlew compileJava` — must succeed with no errors and terminate
 
 ---
 
@@ -121,7 +128,7 @@ specified in the node instruction). Follow the format below **exactly**.
 - [ ] Create / Modify `path/to/file.ext`
   - [specific description]
 
-**Verify**: `./gradlew test --tests "ClassName"` — all tests green
+**Verify**: `./gradlew test --tests "ClassName"` — all tests green and terminate
 
 ---
 
@@ -154,4 +161,6 @@ specified in the node instruction). Follow the format below **exactly**.
 - The plan must be self-contained — the coding agent must be able to execute it
   without re-reading any design artifact.
 - No actual source code in the plan — descriptions only.
+- Never use long-running runtime checks as verification. Prefer build/test
+  commands even when the project also supports manual UI or API smoke checks.
 - Language: match the language of the task description / node instruction.
