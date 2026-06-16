@@ -7,7 +7,7 @@ description: >
   Цикл разработки на основе методологии Superpowers.
   Уточнение запроса → детальный план (writing-plans) → апрув плана →
   исполнение (executing-plans) → верификация перед завершением → финальный апрув.
-coding_agent: claude
+coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK
 tags:

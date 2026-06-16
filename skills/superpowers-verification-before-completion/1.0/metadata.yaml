@@ -7,7 +7,7 @@ description: >
   Mandatory gate before any completion claim. Runs fresh verification, reads
   full output, and only then reports success or lists specific rework items.
   Evidence before claims, always.
-coding_agent: claude
+coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK
 tags:

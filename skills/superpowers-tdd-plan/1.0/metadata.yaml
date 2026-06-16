@@ -7,7 +7,7 @@ description: >
   Generate a concrete list of test cases (Given/When/Then) before any
   implementation. Covers happy path, edge cases, and error handling.
   Produces tdd-plan.md that drives the RED-GREEN-REFACTOR cycle.
-coding_agent: claude
+coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK
 tags:

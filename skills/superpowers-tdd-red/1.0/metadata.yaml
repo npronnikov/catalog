@@ -7,7 +7,7 @@ description: >
   RED phase of TDD: write failing tests from the approved tdd-plan.md.
   No production code. Every test must fail for the right reason before
   implementation begins.
-coding_agent: claude
+coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK
 tags:

@@ -7,7 +7,7 @@ description: >
   REFACTOR phase of TDD: improve code quality while keeping all tests green.
   No new behaviour. Uses systematic debugging if a refactor breaks tests.
   Produces clean, idiomatic code ready for human review.
-coding_agent: claude
+coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK
 tags:

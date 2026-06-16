@@ -7,7 +7,7 @@ description: >
   Execute a pre-written implementation plan step by step with checkpoints and
   mandatory stopping rules. Announces progress, tracks state via TodoWrite,
   and halts on blockers rather than guessing.
-coding_agent: claude
+coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK
 tags:
