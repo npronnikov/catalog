@@ -1,0 +1,22 @@
+entity_type: skill
+id: superpowers-verification-before-completion
+version: "1.0"
+canonical_name: superpowers-verification-before-completion@1.0
+display_name: "Superpowers: Verification Before Completion"
+description: >
+  Mandatory gate before any completion claim. Runs fresh verification, reads
+  full output, and only then reports success or lists specific rework items.
+  Evidence before claims, always.
+coding_agent: claude
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - superpowers
+  - verification
+  - quality-gate
+skill_kind: review
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/superpowers-verification-before-completion/1.0"

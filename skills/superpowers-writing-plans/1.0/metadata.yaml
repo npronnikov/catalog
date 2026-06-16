@@ -1,0 +1,23 @@
+entity_type: skill
+id: superpowers-writing-plans
+version: "1.0"
+canonical_name: superpowers-writing-plans@1.0
+display_name: "Superpowers: Writing Plans"
+description: >
+  Produce a concrete, self-contained implementation plan before touching any code.
+  Each step is 2-5 minutes, follows TDD order, and requires no re-reading of
+  design artifacts at execution time.
+coding_agent: claude
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - superpowers
+  - planning
+  - tdd
+  - implementation
+skill_kind: planning
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/superpowers-writing-plans/1.0"

@@ -1,0 +1,23 @@
+entity_type: skill
+id: superpowers-tdd-refactor
+version: "1.0"
+canonical_name: superpowers-tdd-refactor@1.0
+display_name: "Superpowers TDD: REFACTOR — Clean While Green"
+description: >
+  REFACTOR phase of TDD: improve code quality while keeping all tests green.
+  No new behaviour. Uses systematic debugging if a refactor breaks tests.
+  Produces clean, idiomatic code ready for human review.
+coding_agent: claude
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - superpowers
+  - tdd
+  - refactoring
+  - quality
+skill_kind: review
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/superpowers-tdd-refactor/1.0"

@@ -1,0 +1,404 @@
+id: superpowers-tdd-flow
+version: "1.0"
+canonical_name: superpowers-tdd-flow@1.0
+title: Superpowers TDD Flow
+description: >
+  Цикл разработки по методологии Test-Driven Development.
+  Последовательность: уточнение запроса → план тест-кейсов → апрув плана →
+  RED (написать падающие тесты) → GREEN (реализовать минимальный код) →
+  REFACTOR (почистить, оставаясь зелёными) → верификация → финальный апрув.
+  Базовый принцип: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
+coding_agent: claude
+start_node_id: ai-clarifying-questions
+failure_node_id: terminal-complete
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+
+nodes:
+
+  # ── Шаг 1: Уточняющие вопросы ────────────────────────────────────────────
+  - id: ai-clarifying-questions
+    title: Генерация уточняющих вопросов
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      <#assign humanAnswerQuestions = step["human-answer-questions"]!{} />
+      <#if humanAnswerQuestions.rework_instruction?has_content && (humanAnswerQuestions.keep_changes!false)>
+      Исправь ${humanAnswerQuestions.rework_instruction}
+      <#else>
+      <#if (run.feature_request)?? && run.feature_request?has_content>
+      ${run.feature_request}
+      </#if>
+
+      Изучи кодовую базу проекта и запрос пользователя.
+      Сформулируй 10–15 уточняющих вопросов, которые напрямую влияют на
+      выбор решения. Строго следуй скилу.
+
+      Особое внимание для TDD-флоу:
+      - Какие тестовые фреймворки уже используются в проекте?
+      - Какой уровень покрытия ожидается (unit / integration)?
+      - Есть ли существующие тесты для смежного кода, которые нельзя сломать?
+
+      <#if humanAnswerQuestions.rework_instruction?has_content>
+      ВАЖНО! Учти следующее: ${humanAnswerQuestions.rework_instruction}
+      </#if>
+      </#if>
+    skill_refs:
+      - hgdlc-ask-clarifying-questions@1.0
+    produced_artifacts:
+      - scope: run
+        path: questions.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: human-answer-questions
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ── Шаг 2: Ответы пользователя ───────────────────────────────────────────
+  - id: human-answer-questions
+    title: Ответы на уточняющие вопросы
+    type: human_input
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-clarifying-questions
+        path: questions.md
+        scope: run
+        required: true
+        modifiable: true
+        transfer_mode: by_ref
+    instruction: |
+      Открой questions.md.
+      Отметь чекбокс у выбранного варианта в каждом вопросе.
+      Особое внимание удели вопросам о тестовом фреймворке и ожидаемом покрытии.
+      Нажми Submit когда ответишь на все вопросы.
+    produced_artifacts:
+      - scope: run
+        path: questions.md
+        required: true
+    expected_mutations: []
+    on_submit:
+      transition: ai-tdd-plan
+    on_rework:
+      transition: ai-clarifying-questions
+
+  # ── Шаг 3: TDD Plan ──────────────────────────────────────────────────────
+  - id: ai-tdd-plan
+    title: Составление плана тест-кейсов
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: human-answer-questions
+        path: questions.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign approveTddPlan = step["approve-tdd-plan"]!{} />
+      <#if approveTddPlan.rework_instruction?has_content && (approveTddPlan.keep_changes!false)>
+      Исправь ${approveTddPlan.rework_instruction}
+      <#else>
+      Изучи запрос пользователя и ответы из questions.md.
+      Исследуй кодовую базу: существующие тесты, тестовые утилиты, фреймворки.
+      Составь список тест-кейсов и сохрани в tdd-plan.md.
+
+      Формат каждого тест-кейса:
+      - ID: TC-N
+      - Given/When/Then
+      - Ожидаемое поведение при падении (compile error / AssertionError / 404)
+      - Приоритет и слой (unit/integration)
+
+      Покрой: happy path, edge cases, error handling.
+      НЕ пиши реализацию и НЕ пиши тестовый код — только спецификацию.
+
+      <#if approveTddPlan.rework_instruction?has_content>
+      Важно: учти следующее: ${approveTddPlan.rework_instruction}
+      </#if>
+      </#if>
+    skill_refs:
+      - superpowers-tdd-plan@1.0
+    produced_artifacts:
+      - scope: run
+        path: tdd-plan.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: approve-tdd-plan
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ── Шаг 4: Апрув плана тест-кейсов ──────────────────────────────────────
+  - id: approve-tdd-plan
+    title: Проверка и апрув плана тест-кейсов
+    type: human_approval
+    execution_context: []
+    instruction: |
+      Проверь план тест-кейсов в tdd-plan.md.
+
+      Убедись, что:
+      - Покрыты все ключевые сценарии: happy path, edge cases, ошибки
+      - Каждый тест-кейс имеет чёткий Given/When/Then
+      - Указано ожидаемое поведение при падении (compile error / AssertionError / ...)
+      - Нет тест-кейсов, которые заведомо пройдут без реализации
+      - Тест-кейсы атомарны (один тест — одно поведение)
+      - Количество тестов разумно для данной задачи
+
+      Апрувь для начала RED-фазы или верни на доработку с конкретными замечаниями.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-write-red-tests
+    on_rework:
+      transition: ai-tdd-plan
+
+  # ── Шаг 5: RED — Написать падающие тесты ─────────────────────────────────
+  - id: ai-write-red-tests
+    title: "RED: Написать падающие тесты"
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-tdd-plan
+        path: tdd-plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign aiImplementGreen = step["ai-implement-green"]!{} />
+      <#if aiImplementGreen.rework_instruction?has_content && (aiImplementGreen.keep_changes!false)>
+      В ходе реализации (GREEN) обнаружена проблема с тестами:
+      ${aiImplementGreen.rework_instruction}
+      Исправь тесты согласно замечанию.
+      <#else>
+      RED-фаза TDD. Строго следуй скилу.
+
+      Задача:
+      1. Прочитай tdd-plan.md полностью
+      2. Напиши тестовые методы для каждого TC-N по порядку
+      3. НЕ создавай и НЕ изменяй production-код
+      4. Запусти тесты: они все должны УПАСТЬ (compile error или AssertionError)
+      5. Если какой-то тест проходит — он написан неправильно, исправь его
+
+      После написания всех тестов заполни step-summary:
+      - route: "on_success" если все тесты падают правильно
+      - route: "on_rework" если какой-то тест случайно проходит и нельзя исправить
+      </#if>
+    skill_refs:
+      - superpowers-tdd-red@1.0
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: ai-implement-green
+    on_rework:
+      transition: ai-write-red-tests
+      keep_changes: true
+      max_loop_count: 2
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ── Шаг 6: GREEN — Реализация минимального кода ──────────────────────────
+  - id: ai-implement-green
+    title: "GREEN: Реализация минимального кода"
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-tdd-plan
+        path: tdd-plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-refactor
+        path: tdd-plan.md
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign aiRefactor = step["ai-refactor"]!{} />
+      <#if aiRefactor.rework_instruction?has_content>
+      ${aiRefactor.rework_instruction}
+      <#else>
+      GREEN-фаза TDD. Строго следуй скилу.
+
+      Задача:
+      1. Запусти тесты — убедись что они все ещё падают (RED не потерян)
+      2. Реализуй МИНИМАЛЬНЫЙ production-код чтобы тесты прошли:
+         - Порядок слоёв: domain → repository → service → controller → config
+         - Для каждого теста: запусти до → реализуй → запусти после
+         - Не добавляй функциональность вне требований тестов
+      3. После каждого теста: прогони ВСЕ тесты (нет регрессий?)
+      4. Когда все тесты зелёные — прогони полный build
+
+      Заполни step-summary:
+      - route: "on_success" если все тесты зелёные, build чистый
+      - route: "on_rework" если есть нерешённые падения
+      </#if>
+    skill_refs:
+      - superpowers-tdd-green@1.0
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: ai-refactor
+    on_rework:
+      transition: ai-implement-green
+      keep_changes: true
+      session_policy: resume_previous_session
+      max_loop_count: 3
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ── Шаг 7: REFACTOR — Рефакторинг, оставаясь зелёными ───────────────────
+  - id: ai-refactor
+    title: "REFACTOR: Рефакторинг при зелёных тестах"
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-tdd-plan
+        path: tdd-plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-verify-before-completion
+        path: verification-report.md
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign verifyBeforeCompletion = step["ai-verify-before-completion"]!{} />
+      <#if verifyBeforeCompletion.rework_instruction?has_content>
+      ${verifyBeforeCompletion.rework_instruction}
+      <#else>
+      REFACTOR-фаза TDD. Строго следуй скилу.
+
+      Задача:
+      1. Прогони все тесты — стартовое состояние: все зелёные
+      2. Выяви цели рефакторинга: дублирование, плохие имена, длинные методы,
+         магические значения, неверный уровень абстракции
+      3. Для каждого изменения: одно изменение → прогон тестов → следующее
+      4. Если тесты упали: откати изменение, разберись почему, попробуй иначе
+      5. После 3 неудачных попыток — пропусти цель рефакторинга
+
+      НЕ добавляй новую функциональность.
+      НЕ изменяй тесты чтобы сделать рефакторинг проще.
+
+      Заполни step-summary:
+      - route: "on_success" если все тесты зелёные, код улучшен
+      - route: "on_rework" если рефакторинг сломал что-то и требует исправления в реализации
+      </#if>
+    skill_refs:
+      - superpowers-tdd-refactor@1.0
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: ai-verify-before-completion
+    on_rework:
+      transition: ai-implement-green
+      keep_changes: true
+      session_policy: resume_previous_session
+      max_loop_count: 2
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ── Шаг 8: Верификация перед завершением ─────────────────────────────────
+  - id: ai-verify-before-completion
+    title: Верификация перед завершением
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-tdd-plan
+        path: tdd-plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Проведи финальную верификацию. Строго следуй скилу — каждый шаг обязателен.
+
+      Верификационный чеклист для TDD-флоу:
+      1. Все TC-N из tdd-plan.md покрыты тестовыми методами
+      2. Все тесты зелёные (нет падений, нет ошибок)
+      3. Нет регрессий — тесты существовавшие до запуска флоу тоже зелёные
+      4. Полный build проходит с нулём ошибок
+      5. git diff HEAD не содержит изменений в test-файлах, которые ослабляют
+         проверку (меньше assertions, более мягкие матчеры)
+      6. Нет backup-копий файлов, debug-кода, TODO в production-коде
+
+      Запусти команды свежо — не полагайся на результаты предыдущих шагов.
+
+      Заполни step-summary:
+      - route: "on_success" если всё прошло
+      - route: "on_rework" если есть проблемы с конкретным rework_instruction
+    skill_refs:
+      - superpowers-verification-before-completion@1.0
+    produced_artifacts:
+      - scope: run
+        path: verification-report.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: approve-final-code
+    on_rework:
+      transition: ai-refactor
+      keep_changes: true
+      session_policy: resume_previous_session
+      max_loop_count: 2
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ── Шаг 9: Финальный апрув ───────────────────────────────────────────────
+  - id: approve-final-code
+    title: Финальный апрув TDD-реализации
+    type: human_approval
+    execution_context: []
+    instruction: |
+      Проверь итоговые изменения и отчёт верификации в verification-report.md.
+
+      Убедись, что:
+      - Все TC-N из tdd-plan.md покрыты тестами
+      - Все тесты зелёные, build чистый
+      - Реализация минимальна — нет кода без соответствующего теста
+      - После рефакторинга код читаем и следует паттернам проекта
+      - Нет изменений вне согласованного scope
+
+      Апрувь для завершения флоу или верни на доработку с конкретными замечаниями.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: terminal-complete
+    on_rework:
+      transition: ai-implement-green
+
+  # ── Терминальная нода ─────────────────────────────────────────────────────
+  - id: terminal-complete
+    title: TDD-цикл завершён
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

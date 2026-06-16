@@ -1,0 +1,22 @@
+entity_type: skill
+id: superpowers-executing-plans
+version: "1.0"
+canonical_name: superpowers-executing-plans@1.0
+display_name: "Superpowers: Executing Plans"
+description: >
+  Execute a pre-written implementation plan step by step with checkpoints and
+  mandatory stopping rules. Announces progress, tracks state via TodoWrite,
+  and halts on blockers rather than guessing.
+coding_agent: claude
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - superpowers
+  - execution
+  - planning
+skill_kind: execution
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/superpowers-executing-plans/1.0"
