@@ -3,7 +3,8 @@ version: "1.0"
 canonical_name: jira-task-development-flow@1.0
 title: JIRA Task Development — Получить задачу, спланировать, реализовать
 description: >
-  Полный цикл разработки по JIRA-задаче: поиск задачи по assignee и статусу To Do →
+  Полный цикл разработки по JIRA-задаче: поиск ровно одной задачи по project,
+  assignee и заданным статусам →
   анализ description и создание плана → subtask с планом в JIRA → human approval →
   resolve plan-subtask → реализация по плану → subtask с результатами в JIRA →
   human approval → resolve impl-subtask.
@@ -26,12 +27,17 @@ nodes:
     execution_context: []
     instruction: |
       Выполни поиск задач в JIRA через подключённый скилл.
+      Нужно получить ровно одну задачу.
+
       Аргументы для jira-issues:
       - environment: ${env.environment}
       - project: ${env.project}
       - assignee: ${env.assignee}
       - searchStatuses: ${(env.statuses)!''}
       - maxResults: 1
+
+      Если найдено не ровно 1 задача — сохрани jira-task.json с ok=false,
+      totalResults, issues и понятным error. Не заполняй верхнеуровневый taskKey.
     skill_refs:
       - jira-issues@1.0
     produced_artifacts:
@@ -70,7 +76,10 @@ nodes:
       <#if approvePlan.rework_instruction?has_content && (approvePlan.keep_changes!false)>
       Исправь: ${approvePlan.rework_instruction}
       <#else>
-      Прочитай jira-task.json. Используй поле description как описание задачи,
+      Прочитай jira-task.json. Если ok != true или taskKey отсутствует —
+      заверши ноду ошибкой и не создавай plan.md.
+
+      Используй поле description как описание задачи,
       поле summary как краткое название.
       Исследуй кодовую базу проекта и создай план имплементации.
       Сохрани результат в plan.md. Строго следуй подключённому скиллу,
@@ -170,7 +179,14 @@ nodes:
   - id: human-approve-plan
     title: Проверка и утверждение плана имплементации
     type: human_approval
-    execution_context: []
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-analyze-and-plan
+        path: plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
     instruction: |
       Проверь план имплементации в файле plan.md.
 
@@ -361,7 +377,21 @@ nodes:
   - id: human-approve-impl
     title: Проверка и утверждение реализации
     type: human_approval
-    execution_context: []
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-analyze-and-plan
+        path: plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-create-impl-subtask
+        path: jira-impl-subtask.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
     instruction: |
       Проверь итоговые изменения в кодовой базе.
 

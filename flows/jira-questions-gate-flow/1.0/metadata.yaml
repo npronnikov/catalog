@@ -9,7 +9,7 @@ description: >
   и контуре (SIGMA/DELTA/SBERTRACK) через MCP сервер Atlassian.
   Пользователь заполняет вопросы в gate UI, результат связывается с задачей.
 
-coding_agent: gigacode
+coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK
 tags:

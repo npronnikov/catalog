@@ -1,0 +1,24 @@
+entity_type: skill
+id: analyze-task-impact
+version: "1.0"
+canonical_name: analyze-task-impact@1.0
+display_name: "Анализ влияния JIRA-задачи"
+description: >
+  Анализирует заголовок, описание и комментарии JIRA-задачи, исследует кодовую
+  базу и оценивает число затронутых файлов для выбора Quick Dev или SpecKit.
+coding_agent: qwen
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - hgdlc
+  - jira
+  - analysis
+  - routing
+  - impact
+  - qwen
+skill_kind: analysis
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "skills/analyze-task-impact/1.0"

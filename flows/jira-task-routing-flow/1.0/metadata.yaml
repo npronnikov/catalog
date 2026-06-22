@@ -1,0 +1,32 @@
+entity_type: flow
+id: jira-task-routing-flow
+version: "1.0"
+canonical_name: jira-task-routing-flow@1.0
+display_name: "JIRA Task Routing — Найти задачу, оценить масштаб, выбрать путь"
+description: >
+  Маршрутизирующий flow: поиск JIRA-задачи в выбранном контуре DELTA, SIGMA
+  или SBERTRACK
+  по project, типу, статусу и assignee строго через соответствующий MCP-сервер
+  (скилл jira-issues) → анализ заголовка, описания и комментариев → оценка числа
+  затронутых файлов → автоматический выбор пути разработки. Если правок больше
+  10 файлов — полный SDD-цикл SpecKit; если правок не больше 10 файлов —
+  быстрый путь Quick Dev (implementation → develop → HG Approval). После выполнения
+  задача получает label AIFIXED и переводится в конечный статус по типу задачи.
+coding_agent: qwen
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - hgdlc
+  - jira
+  - routing
+  - speckit
+  - quick-dev
+  - mcp
+  - development
+flow_kind: delivery
+risk_level: medium
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "flows/jira-task-routing-flow/1.0"
