@@ -1,0 +1,22 @@
+entity_type: skill
+id: openspec-archive-gigacode
+version: "1.0"
+canonical_name: openspec-archive-gigacode@1.0
+display_name: "OpenSpec: Архивирование и актуализация документации (GigaCode)"
+description: >
+  Финализирует OpenSpec-изменение: мёрджит delta-specs из
+  openspec/changes/<name>/specs/ в актуальные openspec/specs/ (актуализация
+  документации), затем перемещает папку изменения в
+  openspec/changes/archive/YYYY-MM-DD-<name>/.
+coding_agent: gigacode
+team_code: Demo
+platform_code: BACK
+tags:
+  - openspec
+  - sdd
+  - documentation
+  - gigacode
+skill_kind: analysis
+scope: organization
+approval_status: draft
+lifecycle_status: active

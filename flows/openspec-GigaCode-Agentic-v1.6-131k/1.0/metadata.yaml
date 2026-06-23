@@ -1,0 +1,21 @@
+entity_type: flow
+id: openspec-GigaCode-Agentic-v1.6-131k
+version: "1.0"
+canonical_name: openspec-GigaCode-Agentic-v1.6-131k@1.0
+title: OpenSpec Full Cycle — GigaCode-Agentic-v1.6-131k
+description: >
+  Полный цикл OpenSpec-разработки: исследование идеи и текущих спецификаций →
+  создание delta-specs и артефактов изменения → апрув → реализация кода →
+  верификация → финальный акцепт → актуализация документации и архивирование.
+  Результат: реализованная фича + актуализированные openspec/specs/.
+coding_agent: gigacode
+team_code: Demo
+platform_code: BACK
+tags:
+  - openspec
+  - sdd
+  - full-cycle
+  - documentation
+scope: organization
+approval_status: draft
+lifecycle_status: active

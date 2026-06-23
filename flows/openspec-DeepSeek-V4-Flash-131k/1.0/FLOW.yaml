@@ -1,0 +1,529 @@
+id: openspec-DeepSeek-V4-Flash-131k
+version: "1.0"
+canonical_name: openspec-DeepSeek-V4-Flash-131k@1.0
+title: OpenSpec Full Cycle — DeepSeek-V4-Flash-131k
+description: >
+  Полный цикл OpenSpec: исследование текущих спецификаций → создание delta-specs
+  и артефактов изменения → реализация → верификация → актуализация документации
+  и архивирование. Каждый завершённый цикл оставляет актуальные openspec/specs/.
+coding_agent: gigacode
+start_node_id: ai-describe-change
+failure_node_id: terminal-complete
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+rule_refs: []
+
+nodes:
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ШАГ 1 — Описание изменения
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-describe-change
+    title: Формализация описания изменения
+    type: ai
+    model: vllm/DeepSeek-V4-Flash-131k
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Изучи пользовательский запрос: ${run.feature_request}
+
+      Создай файл change-request.md и запиши в нём:
+
+      # Change Request
+
+      ## Название изменения (kebab-case)
+      <!-- Например: add-user-auth, fix-login-redirect, improve-performance -->
+      <change-name>:
+
+      ## Что нужно сделать
+      Конкретное описание из запроса пользователя.
+
+      ## Зачем
+      Бизнес-контекст, проблема или возможность из запроса.
+
+      ## Дополнительный контекст
+      Ограничения, связанные компоненты, риски — всё что упомянуто в запросе.
+    produced_artifacts:
+      - scope: run
+        path: change-request.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: ai-explore
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ШАГ 2 — Исследование идеи и текущих спецификаций
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-explore
+    title: Исследование идеи и текущих спецификаций
+    type: ai
+    model: vllm/DeepSeek-V4-Flash-131k
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-describe-change
+        path: change-request.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign approveExploration = step["approve-exploration"]!{} />
+      <#if approveExploration.rework_instruction?has_content && (approveExploration.keep_changes!false)>
+      Исследуй глубже: ${approveExploration.rework_instruction}
+      <#else>
+      Прочитай описание изменения из change-request.md.
+      Следуй приложенному скилу.
+
+      Исследуй:
+      1. Текущие спецификации в openspec/specs/ — что уже задокументировано, что затронет изменение
+      2. Кодовую базу при необходимости — для заземления обсуждения
+      3. Уточни скоуп, риски, варианты подхода
+
+      Зафиксируй результаты исследования в exploration-notes.md:
+      - Что нашёл в текущих specs (что уже есть, чего нет)
+      - Кристаллизованное понимание проблемы
+      - Рекомендуемый подход (если возник)
+      - Открытые вопросы (если остались)
+      - Предлагаемые capabilities (имена для delta-specs)
+      </#if>
+    skill_refs:
+      - openspec-explore-gigacode@1.0
+    produced_artifacts:
+      - scope: run
+        path: exploration-notes.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: approve-exploration
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ШАГ 3 — Апрув скоупа исследования
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: approve-exploration
+    title: Апрув скоупа изменения
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-explore
+        path: exploration-notes.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Проверь результаты исследования в exploration-notes.md.
+
+      Убедись что:
+      - Скоуп изменения понят правильно
+      - Затрагиваемые capabilities определены корректно
+      - Подход звучит разумно
+      - Нет пропущенных зависимостей или рисков
+
+      Утверди для перехода к созданию артефактов,
+      или верни на доработку с конкретным указанием что нужно исследовать глубже.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-propose
+    on_rework:
+      transition: ai-explore
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ШАГ 4 — Создание артефактов изменения
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-propose
+    title: Создание артефактов изменения (proposal + specs + design + tasks)
+    type: ai
+    model: vllm/DeepSeek-V4-Flash-131k
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-describe-change
+        path: change-request.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-explore
+        path: exploration-notes.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign approveProposal = step["approve-proposal"]!{} />
+      <#if approveProposal.rework_instruction?has_content && (approveProposal.keep_changes!false)>
+      Доработай артефакты с учётом замечания: ${approveProposal.rework_instruction}
+      <#else>
+      Прочитай change-request.md и exploration-notes.md.
+      Следуй приложенному скилу.
+
+      Возьми название изменения из поля "change-name" в change-request.md.
+
+      Создай в openspec/changes/<name>/:
+      - proposal.md — что делаем и зачем
+      - specs/<capability>/spec.md — delta-спецификации для каждой capability
+      - specs-index.md — список активных delta-specs этого change
+      - design.md — технические решения
+      - tasks.md — чеклист реализации
+
+      Для tasks.md правило обязательное:
+      - В секцию Verification добавляй только завершающиеся команды проверки
+        (тесты, сборка, компиляция, линтеры).
+      - Не добавляй задачи на запуск системы или ручной smoke через долгоживущие процессы:
+        `./gradlew bootRun`, `npm run dev`, `vite`, `docker compose up` и аналоги.
+      - Не формулируй verification как "поднять backend/frontend и проверить руками".
+      - Для этого репозитория предпочитай команды вида:
+        `cd backend && ./gradlew test`, `cd backend && ./gradlew build`,
+        `cd backend && ./gradlew compileJava`, `cd frontend && npm run build`
+
+      После создания всех файлов создай proposal-summary.md с кратким резюме:
+      - Название изменения и путь
+      - Список capabilities и что они специфицируют
+      - Количество задач
+      - Ключевые технические решения из design.md
+      </#if>
+    skill_refs:
+      - openspec-propose-gigacode@1.0
+    produced_artifacts:
+      - scope: run
+        path: proposal-summary.md
+        required: true
+        modifiable: false
+      - scope: project
+        path: "openspec/changes/*/proposal.md"
+        required: true
+        modifiable: false
+      - scope: project
+        path: "openspec/changes/*/design.md"
+        required: true
+        modifiable: false
+      - scope: project
+        path: "openspec/changes/*/tasks.md"
+        required: true
+        modifiable: false
+      - scope: project
+        path: "openspec/changes/*/specs-index.md"
+        required: true
+        modifiable: false
+      - scope: project
+        path: "openspec/changes/*/specs/*/spec.md"
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: approve-proposal
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ШАГ 5 — Апрув артефактов изменения
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: approve-proposal
+    title: Апрув артефактов изменения
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-propose
+        path: proposal-summary.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Проверь артефакты созданного изменения.
+      Сводка в proposal-summary.md, детали в openspec/changes/<name>/.
+
+      Открой и проверь:
+      - proposal.md — правильно ли сформулировано что и зачем?
+      - specs/<cap>/spec.md — specs описывают ПОВЕДЕНИЕ (не реализацию)?
+        Требования конкретные и тестируемые? Сценарии покрывают edge cases?
+      - design.md — технические решения разумны? Ключевые решения зафиксированы?
+      - tasks.md — задачи атомарные? Порядок по зависимостям?
+
+      Утверди для перехода к реализации,
+      или верни на доработку с конкретным замечанием (какой файл, что именно).
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-apply
+    on_rework:
+      transition: ai-propose
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ШАГ 6 — Реализация
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-apply
+    title: Реализация по tasks.md
+    type: ai
+    model: vllm/DeepSeek-V4-Flash-131k
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-propose
+        path: proposal-summary.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/proposal.md"
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/tasks.md"
+        scope: project
+        required: true
+        modifiable: true
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/design.md"
+        scope: project
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/specs-index.md"
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign approveFinal = step["approve-final"]!{} />
+      <#if approveFinal.rework_instruction?has_content && (approveFinal.keep_changes!false)>
+      Устрани замечания и исправь реализацию: ${approveFinal.rework_instruction}
+      <#else>
+      Прочитай proposal-summary.md чтобы найти название изменения и путь.
+      Следуй приложенному скилу.
+
+      Используй уже переданные входные артефакты этого шага:
+      - proposal.md — что именно меняем и зачем
+      - specs-index.md — manifest активных delta-specs текущего change
+      - design.md — технические решения и ограничения
+      - tasks.md — чеклист реализации
+
+      Используй specs-index.md как единственный список активных delta-specs этого change.
+      Читай только те spec-файлы, которые перечислены в specs-index.md.
+
+      Реализуй все задачи из tasks.md последовательно.
+      Помечай каждую задачу выполненной (- [ ] → - [x]) сразу после завершения.
+      </#if>
+    skill_refs:
+      - openspec-apply-gigacode@1.0
+    produced_artifacts: []
+    expected_mutations:
+      - scope: project
+        path: "openspec/changes/*/tasks.md"
+        required: true
+    on_success:
+      transition: ai-verify
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ШАГ 7 — Верификация реализации
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-verify
+    title: Верификация реализации против спецификаций
+    type: ai
+    model: vllm/DeepSeek-V4-Flash-131k
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-propose
+        path: proposal-summary.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/proposal.md"
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/specs-index.md"
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/design.md"
+        scope: project
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/tasks.md"
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай proposal-summary.md чтобы найти название изменения и путь.
+      Следуй приложенному скилу.
+
+      Проверь реализацию по трём измерениям:
+      - Полнота: все задачи выполнены, все требования реализованы
+      - Корректность: код соответствует specs и сценариям
+      - Согласованность: следует решениям из design.md
+
+      Сохрани отчёт в verify-report.md.
+    skill_refs:
+      - openspec-verify-gigacode@1.0
+    produced_artifacts:
+      - scope: run
+        path: verify-report.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: approve-final
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ШАГ 8 — Финальный акцепт
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: approve-final
+    title: Финальный акцепт результата
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-verify
+        path: verify-report.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Проверь отчёт верификации в verify-report.md.
+
+      Убедись что:
+      - Нет CRITICAL проблем (незавершённые задачи, нереализованные требования)
+      - WARNING-и приняты осознанно или исправлены
+      - Реализация работает корректно (проверь вручную если нужно)
+      - Все задачи из tasks.md отмечены [x]
+
+      Утверди для перехода к архивированию и актуализации документации,
+      или верни на доработку с конкретным замечанием что нужно исправить.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-archive
+    on_rework:
+      transition: ai-apply
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ШАГ 9 — Актуализация документации и архивирование
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-archive
+    title: Актуализация документации и архивирование изменения
+    type: ai
+    model: vllm/DeepSeek-V4-Flash-131k
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-propose
+        path: proposal-summary.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/tasks.md"
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-propose
+        path: "openspec/changes/*/specs-index.md"
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай proposal-summary.md чтобы найти название изменения и путь.
+      Следуй приложенному скилу.
+
+      Выполни два действия:
+
+      1. Синхронизировать delta-specs в основную документацию:
+         Используй specs-index.md как источник списка delta-specs текущего change.
+         Для каждого spec-файла из specs-index.md
+         примени изменения к openspec/specs/<capability>/spec.md
+         (добавить/изменить/удалить требования согласно маркерам ADDED/MODIFIED/REMOVED).
+
+      2. Архивировать папку изменения:
+         Переместить openspec/changes/<name>/
+         в openspec/changes/archive/YYYY-MM-DD-<name>/
+
+      Покажи итог: что синхронизировано, куда заархивировано.
+    skill_refs:
+      - openspec-archive-gigacode@1.0
+    produced_artifacts:
+      - scope: project
+        path: "openspec/specs/*/spec.md"
+        required: true
+        modifiable: false
+    expected_mutations:
+      - scope: project
+        path: "openspec/specs/*/spec.md"
+        required: true
+    on_success:
+      transition: terminal-complete
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Терминальная нода
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: terminal-complete
+    title: OpenSpec-цикл завершён
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

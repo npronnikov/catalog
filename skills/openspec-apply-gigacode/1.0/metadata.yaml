@@ -1,0 +1,21 @@
+entity_type: skill
+id: openspec-apply-gigacode
+version: "1.0"
+canonical_name: openspec-apply-gigacode@1.0
+display_name: "OpenSpec: Реализация по tasks.md (GigaCode)"
+description: >
+  Реализует задачи из tasks.md текущего OpenSpec-изменения.
+  Читает specs/, design.md для понимания требований и технических решений.
+  Последовательно выполняет задачи и помечает их выполненными в tasks.md.
+coding_agent: gigacode
+team_code: Demo
+platform_code: BACK
+tags:
+  - openspec
+  - implementation
+  - coding
+  - gigacode
+skill_kind: code
+scope: organization
+approval_status: draft
+lifecycle_status: active

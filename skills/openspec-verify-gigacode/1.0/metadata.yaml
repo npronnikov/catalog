@@ -1,0 +1,23 @@
+entity_type: skill
+id: openspec-verify-gigacode
+version: "1.0"
+canonical_name: openspec-verify-gigacode@1.0
+display_name: "OpenSpec: Верификация реализации (GigaCode)"
+description: >
+  Проверяет соответствие реализации артефактам изменения по трём измерениям:
+  полнота (все задачи и требования покрыты), корректность (код соответствует
+  спекам), согласованность (следует решениям из design.md).
+  Формирует отчёт с CRITICAL / WARNING / SUGGESTION приоритетами.
+coding_agent: gigacode
+team_code: Demo
+platform_code: BACK
+tags:
+  - openspec
+  - review
+  - quality
+  - analysis
+  - gigacode
+skill_kind: review
+scope: organization
+approval_status: draft
+lifecycle_status: active

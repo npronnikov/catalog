@@ -1,0 +1,21 @@
+entity_type: skill
+id: openspec-explore-gigacode
+version: "1.0"
+canonical_name: openspec-explore-gigacode@1.0
+display_name: "OpenSpec: Исследование идей и спецификаций (GigaCode)"
+description: >
+  Режим свободного исследования: thinking partner для проработки идей,
+  изучения текущих спецификаций (openspec/specs/) и выявления скоупа
+  предстоящего изменения. Не реализует код — только помогает думать.
+coding_agent: gigacode
+team_code: Demo
+platform_code: BACK
+tags:
+  - openspec
+  - planning
+  - analysis
+  - gigacode
+skill_kind: analysis
+scope: organization
+approval_status: draft
+lifecycle_status: active
