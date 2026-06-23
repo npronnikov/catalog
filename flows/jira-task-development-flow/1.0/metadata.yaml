@@ -4,11 +4,12 @@ version: "1.0"
 canonical_name: jira-task-development-flow@1.0
 display_name: "JIRA Task Development — Получить задачу, спланировать, реализовать"
 description: >
-  Полный цикл разработки по JIRA-задаче: поиск задачи по assignee и статусу To Do →
+  Полный цикл разработки по JIRA-задаче: поиск ровно одной задачи по project,
+  assignee и заданным статусам →
   анализ description и создание плана → subtask с планом в JIRA → human approval →
   resolve plan-subtask → реализация по плану → subtask с результатами в JIRA →
   human approval → resolve impl-subtask.
-coding_agent: gigacode
+coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK
 tags:

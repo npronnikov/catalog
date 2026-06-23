@@ -6,7 +6,7 @@ display_name: "JIRA Issues"
 description: >
   Работа с задачами в JIRA через MCP сервер Atlassian. Получение информации,
   создание, обновление задач, управление комментариями и вложениями.
-coding_agent: gigacode
+coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK
 tags:

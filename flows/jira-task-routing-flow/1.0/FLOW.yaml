@@ -1,0 +1,818 @@
+id: jira-task-routing-flow
+version: "1.0"
+canonical_name: jira-task-routing-flow@1.0
+title: JIRA Task Routing — Найти задачу, оценить масштаб, выбрать путь
+description: >
+  Маршрутизирующий flow: поиск JIRA-задачи по типу, статусу и assignee строго через
+  MCP (скилл jira-issues) → анализ заголовка, описания и комментариев → оценка числа
+  затронутых файлов → выбор пути. Если правок больше 10 файлов
+  — полный SDD-цикл SpecKit; если правок не больше 10 файлов — быстрый путь Quick Dev
+  (implementation → develop → HG Approval). После успешной ветки задача получает
+  label AIFIXED и переводится в конечный статус по workflow её типа.
+
+start_node_id: ai-fetch-task
+failure_node_id: terminal-failed
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+rule_refs: []
+
+nodes:
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 1 — Найти JIRA-задачу строго через MCP
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-fetch-task
+    title: Найти одну JIRA-задачу в выбранном контуре через MCP
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Найди ровно одну задачу в JIRA строго через skill jira-issues и MCP.
+
+      Обязательные значения env:
+      - environment: ${env.environment}
+      - project: ${env.project}
+      - assignee: ${env.assignee}
+      - status: ${env.status}
+      - issueType: ${env.issueType}
+
+      Если любое значение отсутствует или пусто после trim, заверши ноду ошибкой.
+
+      Нормализуй environment через trim + uppercase. Допустимы только:
+      - DELTA — используй исключительно MCP-сервер Delta Atlassian;
+      - SIGMA — используй исключительно MCP-сервер Sigma Atlassian;
+      - SBERTRACK — используй исключительно MCP-сервер SberTrack Atlassian.
+
+      Не выбирай контур по умолчанию и не переключайся на другой MCP-сервер,
+      если выбранный сервер недоступен.
+
+      Нормализуй assignee и построй JQL:
+        project = "<project>"
+        AND assignee = "<assignee>"
+        AND status = "<status>"
+        AND issuetype = "<issueType>"
+        ORDER BY created ASC
+
+      Если status или issueType содержит несколько значений через запятую,
+      используй соответственно status in (...) или issuetype in (...).
+
+      Передай в jira-issues:
+      - environment: нормализованное значение ${env.environment}
+      - jql: построенный JQL
+      - maxResults: 1
+
+      Требуется ровно один результат. После jira_search обязательно вызови
+      jira_get_issue для найденного taskKey и получи актуальные summary,
+      description и comments. Отсутствие комментариев допустимо.
+
+      Сохрани полный результат в jira-task.json. В нём обязательны:
+      ok, environment, project, taskKey, issueType, summary, description, comments,
+      totalResults, issues и error.
+    skill_refs:
+      - jira-issues@1.0
+    produced_artifacts:
+      - scope: run
+        path: jira-task.json
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: ai-analyze-impact
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 2 — Анализ задачи + оценка масштаба + выбор пути (dynamic routing)
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-analyze-impact
+    title: Анализ заголовка/описания/комментариев и оценка числа затронутых файлов
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай jira-task.json. Проанализируй задачу по полям summary (заголовок),
+      description (описание) и comments (комментарии).
+
+      Если ok != true или taskKey отсутствует, заверши ноду ошибкой.
+      Комментарии необязательны: если comments отсутствует или пуст, выполняй анализ
+      только по summary и description.
+
+      Следуй подключённому скилу, чтобы:
+      - понять суть задачи;
+      - исследовать реальную кодовую базу;
+      - оценить число затронутых файлов (estimatedFiles);
+      - выбрать путь по порогу.
+
+      Порог threshold = 10.
+      Правило выбора: estimatedFiles <= threshold → route "on_quick_dev";
+      estimatedFiles > threshold → route "on_speckit".
+      Граничный случай (ровно threshold) — малый объём → "on_quick_dev".
+
+      Сохрани анализ в impact-analysis.md и обязательно запиши поле route в
+      step-summary.json ("on_quick_dev" или "on_speckit").
+    skill_refs:
+      - analyze-task-impact@1.0
+    produced_artifacts:
+      - scope: run
+        path: impact-analysis.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_quick_dev:
+      transition: route-quick-dev
+    on_speckit:
+      transition: route-speckit
+
+  # Технические command-мосты нужны из-за особенности runtime:
+  # custom route AI-ноды не должен вести прямо в ещё не выполнявшуюся AI-ноду,
+  # иначе runtime ошибочно трактует переход как resume/revisit.
+  - id: route-quick-dev
+    title: Маршрутизация в Quick Dev
+    type: command
+    execution_context: []
+    instruction: "true"
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: qd-plan
+
+  - id: route-speckit
+    title: Маршрутизация в SpecKit
+    type: command
+    execution_context: []
+    instruction: "true"
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: sk-constitution
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ВЕТКА A — Quick Dev (правок <= threshold): implementation → develop → HG Approval
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: qd-plan
+    title: Quick Dev — план имплементации
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-analyze-impact
+        path: impact-analysis.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай jira-task.json (используй поля summary и description как описание задачи)
+      и impact-analysis.md (как оценку масштаба и список затронутых файлов).
+      Следуй подключённому скилу. Исследуй кодовую базу и создай план имплементации.
+      Сохрани результат в implementation-plan.md.
+    skill_refs:
+      - hgdlc-implementation-plan@1.0
+    produced_artifacts:
+      - scope: run
+        path: implementation-plan.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: qd-develop
+
+  - id: qd-develop
+    title: Quick Dev — реализация по плану
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: qd-plan
+        path: implementation-plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign approveQd = step["qd-approve"]!{} />
+      <#if approveQd.rework_instruction?has_content && (approveQd.keep_changes!false)>
+      Исправь: ${approveQd.rework_instruction}
+      <#else>
+      Выполни план имплементации из implementation-plan.md шаг за шагом:
+        - Находи первый невыполненный шаг [ ] и реализуй его.
+        - После выполнения помечай шаг [x] и обновляй implementation-plan.md.
+        - После каждого слоя запускай только завершающуюся команду верификации из плана
+          (build / compile / test / lint).
+        - Не используй долгоживущие процессы и ручные проверки (bootRun, npm run dev,
+          dev server, browser, curl к локальным сервисам).
+        - Не создавай копии файлов с суффиксами _modified, _new и т.п. — изменяй файлы
+          непосредственно.
+        - Не завершай ноду, пока не внесены реальные изменения в файлы проекта,
+          перечисленные в плане.
+      </#if>
+
+      Сохрани implementation-result.md:
+      - список созданных и изменённых файлов проекта;
+      - выполненные команды проверки и их результат;
+      - оставшиеся невыполненные пункты плана (должно быть "нет").
+    skill_refs: []
+    produced_artifacts:
+      - scope: run
+        path: implementation-result.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: qd-approve
+
+  - id: qd-approve
+    title: Quick Dev — HG Approval реализации
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: qd-plan
+        path: implementation-plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: qd-develop
+        path: implementation-result.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Проверь итоговые изменения в кодовой базе по плану implementation-plan.md.
+
+      Убедись, что:
+      - Реализация соответствует плану, все шаги выполнены
+      - Билд проходит, тесты зелёные
+      - Нет лишних изменений вне согласованного scope
+
+      Апрувь для завершения или верни на доработку с конкретными замечаниями.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-finalize-jira
+    on_rework:
+      transition: qd-develop
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ВЕТКА B — SpecKit полный SDD-цикл (правок > threshold)
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: sk-constitution
+    title: SpecKit — конституция проекта
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-analyze-impact
+        path: impact-analysis.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign approveSpec = step["sk-approve-spec"]!{} />
+      <#if approveSpec.rework_instruction?has_content && (approveSpec.keep_changes!false)>
+      Обнови constitution.md с учётом замечания: ${approveSpec.rework_instruction}
+      <#else>
+      Источник требований — jira-task.json (summary, description, comments) и
+      impact-analysis.md (оценка масштаба). Следуй приложенному скилу. Исследуй
+      кодовую базу и существующую документацию. Создай governance-документ в constitution.md.
+      </#if>
+    skill_refs:
+      - speckit-constitution@1.0
+    produced_artifacts:
+      - scope: run
+        path: constitution.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: sk-specify
+
+  - id: sk-specify
+    title: SpecKit — создание спецификации
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-constitution
+        path: constitution.md
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign approveSpec = step["sk-approve-spec"]!{} />
+      <#if approveSpec.rework_instruction?has_content && (approveSpec.keep_changes!false)>
+      Доработай spec.md с учётом замечания: ${approveSpec.rework_instruction}
+      <#else>
+      Источник требований — jira-task.json (summary, description, comments) и constitution.md.
+      Следуй приложенному скилу. Создай структурированную спецификацию в spec.md.
+      Фокус на ЧТО и ЗАЧЕМ — без деталей реализации и технологий.
+      </#if>
+    skill_refs:
+      - speckit-specify@1.0
+    produced_artifacts:
+      - scope: run
+        path: spec.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: sk-clarify
+
+  - id: sk-clarify
+    title: SpecKit — уточнение спецификации
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: sk-specify
+        path: spec.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай спецификацию из spec.md.
+      Следуй приложенному скилу. Найди неоднозначности и сформируй до 5 целевых
+      вопросов для уточнения. Каждый вопрос должен влиять на архитектуру, модель
+      данных или acceptance criteria. Сохрани список вопросов с рекомендованными
+      ответами в clarify-questions.md.
+    skill_refs:
+      - speckit-clarify@1.0
+    produced_artifacts:
+      - scope: run
+        path: clarify-questions.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: sk-human-clarify
+
+  - id: sk-human-clarify
+    title: SpecKit — ответы на уточняющие вопросы
+    type: human_input
+    execution_context:
+      - type: artifact_ref
+        node_id: sk-clarify
+        path: clarify-questions.md
+        scope: run
+        required: true
+        modifiable: true
+        transfer_mode: by_ref
+    instruction: |
+      Открой clarify-questions.md.
+      Для каждого вопроса заполни поле "Ответ:" своим выбором или кратким ответом.
+      Если рекомендованный ответ подходит — напиши "Рекомендованный" или просто его текст.
+      Нажми Submit когда ответишь на все вопросы.
+    produced_artifacts:
+      - scope: run
+        path: clarify-questions.md
+        required: true
+    expected_mutations: []
+    on_submit:
+      transition: sk-analyze
+    on_rework:
+      transition: sk-clarify
+
+  - id: sk-analyze
+    title: SpecKit — анализ консистентности артефактов
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: sk-specify
+        path: spec.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-human-clarify
+        path: clarify-questions.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-constitution
+        path: constitution.md
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай spec.md, clarify-questions.md и constitution.md.
+      Следуй приложенному скилу. Прими ответы из clarify-questions.md как разрешённые
+      уточнения спецификации. Выяви неоднозначности, дублирования, пробелы покрытия и
+      нарушения конституции. Сохрани отчёт анализа в analysis-report.md
+      (только чтение артефактов — не модифицируй spec.md).
+    skill_refs:
+      - speckit-analyze@1.0
+    produced_artifacts:
+      - scope: run
+        path: analysis-report.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: sk-checklist
+
+  - id: sk-checklist
+    title: SpecKit — чеклист качества требований
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: sk-specify
+        path: spec.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-analyze
+        path: analysis-report.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай spec.md и analysis-report.md.
+      Следуй приложенному скилу. Сгенерируй чеклист качества требований в checklist.md.
+      Каждый пункт — вопрос о качестве написанных требований, не о реализации.
+      Пункты со ссылками на разделы spec.md и маркерами [Gap], [Clarity] и т.д.
+    skill_refs:
+      - speckit-checklist@1.0
+    produced_artifacts:
+      - scope: run
+        path: checklist.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: sk-approve-spec
+
+  - id: sk-approve-spec
+    title: SpecKit — апрув качества спецификации
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: sk-specify
+        path: spec.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-analyze
+        path: analysis-report.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-checklist
+        path: checklist.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Проверь качество спецификации по трём артефактам:
+      - spec.md — структурированная спецификация фичи
+      - analysis-report.md — отчёт консистентности (обрати внимание на CRITICAL/HIGH)
+      - checklist.md — чеклист качества требований
+
+      Убедись, что:
+      - Все требования чёткие и тестируемые
+      - Критических неоднозначностей нет (или они приняты осознанно)
+      - Спецификация достаточна для технического планирования
+      - Success criteria измеримы и не содержат деталей реализации
+
+      Утверди для перехода к техническому планированию или верни на доработку
+      с конкретным замечанием.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: sk-plan
+    on_rework:
+      transition: sk-specify
+
+  - id: sk-plan
+    title: SpecKit — технический план реализации
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: sk-specify
+        path: spec.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-constitution
+        path: constitution.md
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-human-clarify
+        path: clarify-questions.md
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай spec.md, constitution.md и clarify-questions.md.
+      Следуй приложенному скилу. Создай технический план в plan.md, включающий:
+      - проверку соответствия конституции
+      - выбор технологий с обоснованием
+      - модель данных
+      - структуру изменений (Create/Modify по файлам)
+      - фазы реализации с контрольными точками
+    skill_refs:
+      - speckit-plan@1.0
+    produced_artifacts:
+      - scope: run
+        path: plan.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: sk-tasks
+
+  - id: sk-tasks
+    title: SpecKit — декомпозиция задач
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: sk-plan
+        path: plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-specify
+        path: spec.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай plan.md и spec.md.
+      Следуй приложенному скилу. Декомпозируй план в поименованные задачи в tasks.md
+      (T001, T002 ...), с зависимостями, путями к файлам и маркерами параллельности [P].
+    skill_refs:
+      - speckit-tasks@1.0
+    produced_artifacts:
+      - scope: run
+        path: tasks.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: sk-approve-tasks
+
+  - id: sk-approve-tasks
+    title: SpecKit — апрув декомпозиции задач
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: sk-plan
+        path: plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-tasks
+        path: tasks.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Проверь декомпозицию задач в tasks.md.
+
+      Убедись, что:
+      - Все задачи пронумерованы (T001, T002...) с конкретным описанием и путём к файлу
+      - Порядок зависимостей корректен (foundation → user stories)
+      - Параллельные задачи [P] действительно независимы
+      - Декомпозиция соответствует плану plan.md и спецификации spec.md
+
+      Утверди для начала реализации или верни на доработку с конкретным замечанием.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: sk-implement
+    on_rework:
+      transition: sk-tasks
+
+  - id: sk-implement
+    title: SpecKit — реализация по задачам
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: sk-tasks
+        path: tasks.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-plan
+        path: plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-specify
+        path: spec.md
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign approveFinal = step["sk-approve-final"]!{} />
+      <#if approveFinal.rework_instruction?has_content && (approveFinal.keep_changes!false)>
+      Устрани замечания: ${approveFinal.rework_instruction}
+      <#else>
+      Прочитай tasks.md и plan.md. Следуй приложенному скилу. Реализуй все задачи из
+      tasks.md фаза за фазой:
+        - Находи первую невыполненную задачу [ ] и реализуй её
+        - После выполнения помечай задачу [x] в tasks.md
+        - После каждой фазы запускай команду верификации из plan.md
+        - Не создавай копии файлов с суффиксами _new, _modified и т.п.
+      </#if>
+    skill_refs:
+      - speckit-implement@1.0
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: sk-approve-final
+
+  - id: sk-approve-final
+    title: SpecKit — финальный акцепт результата
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: sk-constitution
+        path: constitution.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-specify
+        path: spec.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: sk-tasks
+        path: tasks.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Проведи финальный акцепт результата разработки.
+
+      Проверь:
+      - Все задачи из tasks.md отмечены [x]
+      - Реализация соответствует спецификации spec.md
+      - Код соответствует принципам конституции constitution.md
+      - Билд проходит, тесты зелёные
+      - Функциональность работает корректно согласно acceptance criteria
+
+      Утверди для завершения флоу или верни на доработку с конкретным замечанием.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-finalize-jira
+    on_rework:
+      transition: sk-implement
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Финализация исходной JIRA-задачи после любой ветки
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-finalize-jira
+    title: Добавить AIFIXED и перевести JIRA-задачу в конечный статус
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай jira-task.json и финализируй исходную задачу.
+
+      Используй skill jira-issues строго через MCP-сервер,
+      выбранный по environment из jira-task.json.
+
+      Обязательные данные:
+      - environment из jira-task.json;
+      - taskKey из jira-task.json;
+      - issueType из верхнего уровня jira-task.json, либо issuetype/name из issues[0].
+
+      Сначала получи актуальную задачу через jira_get_issue.
+      Добавь label "AIFIXED", не удаляя существующие labels.
+
+      Нормализуй issueType через trim + uppercase:
+
+      1. Для TASK или ТАСКА передай в jira-issues:
+         - taskKey: ключ задачи;
+         - environment: контур задачи;
+         - labelsToAdd: ["AIFIXED"];
+         - transitionSequence: ["IN_PROGRESS", "Resolved"];
+         - expectedFinalStatus: "Resolved".
+
+      2. Для BUG или БАГ передай в jira-issues:
+         - taskKey: ключ задачи;
+         - environment: контур задачи;
+         - labelsToAdd: ["AIFIXED"];
+         - transitionSequence:
+           ["На исправлении", "Тестирование", "Подтверждение исправления"];
+         - expectedFinalStatus: "Подтверждение исправления".
+
+      Для другого issueType заверши ноду ошибкой: цепочка переходов не определена.
+
+      После выполнения обязательно снова получи задачу через jira_get_issue и проверь:
+      - label AIFIXED присутствует;
+      - TASK находится в Resolved;
+      - BUG находится в "Подтверждение исправления".
+
+      Сохрани полный результат и историю операций в jira-finalization.json.
+    skill_refs:
+      - jira-issues@1.0
+    produced_artifacts:
+      - scope: run
+        path: jira-finalization.json
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: terminal-complete
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Терминал
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: terminal-complete
+    title: Flow завершён
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+
+  - id: terminal-failed
+    title: Flow завершён с ошибкой
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
