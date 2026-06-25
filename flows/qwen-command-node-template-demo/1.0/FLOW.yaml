@@ -1,0 +1,154 @@
+id: qwen-command-node-template-demo
+version: "1.0"
+canonical_name: qwen-command-node-template-demo@1.0
+title: Qwen Command Node Template Demo
+description: >
+  Демонстрационный flow для command-нод. Показывает доступность шаблонов
+  ${run.*}, ${env.*} и ${step.*}, запись детерминированных артефактов в проект
+  и routing через route в step-summary.json.
+coding_agent: qwen
+start_node_id: command-render-run-env
+failure_node_id: terminal-complete
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+rule_refs: []
+
+nodes:
+  - id: command-render-run-env
+    title: Показать run и env шаблоны
+    type: command
+    routing_type: static
+    execution_context: []
+    instruction: |
+      mkdir -p docs/command-node-demo
+      cat > docs/command-node-demo/01-run-env.md <<'EOF'
+      # Command Node Demo 01
+
+      Этот файл создан command-нодой после рендеринга шаблонов runtime-контекста.
+
+      - flow: ${run.flow}
+      - feature_request: ${run.feature_request}
+      - target_branch: ${run.target_branch}
+      - created_by: ${run.created_by}
+      - env.demo_label: ${env.demo_label!"default-demo"}
+      EOF
+
+      printf 'STEP_SUMMARY:\n```json\n'
+      cat <<'EOF'
+      {
+        "step_id": "command-render-run-env",
+        "attempt": 1,
+        "status": "done",
+        "route": "on_success",
+        "exit_code": 0,
+        "demo_title": "Run and env template rendering",
+        "rendered_feature_request": ${run.feature_request?json_string},
+        "rendered_env_label": ${(env.demo_label!"default-demo")?json_string},
+        "actions": [
+          "Rendered run context into docs/command-node-demo/01-run-env.md",
+          "Rendered env context into docs/command-node-demo/01-run-env.md"
+        ]
+      }
+      EOF
+      printf '\n```\n'
+    produced_artifacts:
+      - scope: project
+        path: docs/command-node-demo/01-run-env.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: command-render-step
+
+  - id: command-render-step
+    title: Показать step шаблоны
+    type: command
+    routing_type: static
+    execution_context: []
+    instruction: |
+      mkdir -p docs/command-node-demo
+      cat > docs/command-node-demo/02-step-context.md <<'EOF'
+      # Command Node Demo 02
+
+      Этот файл создан второй command-нодой на основе данных из step-summary предыдущей ноды.
+
+      - previous.demo_title: ${step.command-render-run-env.demo_title}
+      - previous.rendered_feature_request: ${step.command-render-run-env.rendered_feature_request}
+      - previous.rendered_env_label: ${step.command-render-run-env.rendered_env_label}
+      EOF
+
+      printf 'STEP_SUMMARY:\n```json\n'
+      cat <<'EOF'
+      {
+        "step_id": "command-render-step",
+        "attempt": 1,
+        "status": "done",
+        "route": "on_success",
+        "exit_code": 0,
+        "composed_message": ${("Feature '" + step["command-render-run-env"].rendered_feature_request + "' tagged as '" + step["command-render-run-env"].rendered_env_label + "'")?json_string},
+        "artifact_path": "docs/command-node-demo/02-step-context.md",
+        "actions": [
+          "Rendered step context from command-render-run-env into docs/command-node-demo/02-step-context.md"
+        ]
+      }
+      EOF
+      printf '\n```\n'
+    produced_artifacts:
+      - scope: project
+        path: docs/command-node-demo/02-step-context.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: command-route-demo
+
+  - id: command-route-demo
+    title: Показать routing через step-summary
+    type: command
+    routing_type: static
+    execution_context: []
+    instruction: |
+      mkdir -p docs/command-node-demo
+      cat > docs/command-node-demo/03-routing.md <<'EOF'
+      # Command Node Demo 03
+
+      Эта нода демонстрирует, что route в step-summary.json управляет переходом.
+
+      - expected_route: ${env.expected_route!"show_success"}
+      - message_from_previous_step: ${step.command-render-step.composed_message}
+      EOF
+
+      printf 'STEP_SUMMARY:\n```json\n'
+      cat <<'EOF'
+      {
+        "step_id": "command-route-demo",
+        "attempt": 1,
+        "status": "done",
+        "route": ${(env.expected_route!"show_success")?json_string},
+        "exit_code": 0,
+        "selected_route": ${(env.expected_route!"show_success")?json_string},
+        "reason": "Deterministic route from env.expected_route with default fallback",
+        "actions": [
+          "Rendered routing inputs into docs/command-node-demo/03-routing.md",
+          "Selected route from env.expected_route"
+        ]
+      }
+      EOF
+      printf '\n```\n'
+    produced_artifacts:
+      - scope: project
+        path: docs/command-node-demo/03-routing.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: terminal-complete
+    show_success:
+      transition: terminal-complete
+
+  - id: terminal-complete
+    title: Complete
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

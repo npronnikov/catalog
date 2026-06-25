@@ -1,0 +1,25 @@
+entity_type: flow
+id: qwen-command-node-template-demo
+version: "1.0"
+canonical_name: qwen-command-node-template-demo@1.0
+display_name: "Qwen Command Node Template Demo"
+description: >
+  Демонстрационный flow для безопасного и детерминированного показа
+  возможностей command-нод: шаблоны run/env/step, запись проектных артефактов
+  и переход по route из step-summary.json.
+coding_agent: qwen
+team_code: Demo
+platform_code: BACK
+tags:
+  - demo
+  - qwen
+  - command-node
+  - templates
+  - routing
+flow_kind: analysis
+risk_level: low
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/flows/qwen-command-node-template-demo/1.0"
