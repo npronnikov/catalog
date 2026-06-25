@@ -42,8 +42,8 @@ nodes:
         "route": "on_success",
         "exit_code": 0,
         "demo_title": "Run and env template rendering",
-        "rendered_feature_request": ${run.feature_request?json_string},
-        "rendered_env_label": ${(env.demo_label!"default-demo")?json_string},
+        "rendered_feature_request": "${run.feature_request?json_string}",
+        "rendered_env_label": "${(env.demo_label!"default-demo")?json_string}",
         "actions": [
           "Rendered run context into docs/command-node-demo/01-run-env.md",
           "Rendered env context into docs/command-node-demo/01-run-env.md"
@@ -85,7 +85,7 @@ nodes:
         "status": "done",
         "route": "on_success",
         "exit_code": 0,
-        "composed_message": ${("Feature '" + step["command-render-run-env"].rendered_feature_request + "' tagged as '" + step["command-render-run-env"].rendered_env_label + "'")?json_string},
+        "composed_message": "${("Feature '" + step["command-render-run-env"].rendered_feature_request + "' tagged as '" + step["command-render-run-env"].rendered_env_label + "'")?json_string}",
         "artifact_path": "docs/command-node-demo/02-step-context.md",
         "actions": [
           "Rendered step context from command-render-run-env into docs/command-node-demo/02-step-context.md"
@@ -124,9 +124,9 @@ nodes:
         "step_id": "command-route-demo",
         "attempt": 1,
         "status": "done",
-        "route": ${(env.expected_route!"show_success")?json_string},
+        "route": "${(env.expected_route!"show_success")?json_string}",
         "exit_code": 0,
-        "selected_route": ${(env.expected_route!"show_success")?json_string},
+        "selected_route": "${(env.expected_route!"show_success")?json_string}",
         "reason": "Deterministic route from env.expected_route with default fallback",
         "actions": [
           "Rendered routing inputs into docs/command-node-demo/03-routing.md",
