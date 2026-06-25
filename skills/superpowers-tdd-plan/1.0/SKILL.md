@@ -93,8 +93,8 @@ Save to `tdd-plan.md` at the path specified in the node instruction.
 **When**: [action — method call or HTTP request with exact parameters]
 **Then**: [expected outcome — return value, status code, side effects]
 
-**Verify failure**: the test should fail with [specific error: NoSuchMethodError / AssertionError / 404]
-before implementation exists.
+**Expected RED failure category**: [compile failure / assertion failure / mapping missing / validation mismatch / other]
+**Expected exact error/message (optional)**: [only when realistically predictable]
 
 ---
 
@@ -125,8 +125,9 @@ before implementation exists.
 
 - Every test case must be independently runnable.
 - No implementation hints in the plan — only inputs, outputs, and assertions.
-- "Verify failure" section is mandatory: it must predict the exact error the
-  test will throw when no implementation exists yet.
+- "Expected RED failure category" is mandatory.
+- Exact error type/message is optional and should be specified only when it is
+  realistically predictable from the framework and current code shape.
 - Test IDs must be sequential and unique.
 - The plan must be self-contained — the RED phase agent must be able to write
   tests directly from this document without reading other artifacts.

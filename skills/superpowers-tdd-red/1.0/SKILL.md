@@ -10,8 +10,9 @@ description: >
 
 ## Goal
 
-Write tests for every test case in `tdd-plan.md`. Run them. Confirm they all
-FAIL or do not compile. Do not write a single line of production code.
+Write tests for every test case in `tdd-plan.md`. Run the new tests and confirm
+they fail for the expected RED reason before implementation begins. Do not
+write a single line of production code.
 
 **Core rule:** If a test passes before implementation, it is wrong. Fix the
 test, not the implementation.
@@ -23,7 +24,7 @@ test, not the implementation.
 Read `tdd-plan.md` fully. Understand:
 - The testing framework in use
 - The exact class / method / endpoint each test targets
-- The expected failure mode for each test case
+- The expected RED failure category for each test case
 
 Also read existing test files to understand naming conventions, base classes,
 test utilities, and fixture patterns already used in the project.
@@ -52,25 +53,37 @@ For each `TC-N` in `tdd-plan.md`, in order:
 
 ## Step 3 — Confirm RED
 
-After writing all tests, run the full test suite:
+After writing all tests, first run focused commands for the new tests added in
+this RED phase. Prefer the narrowest command that still proves each `TC-N`
+fails for the expected reason.
 
 ```
-[project test command]
+[project focused test command]
 ```
 
 Read the full output. For each `TC-N`:
 
-- [ ] TC-01 — FAIL / compile error ✓
-- [ ] TC-02 — FAIL / compile error ✓
+- [ ] TC-01 — fails with expected RED category ✓
+- [ ] TC-02 — fails with expected RED category ✓
 - [ ] ...
 
 **If any test passes:** the test is asserting something that already works,
 or the assertion is too weak. Fix the test before proceeding.
 
-**Expected failure modes:**
-- `NoSuchMethodError` / `SymbolNotFound` — implementation class does not exist yet ✓
-- `AssertionError` — implementation exists but returns wrong value ✓
-- `404 Not Found` — endpoint not mapped yet ✓
+If the assertion is correct and the behavior already exists, the problem is not
+the test implementation but the plan: return `on_rework` so `tdd-plan.md` can
+be revised.
+
+If compile failures in the new tests prevent the full suite from executing,
+record that explicitly. Do not reinterpret this as "all existing tests must
+also fail". Existing tests should remain valid and should stay green whenever
+they are runnable in the current RED state.
+
+**Expected RED failure categories:**
+- `compile failure` — implementation class / method does not exist yet ✓
+- `assertion failure` — implementation exists but returns wrong value ✓
+- `mapping missing` — endpoint not mapped yet ✓
+- `validation mismatch` — request is accepted/rejected differently than required ✓
 - Test passes immediately — **test is wrong**, fix it
 
 ---
@@ -82,7 +95,7 @@ After all tests are confirmed RED, populate `step-summary`:
 ```
 actions:
   - "wrote N test methods covering TC-01 through TC-N"
-  - "ran test suite, confirmed all N tests fail"
+  - "ran focused RED commands, confirmed all N new tests fail as expected"
 route: "on_success"
 issues: []
 ```
@@ -93,9 +106,9 @@ the feature already exists):
 ```
 route: "on_rework"
 rework_instruction: |
-  TC-03 passes before implementation: the endpoint POST /foo already exists
-  and returns 201. This test case is redundant. Remove TC-03 from tdd-plan.md
-  or replace it with a test for different behaviour.
+  TC-03 passes before any new production changes: the endpoint POST /foo already
+  exists and already returns 201. Revise tdd-plan.md: remove TC-03 as redundant
+  or replace it with a test for behaviour that is not yet implemented.
 ```
 
 ---

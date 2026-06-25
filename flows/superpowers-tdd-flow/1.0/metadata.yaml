@@ -4,9 +4,9 @@ version: "1.0"
 canonical_name: superpowers-tdd-flow@1.0
 display_name: "Superpowers: TDD Flow"
 description: >
-  Цикл разработки по методологии Test-Driven Development (RED-GREEN-REFACTOR).
-  Уточнение → план тест-кейсов → апрув → RED (падающие тесты) →
-  GREEN (минимальная реализация) → REFACTOR (чистый код) → верификация → апрув.
+  Upstream-aligned цикл разработки по методологии Superpowers TDD.
+  Уточнение → implementation plan → апрув → исполнение плана с локальными
+  TDD-циклами по поведению → верификация → апрув.
   NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
 coding_agent: qwen
 team_code: HGDLC
@@ -15,7 +15,8 @@ tags:
   - superpowers
   - tdd
   - testing
-  - red-green-refactor
+  - implementation-plan
+  - upstream-aligned
 flow_kind: delivery
 risk_level: low
 scope: organization

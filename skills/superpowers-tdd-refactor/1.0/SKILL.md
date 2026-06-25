@@ -14,8 +14,9 @@ Improve the production code written in the GREEN phase without changing any
 observable behaviour. All tests must remain green after every change.
 
 **Core rule:** If a refactoring causes a test to fail, the refactoring
-introduced a regression — revert it, understand why, then try again.
-Tests are the safety net; a broken test means a broken refactoring.
+introduced a regression — restore the last known green state, understand why,
+then try again. Tests are the safety net; a broken test means a broken
+refactoring.
 
 ---
 
@@ -53,9 +54,11 @@ For each refactoring target:
    - Phase 1: Read the failure message precisely. What assertion failed?
    - Phase 2: Identify the last working state (before this refactor step).
    - Phase 3: Form a hypothesis: which change caused this failure?
-   - Phase 4: Revert the change, verify tests go green, then re-apply more carefully.
+   - Phase 4: Restore the last known green state (by revert or immediate fix),
+     verify tests go green, then re-apply more carefully.
 
-   If three attempts to fix the refactoring fail, revert it entirely and skip it.
+   If three attempts to fix the refactoring fail, abandon that refactoring goal
+   and skip it.
    Leave a `// REFACTOR-DEFERRED:` comment explaining what was attempted.
 
 ---
@@ -134,5 +137,5 @@ rework_instruction: |
 - Do NOT add new functionality during refactoring.
 - Do NOT change test code to make refactoring easier — tests are the spec.
 - Run tests after **every single change** — not batched at the end.
-- Revert any refactoring that causes a test failure after 3 attempts to fix.
+- Restore a green baseline before continuing after any refactoring-induced test failure.
 - Use only terminating build/test commands for verification.

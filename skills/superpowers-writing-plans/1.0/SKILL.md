@@ -12,7 +12,8 @@ description: >
 
 Produce a numbered, checkbox-driven `implementation-plan.md` that is concrete
 enough to execute mechanically: every file to touch, in the correct layer order,
-with verification commands after each layer, and TDD steps interspersed.
+with verification commands after each layer, and focused TDD cycles embedded
+inside execution steps.
 
 **Core principle:** "Write comprehensive plans assuming the engineer has zero
 context for our codebase and questionable taste." No placeholders. No vague
@@ -79,8 +80,13 @@ Build the execution sequence from foundation to surface:
 | 7 | **Configuration** | ENV vars, profiles, feature flags |
 | 8 | **Frontend** | After backend API is stable |
 
-**TDD rule:** For each layer that has testable logic, write the test step
-*before* the implementation step. Mark test step with `[TEST-FIRST]`.
+**TDD rule:** For each testable behavior, plan a focused local cycle:
+write failing test → verify RED → minimal implementation → verify GREEN →
+small refactor while green.
+
+Do **not** plan one global RED phase for the whole feature followed by one
+global GREEN phase. TDD must happen behavior by behavior inside the execution
+plan. Mark test-starting steps with `[TEST-FIRST]`.
 
 **Verification rule:** Add a `Verify:` command after every layer that produces
 compilable code. Verification must use only terminating commands (build, compile,
@@ -106,6 +112,8 @@ Before saving, scan the draft for:
 ## Output Format
 
 Save to `implementation-plan.md` at the path specified in the node instruction.
+This is the primary planning artifact for the feature. Do not create a separate
+mandatory `tdd-plan.md` unless another workflow explicitly requires it.
 
 ```markdown
 # Implementation Plan
@@ -123,12 +131,15 @@ Save to `implementation-plan.md` at the path specified in the node instruction.
 **Goal**: [what this step achieves and why it comes first]
 
 - [ ] [TEST-FIRST] Create `path/to/SomeTest.java`
-  - Test case: [Given/When/Then description]
-  - Expected: test fails with [specific error]
+  - Behavior: [Given/When/Then description]
+  - Expected RED: focused test fails for the correct reason
+- [ ] Run focused RED command for `SomeTest`
 - [ ] Create / Modify `path/to/File.java`
   - [specific: add field X of type Y | add method foo(Bar bar): Baz]
+- [ ] Run focused GREEN command for `SomeTest`
+- [ ] Apply small refactor while tests stay green
 
-**Verify**: `./gradlew test --tests "SomeTest"` — must fail on test, then pass after impl
+**Verify**: focused test passes; any broader verification command for the step also passes
 
 **Commit**: `git commit -m "feat: step 1 — [layer] [what]"`
 
