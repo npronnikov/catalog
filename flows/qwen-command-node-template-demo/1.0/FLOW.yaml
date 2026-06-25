@@ -72,9 +72,9 @@ nodes:
 
       Этот файл создан второй command-нодой на основе данных из step-summary предыдущей ноды.
 
-      - previous.demo_title: ${step.command-render-run-env.demo_title}
-      - previous.rendered_feature_request: ${step.command-render-run-env.rendered_feature_request}
-      - previous.rendered_env_label: ${step.command-render-run-env.rendered_env_label}
+      - previous.demo_title: ${step["command-render-run-env"].demo_title}
+      - previous.rendered_feature_request: ${step["command-render-run-env"].rendered_feature_request}
+      - previous.rendered_env_label: ${step["command-render-run-env"].rendered_env_label}
       EOF
 
       printf 'STEP_SUMMARY:\n```json\n'
@@ -115,7 +115,7 @@ nodes:
       Эта нода демонстрирует, что route в step-summary.json управляет переходом.
 
       - expected_route: ${env.expected_route!"show_success"}
-      - message_from_previous_step: ${step.command-render-step.composed_message}
+      - message_from_previous_step: ${step["command-render-step"].composed_message}
       EOF
 
       printf 'STEP_SUMMARY:\n```json\n'
