@@ -93,9 +93,6 @@ compilable code. Verification must use only terminating commands (build, compile
 test, lint). Forbidden: `bootRun`, `npm run dev`, browser checks, `curl` to
 locally started services.
 
-**Commit rule:** Plan an explicit `git commit` step after each successfully
-verified layer.
-
 ---
 
 ## Step 5 — No-Placeholder Review
@@ -140,8 +137,6 @@ mandatory `tdd-plan.md` unless another workflow explicitly requires it.
 - [ ] Apply small refactor while tests stay green
 
 **Verify**: focused test passes; any broader verification command for the step also passes
-
-**Commit**: `git commit -m "feat: step 1 — [layer] [what]"`
 
 ---
 

@@ -1,0 +1,21 @@
+entity_type: skill
+id: superpowers-brainstorming
+version: "1.0"
+canonical_name: superpowers-brainstorming@1.0
+display_name: "Superpowers: Autonomous Brainstorming"
+description: >
+  Автономный анализ дизайна перед реализацией. Изучает контекст проекта,
+  выявляет ключевые решения, выбирает лучший подход с обоснованием,
+  сохраняет brainstorming-summary.md. Без human-gates.
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - superpowers
+  - brainstorming
+  - planning
+  - design
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/superpowers-brainstorming/1.0"

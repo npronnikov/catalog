@@ -1,0 +1,26 @@
+entity_type: flow
+id: superpowers-quick-dev-flow
+version: "1.0"
+canonical_name: superpowers-quick-dev-flow@1.0
+display_name: "Superpowers: Quick Development Flow"
+description: >
+  Быстрый цикл разработки без уточняющих вопросов и промежуточных апрувов.
+  Детальный план (writing-plans) → исполнение (executing-plans) →
+  верификация перед завершением → финальный апрув.
+  TDD не применяется. Git-коммиты не входят в план.
+coding_agent: qwen
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - superpowers
+  - development
+  - planning
+  - verification
+  - quick
+flow_kind: delivery
+risk_level: low
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/flows/superpowers-quick-dev-flow/1.0"

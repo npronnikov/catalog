@@ -1,119 +1,79 @@
-id: superpowers-guided-dev-flow
+id: superpowers-quick-dev-flow
 version: "1.0"
-canonical_name: superpowers-guided-dev-flow@1.0
-title: Superpowers Guided Development Flow
+canonical_name: superpowers-quick-dev-flow@1.0
+title: Superpowers Quick Development Flow
 description: >
-  Цикл разработки на основе методологии Superpowers.
-  Последовательность: уточнение запроса → детальный план (writing-plans) →
-  апрув плана → исполнение по плану (executing-plans) →
+  Быстрый цикл разработки на основе методологии Superpowers — без уточняющих
+  вопросов и промежуточных апрувов.
+  Последовательность: автономный брейнштоминг (brainstorming-summary) →
+  детальный план (writing-plans) → исполнение по плану (executing-plans) →
   верификация перед завершением → финальный апрув.
+  TDD применяется для testable behaviors. Git-коммиты не входят в план.
   Автоматический возврат на доработку при незакрытых замечаниях верификации.
 coding_agent: qwen
-start_node_id: ai-clarifying-questions
+start_node_id: ai-brainstorming
 failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
 
 nodes:
 
-  # ── Шаг 1: Уточняющие вопросы ────────────────────────────────────────────
-  - id: ai-clarifying-questions
-    title: Генерация уточняющих вопросов
+  # ── Шаг 1: Автономный брейнштоминг ───────────────────────────────────────
+  - id: ai-brainstorming
+    title: Автономный анализ и дизайн
     type: ai
     routing_type: static
     execution_context: []
     instruction: |
-      <#assign humanAnswerQuestions = step["human-answer-questions"]!{} />
-      <#if humanAnswerQuestions.rework_instruction?has_content && (humanAnswerQuestions.keep_changes!false)>
-      Исправь ${humanAnswerQuestions.rework_instruction}
-      <#else>
       <#if (run.feature_request)?? && run.feature_request?has_content>
       ${run.feature_request}
       </#if>
 
-      Изучи кодовую базу проекта и запрос пользователя.
-      Сформулируй 10–15 уточняющих вопросов, которые напрямую влияют на
-      выбор решения. Строго следуй скилу.
+      Изучи запрос и кодовую базу проекта. Строго следуй скилу:
+      выяви ключевые дизайн-решения, выбери лучший подход для каждого
+      с обоснованием, зафиксируй результат в brainstorming-summary.md.
 
-      <#if humanAnswerQuestions.rework_instruction?has_content>
-      ВАЖНО! Учти следующее: ${humanAnswerQuestions.rework_instruction}
-      </#if>
-      </#if>
+      Не задавай вопросов — принимай решения самостоятельно на основе
+      контекста проекта. Отмечай неуверенные допущения явно.
     skill_refs:
-      - hgdlc-ask-clarifying-questions@1.0
+      - superpowers-brainstorming@1.0
     produced_artifacts:
       - scope: run
-        path: questions.md
+        path: brainstorming-summary.md
         required: true
         modifiable: false
     expected_mutations: []
     on_success:
-      transition: human-answer-questions
+      transition: ai-writing-plans
     retry_policy:
       attempts: 3
       on_errors:
         - NODE_VALIDATION_FAILED
 
-  # ── Шаг 2: Ответы пользователя ───────────────────────────────────────────
-  - id: human-answer-questions
-    title: Ответы на уточняющие вопросы
-    type: human_input
-    execution_context:
-      - type: artifact_ref
-        node_id: ai-clarifying-questions
-        path: questions.md
-        scope: run
-        required: true
-        modifiable: true
-        transfer_mode: by_ref
-    instruction: |
-      Открой questions.md.
-      Отметь чекбокс у выбранного варианта в каждом вопросе.
-      Если ни один вариант не выбран — будет использован рекомендуемый.
-      Нажми Submit когда ответишь на все вопросы.
-    produced_artifacts:
-      - scope: run
-        path: questions.md
-        required: true
-    expected_mutations: []
-    on_submit:
-      transition: ai-writing-plans
-    on_rework:
-      transition: ai-clarifying-questions
-
-  # ── Шаг 3: Writing Plans ──────────────────────────────────────────────────
+  # ── Шаг 2: Writing Plans ──────────────────────────────────────────────────
   - id: ai-writing-plans
     title: Составление детального плана реализации
     type: ai
     routing_type: static
     execution_context:
       - type: artifact_ref
-        node_id: human-answer-questions
-        path: questions.md
+        node_id: ai-brainstorming
+        path: brainstorming-summary.md
         scope: run
         required: true
         modifiable: false
         transfer_mode: by_ref
     instruction: |
-      <#assign approvePlan = step["approve-plan"]!{} />
-      <#if approvePlan.rework_instruction?has_content && (approvePlan.keep_changes!false)>
-      Исправь ${approvePlan.rework_instruction}
-      <#else>
-      Изучи запрос пользователя и ответы на уточняющие вопросы из questions.md.
-      Исследуй кодовую базу проекта: структуру пакетов, существующие паттерны,
-      миграции, тесты.
-      Составь детальный план согласно скилу и сохрани в implementation-plan.md.
+      Изучи brainstorming-summary.md и составь детальный план реализации
+      согласно скилу. Сохрани в implementation-plan.md.
 
-      Требования скила:
+      Требования к плану:
       - Каждый шаг: 2-5 минут работы
-      - Для каждого слоя с логикой: сначала тест [TEST-FIRST], потом реализация
+      - Порядок слоёв: миграции → сущности → репозитории → сервисы →
+        контроллеры → конфигурация → фронтенд
       - После каждого слоя: команда верификации (только завершающиеся команды)
+      - TDD для testable behaviors: write failing test → RED → minimal impl → GREEN → small refactor
       - Без плейсхолдеров, без TBD, без "добавить обработку ошибок"
-
-      <#if approvePlan.rework_instruction?has_content>
-      Важно: при выполнении учти следующее: ${approvePlan.rework_instruction}
-      </#if>
-      </#if>
     skill_refs:
       - superpowers-writing-plans@1.0
     produced_artifacts:
@@ -123,38 +83,13 @@ nodes:
         modifiable: false
     expected_mutations: []
     on_success:
-      transition: approve-plan
+      transition: ai-executing-plans
     retry_policy:
       attempts: 3
       on_errors:
         - NODE_VALIDATION_FAILED
 
-  # ── Шаг 4: Апрув плана ───────────────────────────────────────────────────
-  - id: approve-plan
-    title: Проверка и апрув плана реализации
-    type: human_approval
-    execution_context: []
-    instruction: |
-      Проверь план реализации в файле implementation-plan.md.
-
-      Убедись, что:
-      - Все затронутые файлы перечислены с пометкой Create или Modify
-      - Для каждого слоя с логикой есть шаг [TEST-FIRST] перед реализацией
-      - Порядок слоёв корректен (миграции → сущности → репозитории → сервисы →
-        контроллеры → тесты → конфигурация → фронтенд)
-      - Каждый шаг содержит конкретное описание (не "добавить обработку ошибок")
-      - Команды верификации — завершающиеся (build/test/lint), не bootRun/dev server
-      - Нет плейсхолдеров TBD
-
-      Утверди для начала разработки или верни на доработку с конкретными замечаниями.
-    produced_artifacts: []
-    expected_mutations: []
-    on_approve:
-      transition: ai-executing-plans
-    on_rework:
-      transition: ai-writing-plans
-
-  # ── Шаг 5: Executing Plans ────────────────────────────────────────────────
+  # ── Шаг 3: Executing Plans ────────────────────────────────────────────────
   - id: ai-executing-plans
     title: Исполнение плана реализации
     type: ai
@@ -202,12 +137,13 @@ nodes:
       </#if>
     skill_refs:
       - superpowers-executing-plans@1.0
+      - superpowers-test-driven-development@1.0
     produced_artifacts: []
     expected_mutations: []
     on_success:
       transition: ai-verify-before-completion
 
-  # ── Шаг 6: Верификация перед завершением ─────────────────────────────────
+  # ── Шаг 4: Верификация перед завершением ─────────────────────────────────
   - id: ai-verify-before-completion
     title: Верификация перед завершением
     type: ai
@@ -263,7 +199,7 @@ nodes:
       on_errors:
         - NODE_VALIDATION_FAILED
 
-  # ── Шаг 7: Финальный апрув ───────────────────────────────────────────────
+  # ── Шаг 5: Финальный апрув ───────────────────────────────────────────────
   - id: approve-final-code
     title: Финальный апрув кода
     type: human_approval
@@ -275,7 +211,7 @@ nodes:
       Убедись, что:
       - Все шаги плана отмечены [x]
       - Build проходит, тесты зелёные
-      - Изменения соответствуют согласованному плану и ответам на вопросы
+      - Изменения соответствуют запросу и дизайн-решениям из brainstorming-summary.md
       - Нет изменений вне согласованного scope
 
       Апрувь для завершения флоу или верни на доработку с конкретными замечаниями.

@@ -44,7 +44,6 @@ For each step in the plan, in order:
 3. **Run the verification command** specified in the plan's `Verify:` line.
 4. **Read the full output** — do not assume success from partial output.
 5. **Mark completed** in TodoWrite only after verification passes.
-6. **Commit** if the plan includes a `Commit:` line for this step.
 
 When a step starts a TDD behavior cycle:
 - run the focused RED command and confirm failure before implementation

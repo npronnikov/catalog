@@ -1,0 +1,24 @@
+entity_type: skill
+id: hgdlc-adversarial-review
+version: "1.0"
+canonical_name: hgdlc-adversarial-review@1.0
+display_name: "Adversarial Code Review (HGD)"
+description: >
+  Adversarial code review using three parallel layers: Blind Hunter (general bugs),
+  Edge Case Hunter (boundary conditions), Architecture Auditor (hexagonal rules,
+  Liquibase migrations, HGD conventions). Structured triage into patch/decision/defer
+  buckets with optional auto-fix. Use when the user says "сделай ревью", "code review",
+  or "проверь код".
+coding_agent: qwen
+team_code: Demo
+platform_code: BACK
+tags:
+  - review
+  - quality
+  - security
+  - architecture
+  - qwen
+skill_kind: review
+scope: organization
+approval_status: draft
+lifecycle_status: active
