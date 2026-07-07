@@ -1,0 +1,30 @@
+entity_type: flow
+id: gate-workbench-smoke-test
+version: "1.0"
+canonical_name: gate-workbench-smoke-test@1.0
+display_name: "Gate Workbench Smoke Test"
+description: "Детерминированный флоу для ручной проверки нового функционала работы с кодом и Gate: command-нода сеет файлы (код, markdown+mermaid, .mmd, .dbml, .svg, human-form опросник); human_input-гейт (редактирование + опросник Форма↔JSON + submit); human_approval-гейт (ревью диффа, Preview, rework-декорации/меню на Diff, approve/rework/takeover). Rework на approval уходит в ai-ноду (опциональная ветка)."
+# Требуется валидным только если реально доходишь до ai-ноды (Rework на approval-гейте).
+# happy-path (command -> submit -> approve) агент НЕ задействует. Поменяй под свой настроенный агент.
+coding_agent: "claude"
+# team_code определяет команду-владельца ранов/гейтов — важно для ролевой проверки
+# (админ видит любой гейт; team member без нужной роли увидит warning). Подставь свою команду.
+team_code: "Zonder Team"
+platform_code: "FRONT"
+tags:
+  - test
+  - gate
+  - workbench
+flow_kind: ''
+risk_level: ''
+scope: "organization"
+approved_by: ''
+approved_at: ''
+published_at: ''
+source_ref: "main"
+source_path: "flows/gate-workbench-smoke-test/1.0"
+lifecycle_status: active
+forked_from: ''
+forked_by: ''
+# checksum пересчитывается приложением при импорте/публикации флоу — оставлено пустым намеренно.
+checksum: ''

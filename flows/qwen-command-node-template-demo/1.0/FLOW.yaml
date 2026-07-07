@@ -11,7 +11,6 @@ start_node_id: command-render-run-env
 failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
-rule_refs: []
 
 nodes:
   - id: command-render-run-env

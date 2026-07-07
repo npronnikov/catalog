@@ -10,8 +10,6 @@ start_node_id: ai-analyze-architecture
 failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
-rule_refs:
-  - java-backend-coding-standards@1.0
 
 nodes:
   - id: ai-analyze-architecture

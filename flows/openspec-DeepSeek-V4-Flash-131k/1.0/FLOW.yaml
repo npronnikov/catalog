@@ -11,7 +11,6 @@ start_node_id: ai-describe-change
 failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
-rule_refs: []
 
 nodes:
 

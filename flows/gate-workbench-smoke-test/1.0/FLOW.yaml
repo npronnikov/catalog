@@ -1,0 +1,320 @@
+id: gate-workbench-smoke-test-1
+version: "0.1"
+canonical_name: gate-workbench-smoke-test-1@0.1
+title: Gate Workbench Smoke Test
+description: |
+  Небольшой детерминированный флоу для ручной проверки нового функционала
+  «работа с кодом + Gate»: command-нода пишет набор файлов (код, markdown+mermaid,
+  .mmd, .dbml, .svg, human-form опросник), затем human_input-гейт (редактирование
+  артефактов + опросник Форма↔JSON + submit-input), затем human_approval-гейт
+  (ревью диффа, Preview, rework-декорации и контекстное меню на Diff-вкладке,
+  approve / rework / takeover). Rework на любом гейте уходит в ai-ноду
+  (опциональная ветка — требует настроенного кодинг-агента); happy-path AI не требует.
+start_node_id: command-seed-changes
+failure_node_id: terminal-done
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+
+nodes:
+  # 1) Детерминированно создаём ревьюабельные изменения и все preview-форматы.
+  - id: command-seed-changes
+    title: Засеять демо-изменения в workspace
+    type: command
+    routing_type: static
+    execution_context: []
+    instruction: |
+      set -e
+      mkdir -p src/demo docs/demo input
+
+      # --- Кодовый файл: дифф / редактирование / Source / rework-декорации ---
+      cat > src/demo/Sample.java <<'EOF'
+      package demo;
+
+      /** Демо-класс для проверки код-ревью в гейте. */
+      public class Sample {
+          public int add(int a, int b) {
+              return a + b;
+          }
+
+          public int mul(int a, int b) {
+              return a * b;
+          }
+      }
+      EOF
+
+      # --- Markdown с mermaid-фенсом: Preview markdown + mermaid ---
+      cat > docs/demo/notes.md <<'EOF'
+      # Demo notes
+
+      Проверка **markdown**-preview с диаграммой mermaid:
+
+      ```mermaid
+      graph TD;
+        A[Start] --> B{Gate};
+        B -->|approve| C[Done];
+        B -->|rework| A;
+      ```
+
+      - список
+      - элементов
+      EOF
+
+      # --- Standalone mermaid: Preview .mmd ---
+      cat > docs/demo/diagram.mmd <<'EOF'
+      sequenceDiagram
+        participant U as User
+        participant G as Gate
+        U->>G: open
+        G-->>U: diff + preview
+      EOF
+
+      # --- DBML: Preview dbml -> mermaid erDiagram ---
+      cat > docs/demo/schema.dbml <<'EOF'
+      Table users {
+        id int [pk]
+        email varchar [unique]
+        org_id int
+      }
+
+      Table posts {
+        id int [pk]
+        user_id int
+        title varchar
+      }
+
+      Ref: posts.user_id > users.id
+      EOF
+
+      # --- SVG: Preview изображения через <img>+blob ---
+      cat > docs/demo/logo.svg <<'EOF'
+      <svg xmlns="http://www.w3.org/2000/svg" width="120" height="60">
+        <rect width="120" height="60" fill="#4f46e5"/>
+        <text x="60" y="35" fill="#fff" font-size="14" text-anchor="middle">DEMO</text>
+      </svg>
+      EOF
+
+      # --- Human-form опросник: FormArtifactEditor (Форма <-> JSON) ---
+      cat > input/questionnaire.json <<'EOF'
+      {
+        "kind": "human-form",
+        "title": "Release readiness questionnaire",
+        "fields": [
+          { "id": "summary", "type": "textarea", "label": "Change summary", "required": true, "value": "" },
+          { "id": "risk", "type": "radio", "label": "Risk level", "required": true, "options": ["low", "medium", "high"], "value": null },
+          { "id": "areas", "type": "checkbox", "label": "Affected areas", "options": ["backend", "frontend", "docs"], "value": [] },
+          { "id": "reviewer", "type": "text", "label": "Reviewer", "value": "" }
+        ]
+      }
+      EOF
+
+      printf 'STEP_SUMMARY:\n```json\n'
+      cat <<'EOF'
+      {
+        "step_id": "command-seed-changes",
+        "attempt": 1,
+        "status": "done",
+        "route": "on_success",
+        "exit_code": 0,
+        "actions": [
+          "Seeded src/demo/Sample.java",
+          "Seeded docs/demo/notes.md (markdown+mermaid)",
+          "Seeded docs/demo/diagram.mmd",
+          "Seeded docs/demo/schema.dbml",
+          "Seeded docs/demo/logo.svg",
+          "Seeded input/questionnaire.json (human-form)"
+        ]
+      }
+      EOF
+      printf '\n```\n'
+    produced_artifacts:
+      - { scope: run, path: src/demo/Sample.java, required: true }
+      - { scope: run, path: docs/demo/notes.md, required: true }
+      - { scope: run, path: docs/demo/diagram.mmd, required: true }
+      - { scope: run, path: docs/demo/schema.dbml, required: true }
+      - { scope: run, path: docs/demo/logo.svg, required: true }
+      - { scope: run, path: input/questionnaire.json, required: true }
+    expected_mutations: []
+    on_success:
+      transition: human-input-review
+
+  # 2) human_input: редактирование артефактов + опросник Форма<->JSON + submit-input.
+  #    filterPaths ограничит список только editable-артефактами (два ниже).
+  #    Rework уходит ВПЕРЁД на ai-ноду (гейтовый handler_config допускает только transition).
+  - id: human-input-review
+    title: Заполнить опросник и отредактировать артефакты
+    type: human_input
+    # ВАЖНО: редактор флоу (syncHumanInputManagedOutputs) авто-добавляет в этот список ВСЕ
+    # run-scoped produced_artifacts upstream-ноды, и для НЕобъявленных ставит modifiable:true +
+    # required:true (→ зелёный «ждёт действия»). Чтобы preview-файлы остались read-only и без
+    # маркера, их надо объявить ЯВНО с modifiable:false — тогда синк сохранит этот флаг.
+    execution_context:
+      # Единственный обязательный + редактируемый — опросник.
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: input/questionnaire.json
+        modifiable: true
+      # Редактируемый, но НЕ обязательный (без зелёного маркера).
+      - type: artifact_ref
+        required: false
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: src/demo/Sample.java
+        modifiable: true
+      # Preview-артефакты: read-only (modifiable:false) — видны в списке, открываются в Preview,
+      # без зелёной подсветки. Объявлены явно, чтобы синк не поднял им modifiable/required в true.
+      - type: artifact_ref
+        required: false
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: docs/demo/diagram.mmd
+        modifiable: false
+      - type: artifact_ref
+        required: false
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: docs/demo/logo.svg
+        modifiable: false
+      - type: artifact_ref
+        required: false
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: docs/demo/notes.md
+        modifiable: false
+      - type: artifact_ref
+        required: false
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: docs/demo/schema.dbml
+        modifiable: false
+    instruction: |
+      Проверка human_input-гейта:
+      1) Открой input/questionnaire.json — он должен показаться как ОПРОСНИК (форма).
+         Заполни поля, переключись Форма ↔ JSON, проверь валидацию невалидного JSON.
+         Это ЕДИНСТВЕННЫЙ обязательный для изменения артефакт.
+      2) (Опционально) Открой src/demo/Sample.java — отредактируй в Monaco (вкладка Source), Revert.
+      3) Нажми Submit input — уйдут только изменённые артефакты (base64).
+      Rework отправит артефакты AI-ноде на доработку (нужен кодинг-агент).
+    allowed_roles:
+      - PRODUCT_OWNER
+    produced_artifacts:
+      - { scope: run, path: input/questionnaire.json, required: true, modifiable: true }
+      - { scope: run, path: src/demo/Sample.java, required: true, modifiable: true }
+    expected_mutations: []
+    on_submit:
+      transition: human-approval-review
+    on_rework:
+      transition: ai-apply-input-rework
+
+  # 2a) Опциональная AI-ветка для human_input rework. on_success — back-edge (цикл),
+  #     поэтому здесь max_loop_count (на ai-ноде это разрешено схемой).
+  - id: ai-apply-input-rework
+    title: Доработать артефакты агентом (input rework)
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: input/questionnaire.json
+        modifiable: true
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: src/demo/Sample.java
+        modifiable: true
+    instruction: |
+      <#assign rw = step["human-input-review"]!{} />
+      Примени запрошенные правки к артефактам в рабочей директории.
+      <#if rw.rework_instruction?has_content>
+      Инструкция: ${rw.rework_instruction}
+      <#else>
+      Улучши input/questionnaire.json и src/demo/Sample.java по своему усмотрению.
+      </#if>
+      Сохрани изменения — они вернутся на повторное заполнение/ревью.
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: human-input-review
+      max_loop_count: 5
+
+  # 3) human_approval: ревью диффа + Preview + декорации/меню на Diff + approve/rework/takeover.
+  - id: human-approval-review
+    title: Ревью изменений и решение
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: src/demo/Sample.java
+      - type: artifact_ref
+        required: false
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: docs/demo/notes.md
+    instruction: |
+      Проверка human_approval-гейта (workbench review + edit-in-takeover):
+      - Список изменённых файлов, дифф (side-by-side / inline / patch), viewed-прогресс.
+      - Preview: notes.md (markdown+mermaid), diagram.mmd, schema.dbml (dbml→mermaid), logo.svg (изображение).
+      - На Diff-вкладке: правый клик → «Request Rework» (scope file/selection), rework-декорации.
+      - Approve (с комментарием) / Rework (keep vs discard, session policy) / Human Takeover (start/pull diff/end).
+      Approve → завершение. Rework → ai-нода применит инструкцию (нужен кодинг-агент).
+    review_artifacts: []
+    allowed_actions:
+      - approve
+      - rework
+      - takeover
+    on_approve:
+      transition: terminal-done
+    on_rework:
+      transition: ai-apply-approval-rework
+
+  # 3a) Опциональная AI-ветка для human_approval rework. on_success — back-edge → max_loop_count.
+  - id: ai-apply-approval-rework
+    title: Применить rework агентом (approval rework)
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: command-seed-changes
+        path: src/demo/Sample.java
+        modifiable: true
+    instruction: |
+      <#assign rw = step["human-approval-review"]!{} />
+      Примени запрошенные правки к коду в рабочей директории.
+      <#if rw.rework_instruction?has_content>
+      Инструкция ревьюера: ${rw.rework_instruction}
+      <#else>
+      Улучши src/demo/Sample.java по своему усмотрению (добавь javadoc/тест-заглушку).
+      </#if>
+      Сохрани изменения — они уйдут на повторное ревью.
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: human-approval-review
+      max_loop_count: 5
+
+  # 4) Терминал.
+  - id: terminal-done
+    title: Завершение
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

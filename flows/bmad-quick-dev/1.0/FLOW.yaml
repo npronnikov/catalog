@@ -12,7 +12,6 @@ start_node_id: ai-clarify-and-route
 failure_node_id: terminal-complete
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
-rule_refs: []
 
 nodes:
 

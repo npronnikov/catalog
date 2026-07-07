@@ -9,7 +9,6 @@ start_node_id: create-module1
 failure_node_id: terminal
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
-rule_refs: []
 
 nodes:
   - id: create-module1
