@@ -1,0 +1,24 @@
+entity_type: flow
+id: gigacode-subagent-smoke-flow
+version: "1.0"
+canonical_name: gigacode-subagent-smoke-flow@1.0
+display_name: "GigaCode Subagent Smoke Flow"
+description: >
+  Minimal AI DLC example flow with one GigaCode AI node that invokes a linked
+  code-review subagent, then finishes successfully.
+coding_agent: gigacode
+team_code: AIDLC
+platform_code: BACK
+tags:
+  - aidlc
+  - gigacode
+  - subagent
+  - smoke
+  - example
+flow_kind: analysis
+risk_level: low
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/flows/gigacode-subagent-smoke-flow/1.0"

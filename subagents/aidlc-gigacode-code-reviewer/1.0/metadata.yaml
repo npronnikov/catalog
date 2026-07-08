@@ -1,0 +1,22 @@
+entity_type: subagent
+id: aidlc-gigacode-code-reviewer
+version: "1.0"
+canonical_name: aidlc-gigacode-code-reviewer@1.0
+display_name: "AIDLC GigaCode Code Reviewer"
+description: >
+  Example GigaCode subagent for focused review of AI DLC implementation changes.
+  Produces findings-first feedback with verification gaps and merge readiness.
+coding_agent: gigacode
+team_code: AIDLC
+tags:
+  - aidlc
+  - gigacode
+  - review
+  - quality
+  - example
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/subagents/aidlc-gigacode-code-reviewer/1.0"
+definition_file: "aidlc-gigacode-code-reviewer.md"

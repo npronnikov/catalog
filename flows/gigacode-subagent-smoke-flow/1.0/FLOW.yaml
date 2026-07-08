@@ -1,0 +1,50 @@
+id: gigacode-subagent-smoke-flow
+version: "1.0"
+canonical_name: gigacode-subagent-smoke-flow@1.0
+title: GigaCode Subagent Smoke Flow
+description: >
+  Minimal smoke flow showing a single GigaCode AI node with one linked subagent.
+coding_agent: gigacode
+start_node_id: ai-review-request
+failure_node_id: terminal-done
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+rule_refs: []
+
+nodes:
+  - id: ai-review-request
+    title: Review requested change with GigaCode subagent
+    type: ai
+    model: vllm/GigaCode-Agentic-v1.6-131k
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Review this feature request using the linked subagent:
+
+      ${run.feature_request}
+
+      Produce a concise review note in aidlc-subagent-smoke-review.md with:
+      - key risks
+      - required verification
+      - final verdict
+    subagent_refs:
+      - aidlc-gigacode-code-reviewer@1.0
+    produced_artifacts:
+      - scope: run
+        path: aidlc-subagent-smoke-review.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: terminal-done
+    retry_policy:
+      attempts: 2
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  - id: terminal-done
+    title: Complete
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
