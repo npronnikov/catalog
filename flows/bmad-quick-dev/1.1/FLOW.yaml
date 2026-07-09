@@ -150,7 +150,7 @@ nodes:
       ВАЖНО: ${humanApprovePlan.rework_instruction}
       </#if>
 
-      <#if aiRework.rework_instruction?has_content)>
+      <#if aiRework.rework_instruction?has_content>
         ОЦЕНЬ ВАЖНО! Прочитай файл review-report.md и учти все замечания с ошибкой bad_intent при создании спецификации spec.md
       </#if>
 
@@ -351,7 +351,7 @@ nodes:
     instruction: |      
       <#assign aiRework = step["ai-route-rework"]!{} />
 
-      <#if aiRework.rework_instruction?has_content)>
+      <#if aiRework.rework_instruction?has_content>
         ОЦЕНЬ ВАЖНО! Прочитай файл review-report.md и учти все замечания с ошибкой bad_spec при написании кода
       </#if>
 
