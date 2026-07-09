@@ -29,7 +29,7 @@ nodes:
       <#if humanClarifyIntent.rework_instruction?has_content>
       ВАЖНО! При выполнении инструкции учти следующее: ${humanClarifyIntent.rework_instruction}
       </#if>
-     
+
 
       Проанализируй намерение пользователя:
       <#if (run.feature_request)?? && run.feature_request?has_content>
@@ -154,8 +154,8 @@ nodes:
         ОЦЕНЬ ВАЖНО! Прочитай файл review-report.md и учти все замечания с ошибкой bad_intent при создании спецификации spec.md
       </#if>
 
-      
-      
+
+
       Путь к implementation_artifacts читай из _bmad/bmm/config.yaml, если файл есть, если нет, то используй _bmad-output/implementation_artifacts/
 
       Исследуй кодовую базу, чтобы понять зону влияния изменений.
@@ -170,7 +170,7 @@ nodes:
       Добавь в spec-scratchpad.json поле slug.
 
       Спеку пищи по-русски, если не задано другое.
-      
+
       Заполни шаблон спеки и сохрани в _bmad-output/implementation_artifacts/spec.md:
       <TEMPLATE START>
       ---
@@ -185,9 +185,9 @@ nodes:
           Never over-specify "how" — use boundaries + examples instead.
           Cohesive cross-layer stories (DB+BE+UI) stay in ONE file.
           IMPORTANT: Remove all HTML comments when filling this template. -->
-      
+
       <frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">
-      
+
       ## Intent
 
       <!-- What is broken or missing, and why it matters. Then the high-level approach — the "what", not the "how". -->
@@ -259,10 +259,10 @@ nodes:
       **Manual checks (if no CLI):**
       - WHAT_TO_INSPECT_AND_EXPECTED_STATE
        <TEMPLATE END>
-      
+
       Целевой объём: 900–1600 токенов. Если больше 1600 — сократи до основной цели
       и добавь отложенные цели в файл deferred-work проекта.
-      
+
       Добавляй отложенные цели в {implementation_artifacts}/deferred-work.md
       Сохрани спеку в _bmad-output/implementation_artifacts/spec.md
     skill_refs: []
@@ -348,7 +348,7 @@ nodes:
         scope: run
         required: false
         transfer_mode: by_ref
-    instruction: |      
+    instruction: |
       <#assign aiRework = step["ai-route-rework"]!{} />
 
       <#if aiRework.rework_instruction?has_content>
@@ -552,7 +552,7 @@ nodes:
     on_bad_spec:
       transition: ai-implement
       max_loop_count: 10
-      keep_changes: false
+      keep_changes: true
       session_policy: new_session
     on_bad_intent:
       transition: ai-plan
