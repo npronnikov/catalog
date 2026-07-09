@@ -135,7 +135,7 @@ nodes:
         path: clarification.md
         scope: run
         required: true
-        transfer_mode: by_value
+        transfer_mode: by_ref
       - type: artifact_ref
         node_id: ai-review
         path: review-report.md
@@ -144,9 +144,17 @@ nodes:
         transfer_mode: by_ref
     instruction: |
       <#assign humanApprovePlan = step["human-approve-plan"]!{} />
+      <#assign aiRework = step["ai-route-rework"]!{} />
+
       <#if humanApprovePlan.rework_instruction?has_content && (humanApprovePlan.keep_changes!false)>
       ВАЖНО: ${humanApprovePlan.rework_instruction}
       </#if>
+
+      <#if aiRework.rework_instruction?has_content)>
+        ОЦЕНЬ ВАЖНО! Прочитай файл review-report.md и учти все замечания с ошибкой bad_intent при создании спецификации spec.md
+      </#if>
+
+      
       
       Путь к implementation_artifacts читай из _bmad/bmm/config.yaml, если файл есть, если нет, то используй _bmad-output/implementation_artifacts/
 
@@ -162,8 +170,6 @@ nodes:
       Добавь в spec-scratchpad.json поле slug.
 
       Спеку пищи по-русски, если не задано другое.
-
-      Если есть файл review-report.md, то ознакомься с замечаниями в нем перед тем как создавать или изменять spec.md
       
       Заполни шаблон спеки и сохрани в _bmad-output/implementation_artifacts/spec.md:
       <TEMPLATE START>
@@ -342,9 +348,14 @@ nodes:
         scope: run
         required: false
         transfer_mode: by_ref
-    instruction: |
-      Если есть файл review-report.md, то ознакомься с замечаниями в нем перед тем как переходить к выполнению задач.
-      
+    instruction: |      
+      <#assign aiRework = step["ai-route-rework"]!{} />
+
+      <#if aiRework.rework_instruction?has_content)>
+        ОЦЕНЬ ВАЖНО! Прочитай файл review-report.md и учти все замечания с ошибкой bad_spec при написании кода
+      </#if>
+
+
       Прочитай _bmad-output/implementation_artifacts/spec.md. Далее просто spec.md. Если в frontmatter spec.md есть непустой context — загрузи
       эти файлы перед началом. При передаче суб-агенту включи их в промпт, чтобы
       суб-агент имел доступ к зафиксированным ограничениям.
@@ -440,12 +451,6 @@ nodes:
 
       Сохрани review-report.md в скопе артефактов run.
 
-      Сохрани step-summary.json с полем route:
-        - route: "on_success" — если рекомендация review-report.md равна "approve"
-        - route: "on_rework" — если рекомендация review-report.md равна "rework-spec" или "rework-intent"
-
-      Для route="on_rework" добавь rework_instruction: кратко укажи рекомендацию ревью
-      и что именно должен обработать маршрутизатор.
     skill_refs:
       - bmad-review-adversarial-general@1.0
       - bmad-review-edge-case-hunter@1.0
@@ -531,11 +536,14 @@ nodes:
         Рекомендация в review-report.md — "approve". Переходи к презентации.
 
       Не смешивай пути. Рекомендация в review-report.md — авторитетна.
+      Сохрани step-summary.json с полем route:
+        - route: "on_success" — если рекомендация review-report.md равна "approve"
+        - route: "on_rework" — если рекомендация review-report.md равна "rework-spec" или "rework-intent"
 
       После выполнения выбранного пути добавь в step-summary.json:
-        ПУТЬ А: { "route": "on_bad_spec",   "actions": ["откат изменений кода", "правка разделов спека", "запись в журнал изменений"] }
-        ПУТЬ Б: { "route": "on_bad_intent", "actions": ["откат изменений кода"] }
-        ПУТЬ В: { "route": "on_present",    "actions": ["переход к презентации"] }
+        ПУТЬ А: { "route": "on_bad_spec",   "rework_instruction": ["Переработай спецификацию"] }
+        ПУТЬ Б: { "route": "on_bad_intent", "rework_instruction": ["Переработай интент"] }
+        ПУТЬ В: { "route": "on_present"}
 
       Поле "route" в step-summary.json обязательно!
     skill_refs: []
