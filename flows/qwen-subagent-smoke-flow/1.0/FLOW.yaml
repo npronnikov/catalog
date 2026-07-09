@@ -3,32 +3,40 @@ version: "1.0"
 canonical_name: qwen-subagent-smoke-flow@1.0
 title: Qwen Subagent Smoke Flow
 description: >
-  Minimal smoke flow showing a single Qwen AI node with one linked subagent.
+  Minimal smoke flow showing a single Qwen AI node with linked review subagents
+  followed by a human approval gate.
 coding_agent: qwen
 start_node_id: ai-review-request
 failure_node_id: terminal-done
 fail_on_missing_declared_output: true
 fail_on_missing_expected_mutation: false
-rule_refs: []
 
 nodes:
   - id: ai-review-request
-    title: Review requested change with Qwen subagent
+    title: Review requested change with Qwen subagents
     type: ai
-    model: vllm/Qwen3-Coder-Next-262k
     routing_type: static
     execution_context: []
     instruction: |
-      Review this feature request using the linked subagent:
+      <#assign approval = step["human-approval-review"]!{} />
+      <#if approval.rework_instruction?has_content && (approval.keep_changes!false)>
+      Rework the review note using this human feedback:
+
+      ${approval.rework_instruction}
+      <#else>
+      Review this feature request using the linked subagents:
 
       ${run.feature_request}
+      </#if>
 
       Produce a concise review note in aidlc-subagent-smoke-review.md with:
       - key risks
       - required verification
       - final verdict
     subagent_refs:
-      - aidlc-qwen-code-reviewer@1.0
+      - aidlc-qwen-review-blind-hunter@1.0
+      - aidlc-qwen-review-edge-case-hunter@1.0
+      - aidlc-qwen-review-acceptance-auditor@1.0
     produced_artifacts:
       - scope: run
         path: aidlc-subagent-smoke-review.md
@@ -36,11 +44,34 @@ nodes:
         modifiable: false
     expected_mutations: []
     on_success:
-      transition: terminal-done
+      transition: human-approval-review
     retry_policy:
       attempts: 2
       on_errors:
         - NODE_VALIDATION_FAILED
+
+  - id: human-approval-review
+    title: Approve Qwen subagent smoke review
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-review-request
+        path: aidlc-subagent-smoke-review.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Review aidlc-subagent-smoke-review.md.
+
+      Approve if the smoke review is sufficient, or send it back for rework
+      with specific feedback.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: terminal-done
+    on_rework:
+      transition: ai-review-request
 
   - id: terminal-done
     title: Complete

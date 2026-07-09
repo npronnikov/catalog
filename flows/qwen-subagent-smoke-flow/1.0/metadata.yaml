@@ -4,8 +4,8 @@ version: "1.0"
 canonical_name: qwen-subagent-smoke-flow@1.0
 display_name: "Qwen Subagent Smoke Flow"
 description: >
-  Minimal AI DLC example flow with one Qwen AI node that invokes a linked
-  code-review subagent, then finishes successfully.
+  Minimal AI DLC example flow with one Qwen AI node that invokes linked
+  code-review subagents, waits for human approval, then finishes successfully.
 coding_agent: qwen
 team_code: AIDLC
 platform_code: BACK
