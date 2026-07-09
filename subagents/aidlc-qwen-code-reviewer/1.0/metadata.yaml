@@ -1,0 +1,22 @@
+entity_type: subagent
+id: aidlc-qwen-code-reviewer
+version: "1.0"
+canonical_name: aidlc-qwen-code-reviewer@1.0
+display_name: "AIDLC Qwen Code Reviewer"
+description: >
+  Example Qwen subagent for focused review of AI DLC implementation changes.
+  Produces findings-first feedback with verification gaps and merge readiness.
+coding_agent: qwen
+team_code: AIDLC
+tags:
+  - aidlc
+  - qwen
+  - review
+  - quality
+  - example
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/subagents/aidlc-qwen-code-reviewer/1.0"
+definition_file: "aidlc-qwen-code-reviewer.md"

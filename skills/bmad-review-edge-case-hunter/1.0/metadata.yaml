@@ -1,0 +1,24 @@
+entity_type: skill
+id: bmad-review-edge-case-hunter
+version: "1.0"
+canonical_name: bmad-review-edge-case-hunter@1.0
+display_name: "Edge Case Hunter Review"
+description: >
+  Exhaustive, method-driven edge-case analysis of diffs, files, or functions —
+  mechanically walks every branching path and boundary condition and reports
+  only unhandled ones as structured JSON findings. Orthogonal to adversarial
+  review: path-driven, not attitude-driven. Use when you need exhaustive
+  edge-case analysis of code, specs, or diffs.
+coding_agent: qwen
+team_code: Demo
+platform_code: BACK
+tags:
+  - review
+  - quality
+  - analysis
+skill_kind: review
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/bmad-review-edge-case-hunter/1.0"

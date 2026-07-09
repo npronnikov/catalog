@@ -5,8 +5,8 @@ title: HGDLC Light Development Flow
 description: >
   Лёгкий цикл разработки с участием человека на каждом ключевом этапе.
   Последовательность: уточняющие вопросы → ответы пользователя →
-  план имплементации → апрув плана → разработка → ревью кода →
-  апрув итогового кода.
+  план имплементации → апрув плана → разработка →
+  adversarial-ревью тремя сабагентами → апрув итогового кода.
 coding_agent: qwen
 start_node_id: ai-clarifying-questions
 failure_node_id: terminal-complete
@@ -167,12 +167,21 @@ nodes:
         transfer_mode: by_ref
     instruction: |
       <#assign aiCodeReview = step["ai-code-review"]!{} />
-      <#if aiCodeReview.rework_instruction??>
-      ${aiCodeReview.rework_instruction}
+      <#if aiCodeReview.route?has_content && aiCodeReview.route == "on_rework">
+      Изучи отчёт ревью в code-review-report.md из предыдущего шага.
+      Устрани все блокирующие замечания severity critical и major из
+      консолидированной секции отчёта и из секций отдельных сабагентов.
+
+      Используй именно code-review-report.md как источник замечаний для
+      доработки. Не ожидай rework_instruction и не придумывай отдельный
+      список правок вне отчёта.
       <#else>
       Выполни план имплементации из implementation-plan.md шаг за шагом:
         - Находи первый невыполненный шаг [ ] и реализуй его.
         - После выполнения помечай шаг [x] и обновляй implementation-plan.md.
+      </#if>
+
+      Общие правила выполнения:
         - После каждого слоя запускай только завершающуюся команду верификации
           из плана: build / compile / test / lint.
         - Не используй для верификации долгоживущие процессы и ручные проверки:
@@ -180,7 +189,6 @@ nodes:
           локально поднятым сервисам и аналогичные команды запрещены.
         - Не создавай копии файлов с суффиксами _modified, _new и т.п. —
           изменяй файлы непосредственно.
-      </#if>
     skill_refs: []
     produced_artifacts: []
     expected_mutations: []
@@ -189,7 +197,7 @@ nodes:
 
   # ── Шаг 6: Ревью кода ─────────────────────────────────────────────────────
   - id: ai-code-review
-    title: Ревью кода
+    title: Adversarial ревью кода тремя сабагентами
     type: ai
     routing_type: dynamic
     execution_context:
@@ -207,25 +215,41 @@ nodes:
         required: false
         modifiable: false
         transfer_mode: by_ref
+    subagent_refs:
+      - aidlc-qwen-review-blind-hunter@1.0
+      - aidlc-qwen-review-edge-case-hunter@1.0
+      - aidlc-qwen-review-acceptance-auditor@1.0
     instruction: |
-      Проведи ревью только изменений в рабочем дереве проекта относительно
-      текущего HEAD, то есть текущего незакоммиченного diff после шага
-      разработки. Не ревьюй кодовую базу "в целом" — ревьюй только сделанные
-      изменения.
+      Проведи adversarial-ревью только изменений в рабочем дереве проекта
+      относительно текущего HEAD, то есть текущего незакоммиченного diff после
+      шага разработки. Не ревьюй кодовую базу "в целом" — ревьюй только
+      сделанные изменения.
 
       Считай implementation-plan.md основным источником требований, а
       questions.md — источником уточняющих ограничений, договорённостей и
       решений пользователя.
 
-      В ревью обязательно проверь:
-      - полностью ли реализован plan из implementation-plan.md
-      - нет ли изменений, противоречащих answers из questions.md
-      - нет ли лишних изменений вне согласованного scope
-      - какие пункты плана реализованы, не реализованы или реализованы частично
+      Запусти три независимых прохода ревью без общего контекста между
+      ревьюерами. Если сабагенты доступны — используй связанные subagent_refs.
+      Если запуск сабагентов невозможен, выполни те же три прохода
+      последовательно, но изолированно по ролям:
+      1. Blind hunter — смотрит только на diff и ищет явные дефекты,
+         регрессии и опасные изменения.
+      2. Edge-case hunter — смотрит на diff и соседний код, ищет пропущенные
+         случаи, контракты, негативные сценарии и интеграционные риски.
+      3. Acceptance auditor — сверяет diff против implementation-plan.md и
+         questions.md, проверяет полноту реализации и отсутствие выхода за scope.
 
-      Следуй приложенному скилу hgdlc-code-review: оцени только сделанные
-      изменения по пяти осям (корректность, читаемость, архитектура,
-      безопасность, производительность).
+      В каждом проходе обязательно оцени:
+      - корректность и регрессии поведения
+      - читаемость и сопровождаемость
+      - архитектурные нарушения
+      - безопасность и эксплуатационные риски
+      - производительность, если она затронута изменением
+      - полноту относительно implementation-plan.md
+      - противоречия answers из questions.md
+      - лишние изменения вне согласованного scope
+
       В секции Verification учитывай только завершающиеся команды сборки,
       компиляции, тестов и линтеров. Не требуй и не ожидай запуск backend /
       frontend, browser-based проверки или `curl` к локально поднятым сервисам.
@@ -233,26 +257,32 @@ nodes:
       Если изменений относительно HEAD нет, явно укажи это в отчёте и не
       придумывай замечания.
 
-      Сохрани отчёт в code-review-report.md.
+      Сохрани консолидированный отчёт в code-review-report.md в структуре:
+      - Executive summary
+      - Reviewer 1: Blind hunter
+      - Reviewer 2: Edge-case hunter
+      - Reviewer 3: Acceptance auditor
+      - Consolidated findings
+      - Verification
+      - Verdict
 
       После завершения ревью заполни step-summary.
       Добавь в step-summary для этой ноды:
       - route: "on_rework" если есть замечания severity "critical" или "major"; "on_success" если только "minor" / "info" или замечаний нет
       - actions: непустой массив выполненных действий ревью
-      - issues: массив замечаний (пустой если нет; для on_rework — минимум одно замечание)
-      - rework_instruction: строка, обязательна если route="on_rework"; конкретный нумерованный список исправлений по файлам/строкам (читается FTL-шаблоном на шаге разработки)
+      - issues: массив консолидированных замечаний (пустой если нет; для on_rework — минимум одно замечание)
+      - report_path: "code-review-report.md"
 
       Примеры заполнения:
-      - actions: ["провёл ревью кода по пяти осям", "выполнил оценку на наличие критических и требуемых замечаний"]
+      - actions: ["запустил три независимых прохода ревью", "собрал консолидированный отчёт по замечаниям"]
       - route: "on_rework"
       - issues: [
-        {"severity": "critical", "file": "path/to/File.java", "line": 42, "message": "описание проблемы"},
-        {"severity": "major", "file": "path/to/File.java", "message": "описание проблемы"}
+        {"severity": "critical", "file": "path/to/File.java", "line": 42, "message": "описание проблемы", "reviewer": "blind-hunter"},
+        {"severity": "major", "file": "path/to/File.java", "message": "описание проблемы", "reviewer": "acceptance-auditor"}
         ]
-      - rework_instruction: "Конкретный список исправлений:\n1. {файл:строка — что именно исправить}\n2. ..."
+      - report_path: "code-review-report.md"
 
-    skill_refs:
-      - hgdlc-code-review@1.0
+    skill_refs: []
     produced_artifacts:
       - scope: run
         path: code-review-report.md

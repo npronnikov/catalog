@@ -1,0 +1,25 @@
+entity_type: flow
+id: bmad-quick-dev-flow
+version: "1.1"
+canonical_name: bmad-quick-dev-flow@1.1
+display_name: "BMAD Quick Dev — Clarify, Plan, Implement, Review, Present"
+description: >
+  Full-cycle development flow: intent clarification → spec planning with human approval →
+  implementation → adversarial review (3 sub-agents) → rework routing (bad_spec vs intent_gap) →
+  final presentation with suggested review order.
+coding_agent: qwen
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - bmad
+  - development
+  - full-cycle
+  - review
+  - adversarial
+flow_kind: delivery
+risk_level: medium
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/flows/bmad-quick-dev/1.1"

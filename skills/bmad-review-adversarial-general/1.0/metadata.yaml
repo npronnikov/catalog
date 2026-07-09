@@ -1,0 +1,22 @@
+entity_type: skill
+id: bmad-review-adversarial-general
+version: "1.0"
+canonical_name: bmad-review-adversarial-general@1.0
+display_name: "Adversarial Review (General)"
+description: >
+  Cynical adversarial review of any content — diff, spec, story, or doc — producing
+  a findings report from an unforgiving reviewer persona. Looks for what's missing,
+  not just what's wrong, and requires at least ten findings per review.
+  Use when the user requests a critical or cynical review of something.
+coding_agent: qwen
+team_code: Demo
+platform_code: BACK
+tags:
+  - review
+  - quality
+skill_kind: review
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/bmad-review-adversarial-general/1.0"
