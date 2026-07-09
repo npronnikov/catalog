@@ -384,7 +384,7 @@ nodes:
   - id: ai-review
     title: Adversarial ревью — 3 суб-агента
     type: ai
-    routing_type: dynamic
+    routing_type: static
     execution_context:
       - type: artifact_ref
         node_id: ai-plan
@@ -463,11 +463,6 @@ nodes:
         - NODE_VALIDATION_FAILED
     on_success:
       transition: human-approve-review
-    on_rework:
-      transition: ai-route-rework
-      max_loop_count: 10
-      keep_changes: true
-      session_policy: new_session
 
   - id: human-approve-review
     title: Проверить находки ревью и принять решение
