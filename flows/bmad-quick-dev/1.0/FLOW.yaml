@@ -457,9 +457,6 @@ nodes:
       session_policy: new_session
     on_present:
       transition: ai-present
-      max_loop_count: 10
-      keep_changes: true
-      session_policy: new_session
 
   # ════════════════════════════════════════════════════════════════════════════
   # ШАГ 5 — Презентация

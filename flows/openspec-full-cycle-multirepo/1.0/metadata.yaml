@@ -1,0 +1,25 @@
+entity_type: flow
+id: openspec-full-cycle-multirepo
+version: "1.0"
+canonical_name: openspec-full-cycle-multirepo@1.0
+title: OpenSpec Full Cycle Multirepo — Explore, Propose, Apply, Verify, Archive
+description: >
+  Полный цикл OpenSpec-разработки: исследование идеи и текущих спецификаций →
+  создание delta-specs и артефактов изменения → апрув → реализация кода →
+  верификация → финальный акцепт → актуализация документации и архивирование.
+  Результат: реализованная фича + актуализированные openspec/specs/.
+  Версия для проектов с несколькими репозиториями; OpenSpec-артефакты лежат в main.
+coding_agent: qwen
+team_code: Demo
+platform_code: BACK
+tags:
+  - openspec
+  - sdd
+  - full-cycle
+  - documentation
+  - multirepo
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/flows/openspec-full-cycle-multirepo/1.0"

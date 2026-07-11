@@ -176,8 +176,7 @@ nodes:
       - route: "on_rework"
       - issues: [{"severity": "critical", "description": "TC-03 падает: expected 201 but was 200"}]
       - rework_instruction: |
-          1. src/main/java/FooController.java:42 — вернуть HttpStatus.CREATED вместо OK
-          2. implementation-plan.md шаг 3.2 не отмечен [x] — завершить реализацию
+          Исправь все замечания из verification-report.md уровня Critical и Required.
 
     skill_refs:
       - superpowers-verification-before-completion@1.0
