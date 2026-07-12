@@ -1,0 +1,101 @@
+id: qwen-multirepo-artifact-smoke-flow
+version: "1.0"
+canonical_name: qwen-multirepo-artifact-smoke-flow@1.0
+title: Qwen Multirepo Project Artifact Smoke Flow
+description: >
+  Smoke flow based on the restore architecture flow shape. A single Qwen AI node
+  produces two project-scoped architecture artifacts in different repositories:
+  one in main and one in back.
+coding_agent: qwen
+start_node_id: ai-generate-architecture-artifacts
+failure_node_id: terminal-done
+multirepository: true
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+
+nodes:
+  - id: ai-generate-architecture-artifacts
+    title: Generate architecture artifacts in main and back
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      <#assign approval = step["approve-architecture-artifacts"]!{} />
+      <#if approval.rework_instruction?has_content && (approval.keep_changes!false)>
+      Исправь оба архитектурных артефакта с учетом замечания:
+
+      ${approval.rework_instruction}
+      <#else>
+      Изучи проект и подготовь два коротких Markdown-артефакта для smoke-теста
+      мультирепозиторных project-scoped produced_artifacts.
+      Используй подключенный restore-architecture skill как guidance для анализа,
+      но обязательные output paths в этом flow именно такие:
+
+      Создай:
+      1. docs/architecture-main.md в репозитории alias main
+      2. docs/architecture-back.md в репозитории alias back
+
+      В каждом файле укажи:
+      - заголовок
+      - repo alias
+      - краткое описание назначения репозитория
+      - 3-5 наблюдений по архитектуре или структуре кода
+      </#if>
+    skill_refs:
+      - restore-c4-architecture-java@1.0
+    produced_artifacts:
+      - scope: project
+        path: main:docs/architecture-main.md
+        required: true
+        modifiable: false
+      - scope: project
+        path: back:docs/architecture-back.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: approve-architecture-artifacts
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  - id: approve-architecture-artifacts
+    title: Approve generated architecture artifacts
+    type: human_approval
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-generate-architecture-artifacts
+        path: main:docs/architecture-main.md
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-generate-architecture-artifacts
+        path: back:docs/architecture-back.md
+        scope: project
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Проверь два сгенерированных артефакта:
+      - main:docs/architecture-main.md
+      - back:docs/architecture-back.md
+
+      Подтверди, если оба файла созданы в правильных репозиториях и содержат
+      осмысленное smoke-описание архитектуры. Верни на доработку, если один из
+      файлов отсутствует, создан в неправильном repo alias или требует правок.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: terminal-done
+    on_rework:
+      transition: ai-generate-architecture-artifacts
+
+  - id: terminal-done
+    title: Complete
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
