@@ -1,0 +1,23 @@
+entity_type: flow
+id: superpowers-quick-dev-flow
+version: "1.2"
+canonical_name: superpowers-quick-dev-flow@1.2
+display_name: "Superpowers Quick Development Flow"
+description: "Быстрый цикл разработки на основе методологии Superpowers — без уточняющих вопросов и промежуточных апрувов. Последовательность: автономный брейнштоминг (brainstorming-summary) → детальный план (writing-plans) → исполнение по плану (executing-plans) → верификация перед завершением → финальный апрув. TDD применяется для testable behaviors. Git-коммиты не входят в план. Автоматический возврат на доработку при незакрытых замечаниях верификации.
+"
+coding_agent: "qwen"
+team_code: "HGDLC"
+platform_code: "BACK"
+tags: ["superpowers", "development", "planning", "verification", "quick"]
+flow_kind: "delivery"
+risk_level: "low"
+scope: "organization"
+approved_by: ''
+approved_at: ''
+published_at: ''
+source_ref: "main"
+source_path: "flows/superpowers-quick-dev-flow/1.2"
+lifecycle_status: active
+forked_from: ''
+forked_by: ''
+checksum: "4f6ab122bdda80f66223e698da521afa77b84d7d23b5ffddb5ca98f3e06eed26"

@@ -1,0 +1,213 @@
+id: superpowers-quick-dev-flow
+version: "1.2"
+canonical_name: superpowers-quick-dev-flow@1.2
+title: Superpowers Quick Development Flow
+description: |
+  Быстрый цикл разработки на основе методологии Superpowers — без уточняющих вопросов и промежуточных апрувов. Последовательность: автономный брейнштоминг (brainstorming-summary) → детальный план (writing-plans) → исполнение по плану (executing-plans) → верификация перед завершением → финальный апрув. TDD применяется для testable behaviors. Git-коммиты не входят в план. Автоматический возврат на доработку при незакрытых замечаниях верификации.
+  
+start_node_id: ai-brainstorming
+failure_node_id: terminal-complete
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+multirepository: false
+
+nodes:
+  - id: ai-brainstorming
+    title: Автономный анализ и дизайн
+    type: ai
+    execution_context: []
+    instruction: |
+      <#if (run.feature_request)?? && run.feature_request?has_content>
+      ${run.feature_request}
+      </#if>
+      
+      Изучи запрос и кодовую базу проекта. Строго следуй скилу:
+      выяви ключевые дизайн-решения, выбери лучший подход для каждого
+      с обоснованием, зафиксируй результат в brainstorming-summary.md.
+      
+      Не задавай вопросов — принимай решения самостоятельно на основе
+      контекста проекта. Отмечай неуверенные допущения явно.
+      
+    routing_type: static
+    retry_policy:
+      on_errors:
+        - NODE_VALIDATION_FAILED
+      attempts: 3
+    skill_refs:
+      - superpowers-brainstorming@1.0
+    produced_artifacts:
+      -
+        scope: run
+        path: brainstorming-summary.md
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: ai-writing-plans
+  - id: ai-writing-plans
+    title: Составление детального плана реализации для системы
+    type: ai
+    execution_context:
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: ai-brainstorming
+        path: brainstorming-summary.md
+    instruction: |
+      Изучи brainstorming-summary.md и составь детальный план реализации
+      согласно скилу. Сохрани в implementation-plan.md.
+      
+      Требования к плану:
+      - Каждый шаг: 2-5 минут работы
+      - Порядок слоёв: миграции → сущности → репозитории → сервисы →
+        контроллеры → конфигурация → фронтенд
+      - После каждого слоя: команда верификации (только завершающиеся команды)
+      - TDD для testable behaviors: write failing test → RED → minimal impl → GREEN → small refactor
+      - Без плейсхолдеров, без TBD, без "добавить обработку ошибок"
+      
+    routing_type: static
+    retry_policy:
+      on_errors:
+        - NODE_VALIDATION_FAILED
+      attempts: 3
+    skill_refs:
+      - superpowers-writing-plans@1.0
+    produced_artifacts:
+      -
+        scope: run
+        path: implementation-plan.md
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: ai-executing-plans
+  - id: ai-executing-plans
+    title: Исполнение плана реализации
+    type: ai
+    execution_context:
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: ai-writing-plans
+        path: implementation-plan.md
+      - type: artifact_ref
+        required: false
+        scope: run
+        transfer_mode: by_ref
+        node_id: ai-verify-before-completion
+        path: verification-report.md
+    instruction: |
+      <#assign verifyBeforeCompletion = step["ai-verify-before-completion"]!{} />
+      <#if verifyBeforeCompletion.rework_instruction?has_content>
+      ${verifyBeforeCompletion.rework_instruction}
+      <#else>
+      Выполни план из implementation-plan.md строго согласно скилу:
+      
+      1. Объяви старт: "Executing plan: implementation-plan.md"
+      2. Создай TodoWrite из всех незакрытых [ ] шагов плана
+      3. Для каждого шага по порядку:
+         - Отметь в TodoWrite как in_progress
+         - Выполни точно как написано
+         - Запусти команду из строки Verify:
+         - Прочитай полный вывод команды
+         - Отметь в TodoWrite как completed
+      4. Остановись и сообщи о блокере если:
+         - Зависимость отсутствует
+         - Тест не проходит после 3 попыток
+         - Инструкция неоднозначна
+      
+      Запрещено:
+      - Пропускать шаги
+      - Использовать bootRun, npm run dev, curl к локальным сервисам
+      - Создавать копии файлов с суффиксами _modified, _new
+      - Реализовывать функциональность вне плана
+      </#if>
+      
+    routing_type: static
+    skill_refs:
+      - superpowers-executing-plans@1.0
+      - superpowers-test-driven-development@1.0
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: ai-verify-before-completion
+  - id: ai-verify-before-completion
+    title: Верификация перед завершением
+    type: ai
+    execution_context:
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: ai-writing-plans
+        path: implementation-plan.md
+    instruction: |
+      Проведи верификацию перед тем как объявить работу завершённой.
+      Строго следуй скилу — каждый из пяти шагов обязателен.
+      
+      Верификационный чеклист:
+      1. Все [ ] в implementation-plan.md теперь [x] — нет незакрытых шагов
+      2. Полный build команда проходит с нулём ошибок
+      3. Все тесты зелёные (новые + существующие — нет регрессий)
+      4. git diff HEAD не содержит изменений вне согласованного scope
+      5. Нет backup-копий файлов, debug-кода, TODO в production-коде
+      
+      После проверки заполни step-summary:
+      - route: "on_success" если всё прошло
+      - route: "on_rework" если есть проблемы
+      
+      Пример on_rework:
+      - actions: ["запустил ./gradlew test", "прочитал полный вывод"]
+      - route: "on_rework"
+      - issues: [{"severity": "critical", "description": "TC-03 падает: expected 201 but was 200"}]
+      - rework_instruction: |
+          Исправь все замечания из verification-report.md уровня Critical и Required.
+      
+    routing_type: dynamic
+    retry_policy:
+      on_errors:
+        - NODE_VALIDATION_FAILED
+      attempts: 3
+    skill_refs:
+      - superpowers-verification-before-completion@1.0
+    produced_artifacts:
+      -
+        scope: run
+        path: verification-report.md
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: approve-final-code
+    on_rework:
+      transition: ai-executing-plans
+      max_loop_count: 3
+      keep_changes: true
+      session_policy: resume_previous_session
+  - id: approve-final-code
+    title: Финальный апрув кода
+    type: human_approval
+    execution_context: []
+    instruction: |
+      Проверь итоговые изменения в кодовой базе и отчёт верификации в
+      verification-report.md.
+      
+      Убедись, что:
+      - Все шаги плана отмечены [x]
+      - Build проходит, тесты зелёные
+      - Изменения соответствуют запросу и дизайн-решениям из brainstorming-summary.md
+      - Нет изменений вне согласованного scope
+      
+      Апрувь для завершения флоу или верни на доработку с конкретными замечаниями.
+      
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: terminal-complete
+    on_rework:
+      transition: ai-executing-plans
+  - id: terminal-complete
+    title: Разработка завершена
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
