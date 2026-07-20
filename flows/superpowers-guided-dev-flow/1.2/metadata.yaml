@@ -1,0 +1,23 @@
+entity_type: flow
+id: superpowers-guided-dev-flow
+version: "1.2"
+canonical_name: superpowers-guided-dev-flow@1.2
+display_name: "Superpowers Guided Development Flow"
+description: "Цикл разработки на основе методологии Superpowers. Последовательность: уточнение запроса → детальный план (writing-plans) → апрув плана → исполнение по плану (executing-plans) → верификация перед завершением → финальный апрув. Автоматический возврат на доработку при незакрытых замечаниях верификации.
+"
+coding_agent: "qwen"
+team_code: "HGDLC"
+platform_code: "BACK"
+tags: ["superpowers", "development", "planning", "verification"]
+flow_kind: "delivery"
+risk_level: "medium"
+scope: "organization"
+approved_by: ''
+approved_at: ''
+published_at: ''
+source_ref: "main"
+source_path: "flows/superpowers-guided-dev-flow/1.2"
+lifecycle_status: active
+forked_from: ''
+forked_by: ''
+checksum: "f642fc54b101ceb02170025b8474feeb4d91520428a5b417bfebd965a16e27f4"

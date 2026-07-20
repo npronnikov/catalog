@@ -1,0 +1,278 @@
+id: superpowers-guided-dev-flow
+version: "1.2"
+canonical_name: superpowers-guided-dev-flow@1.2
+title: Superpowers Guided Development Flow
+description: |
+  Цикл разработки на основе методологии Superpowers. Последовательность: уточнение запроса → детальный план (writing-plans) → апрув плана → исполнение по плану (executing-plans) → верификация перед завершением → финальный апрув. Автоматический возврат на доработку при незакрытых замечаниях верификации.
+  
+start_node_id: ai-clarifying-questions
+failure_node_id: terminal-complete
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+multirepository: false
+
+nodes:
+  - id: ai-clarifying-questions
+    title: Генерация уточняющих вопросов
+    type: ai
+    execution_context: []
+    instruction: |
+      <#assign humanAnswerQuestions = step["human-answer-questions"]!{} />
+      <#if humanAnswerQuestions.rework_instruction?has_content && (humanAnswerQuestions.keep_changes!false)>
+      Исправь ${humanAnswerQuestions.rework_instruction}
+      <#else>
+      <#if (run.feature_request)?? && run.feature_request?has_content>
+      ${run.feature_request}
+      </#if>
+      
+      Изучи кодовую базу проекта и запрос пользователя.
+      Сформулируй 10–15 уточняющих вопросов, которые напрямую влияют на
+      выбор решения. Строго следуй скилу.
+      
+      <#if humanAnswerQuestions.rework_instruction?has_content>
+      ВАЖНО! Учти следующее: ${humanAnswerQuestions.rework_instruction}
+      </#if>
+      </#if>
+      
+    routing_type: static
+    retry_policy:
+      on_errors:
+        - NODE_VALIDATION_FAILED
+      attempts: 3
+    skill_refs:
+      - hgdlc-ask-clarifying-questions@1.0
+    produced_artifacts:
+      -
+        scope: run
+        path: questions.md
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: human-answer-questions
+  - id: human-answer-questions
+    title: Ответы на уточняющие вопросы
+    type: human_input
+    execution_context:
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: ai-clarifying-questions
+        path: questions.md
+        modifiable: true
+    instruction: |
+      Открой questions.md.
+      Отметь чекбокс у выбранного варианта в каждом вопросе.
+      Если ни один вариант не выбран — будет использован рекомендуемый.
+      Нажми Submit когда ответишь на все вопросы.
+      
+    produced_artifacts:
+      -
+        scope: run
+        path: questions.md
+        required: true
+    expected_mutations: []
+    on_submit:
+      transition: ai-writing-plans
+    on_rework:
+      transition: ai-clarifying-questions
+  - id: ai-writing-plans
+    title: Составление детального плана реализации
+    type: ai
+    execution_context:
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: human-answer-questions
+        path: questions.md
+    instruction: |
+      <#assign approvePlan = step["approve-plan"]!{} />
+      <#if approvePlan.rework_instruction?has_content && (approvePlan.keep_changes!false)>
+      Исправь ${approvePlan.rework_instruction}
+      <#else>
+      Изучи запрос пользователя и ответы на уточняющие вопросы из questions.md.
+      Исследуй кодовую базу проекта: структуру пакетов, существующие паттерны,
+      миграции, тесты.
+      Составь детальный план согласно скилу и сохрани в implementation-plan.md.
+      
+      Требования скила:
+      - Каждый шаг: 2-5 минут работы
+      - Для каждого слоя с логикой: сначала тест [TEST-FIRST], потом реализация
+      - После каждого слоя: команда верификации (только завершающиеся команды)
+      - Без плейсхолдеров, без TBD, без "добавить обработку ошибок"
+      
+      <#if approvePlan.rework_instruction?has_content>
+      Важно: при выполнении учти следующее: ${approvePlan.rework_instruction}
+      </#if>
+      </#if>
+      
+    routing_type: static
+    retry_policy:
+      on_errors:
+        - NODE_VALIDATION_FAILED
+      attempts: 3
+    skill_refs:
+      - superpowers-writing-plans@1.0
+    produced_artifacts:
+      -
+        scope: run
+        path: implementation-plan.md
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: approve-plan
+  - id: approve-plan
+    title: Проверка и апрув плана реализации
+    type: human_approval
+    execution_context: []
+    instruction: |
+      Проверь план реализации в файле implementation-plan.md.
+      
+      Убедись, что:
+      - Все затронутые файлы перечислены с пометкой Create или Modify
+      - Для каждого слоя с логикой есть шаг [TEST-FIRST] перед реализацией
+      - Порядок слоёв корректен (миграции → сущности → репозитории → сервисы →
+        контроллеры → тесты → конфигурация → фронтенд)
+      - Каждый шаг содержит конкретное описание (не "добавить обработку ошибок")
+      - Команды верификации — завершающиеся (build/test/lint), не bootRun/dev server
+      - Нет плейсхолдеров TBD
+      
+      Утверди для начала разработки или верни на доработку с конкретными замечаниями.
+      
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-executing-plans
+    on_rework:
+      transition: ai-writing-plans
+  - id: ai-executing-plans
+    title: Исполнение плана реализации
+    type: ai
+    execution_context:
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: ai-writing-plans
+        path: implementation-plan.md
+      - type: artifact_ref
+        required: false
+        scope: run
+        transfer_mode: by_ref
+        node_id: ai-verify-before-completion
+        path: verification-report.md
+    instruction: |
+      <#assign verifyBeforeCompletion = step["ai-verify-before-completion"]!{} />
+      <#if verifyBeforeCompletion.rework_instruction?has_content>
+      ${verifyBeforeCompletion.rework_instruction}
+      <#else>
+      Выполни план из implementation-plan.md строго согласно скилу:
+      
+      1. Объяви старт: "Executing plan: implementation-plan.md"
+      2. Создай TodoWrite из всех незакрытых [ ] шагов плана
+      3. Для каждого шага по порядку:
+         - Отметь в TodoWrite как in_progress
+         - Выполни точно как написано
+         - Запусти команду из строки Verify:
+         - Прочитай полный вывод команды
+         - Отметь в TodoWrite как completed
+      4. Остановись и сообщи о блокере если:
+         - Зависимость отсутствует
+         - Тест не проходит после 3 попыток
+         - Инструкция неоднозначна
+      
+      Запрещено:
+      - Пропускать шаги
+      - Использовать bootRun, npm run dev, curl к локальным сервисам
+      - Создавать копии файлов с суффиксами _modified, _new
+      - Реализовывать функциональность вне плана
+      </#if>
+      
+    routing_type: static
+    skill_refs:
+      - superpowers-executing-plans@1.0
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: ai-verify-before-completion
+  - id: ai-verify-before-completion
+    title: Верификация перед завершением
+    type: ai
+    execution_context:
+      - type: artifact_ref
+        required: true
+        scope: run
+        transfer_mode: by_ref
+        node_id: ai-writing-plans
+        path: implementation-plan.md
+    instruction: |
+      Проведи верификацию перед тем как объявить работу завершённой.
+      Строго следуй скилу — каждый из пяти шагов обязателен.
+      
+      Верификационный чеклист:
+      1. Все [ ] в implementation-plan.md теперь [x] — нет незакрытых шагов
+      2. Полный build команда проходит с нулём ошибок
+      3. Все тесты зелёные (новые + существующие — нет регрессий)
+      4. git diff HEAD не содержит изменений вне согласованного scope
+      5. Нет backup-копий файлов, debug-кода, TODO в production-коде
+      
+      После проверки заполни step-summary:
+      - route: "on_success" если всё прошло
+      - route: "on_rework" если есть проблемы
+      
+      Пример on_rework:
+      - actions: ["запустил ./gradlew test", "прочитал полный вывод"]
+      - route: "on_rework"
+      - issues: [{"severity": "critical", "description": "TC-03 падает: expected 201 but was 200"}]
+      - rework_instruction: |
+          Исправь все замечания из verification-report.md уровня Critical и Required.
+      
+    routing_type: dynamic
+    retry_policy:
+      on_errors:
+        - NODE_VALIDATION_FAILED
+      attempts: 3
+    skill_refs:
+      - superpowers-verification-before-completion@1.0
+    produced_artifacts:
+      -
+        scope: run
+        path: verification-report.md
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: approve-final-code
+    on_rework:
+      transition: ai-executing-plans
+      max_loop_count: 3
+      keep_changes: true
+      session_policy: resume_previous_session
+  - id: approve-final-code
+    title: Финальный апрув кода
+    type: human_approval
+    execution_context: []
+    instruction: |
+      Проверь итоговые изменения в кодовой базе и отчёт верификации в
+      verification-report.md.
+      
+      Убедись, что:
+      - Все шаги плана отмечены [x]
+      - Build проходит, тесты зелёные
+      - Изменения соответствуют согласованному плану и ответам на вопросы
+      - Нет изменений вне согласованного scope
+      
+      Апрувь для завершения флоу или верни на доработку с конкретными замечаниями.
+      
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: terminal-complete
+    on_rework:
+      transition: ai-executing-plans
+  - id: terminal-complete
+    title: Разработка завершена
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
