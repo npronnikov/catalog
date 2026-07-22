@@ -3,9 +3,9 @@ version: "1.0"
 canonical_name: openspec-full-cycle@1.0
 title: OpenSpec Full Cycle — Explore, Propose, Apply, Verify, Archive
 description: >
-  Полный цикл OpenSpec: исследование текущих спецификаций → создание delta-specs
-  и артефактов изменения → реализация → верификация → актуализация документации
-  и архивирование. Каждый завершённый цикл оставляет актуальные openspec/specs/.
+  A full OpenSpec cycle: explore the current specifications → create
+  delta-specs and change artifacts → implement → verify → update documentation
+  and archive. Each completed cycle leaves openspec/specs/ up to date.
 coding_agent: claude
 start_node_id: ai-describe-change
 failure_node_id: terminal-complete

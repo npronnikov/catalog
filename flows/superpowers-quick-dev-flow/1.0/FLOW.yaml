@@ -3,13 +3,13 @@ version: "1.0"
 canonical_name: superpowers-quick-dev-flow@1.0
 title: Superpowers Quick Development Flow
 description: >
-  Быстрый цикл разработки на основе методологии Superpowers — без уточняющих
-  вопросов и промежуточных апрувов.
-  Последовательность: автономный брейнштоминг (brainstorming-summary) →
-  детальный план (writing-plans) → исполнение по плану (executing-plans) →
-  верификация перед завершением → финальный апрув.
-  TDD применяется для testable behaviors. Git-коммиты не входят в план.
-  Автоматический возврат на доработку при незакрытых замечаниях верификации.
+  A fast development cycle based on the Superpowers methodology, without
+  clarification questions or intermediate approvals.
+  Sequence: autonomous brainstorming (brainstorming-summary) →
+  detailed plan (writing-plans) → execute the plan (executing-plans) →
+  verification before completion → final approval.
+  TDD is used for testable behaviors. Git commits are not part of the plan.
+  Automatically returns to rework when verification findings remain open.
 coding_agent: qwen
 start_node_id: ai-brainstorming
 failure_node_id: terminal-complete

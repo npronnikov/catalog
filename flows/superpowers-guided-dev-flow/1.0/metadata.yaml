@@ -4,9 +4,9 @@ version: "1.0"
 canonical_name: superpowers-guided-dev-flow@1.0
 display_name: "Superpowers: Guided Development Flow"
 description: >
-  Цикл разработки на основе методологии Superpowers.
-  Уточнение запроса → детальный план (writing-plans) → апрув плана →
-  исполнение (executing-plans) → верификация перед завершением → финальный апрув.
+  A development cycle based on the Superpowers methodology.
+  Clarify the request → detailed plan (writing-plans) → plan approval →
+  execution (executing-plans) → verification before completion → final approval.
 coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK

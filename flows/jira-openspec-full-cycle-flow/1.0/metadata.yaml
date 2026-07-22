@@ -4,10 +4,11 @@ version: "1.0"
 canonical_name: jira-openspec-full-cycle-flow@1.0
 display_name: "JIRA OpenSpec Full Cycle — DeepSeek-V4-Flash-131k"
 description: >
-  Flow ищет JIRA-задачу в выбранном контуре DELTA, SIGMA или SBERTRACK по project,
-  типу, статусу и assignee строго через соответствующий MCP-сервер (скилл jira-issues),
-  формализует найденную задачу как OpenSpec change-request, выполняет полный
-  OpenSpec-цикл и после выполнения переводит задачу в конечный статус с label AIFIXED.
+  The flow searches for a JIRA issue in the selected DELTA, SIGMA, or SBERTRACK
+  environment by project, type, status, and assignee strictly through the
+  corresponding MCP server (the jira-issues skill), formalizes the issue as an
+  OpenSpec change request, runs the full OpenSpec cycle, and then moves the
+  issue to the final status with the AIFIXED label.
 coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK

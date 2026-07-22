@@ -4,10 +4,11 @@ version: "1.0"
 canonical_name: jira-task-superpowers-flow@1.0
 display_name: "JIRA Task Superpowers"
 description: >
-  Flow для поиска JIRA-задачи в выбранном контуре DELTA, SIGMA или SBERTRACK
-  по project, типу, статусу и assignee строго через соответствующий MCP-сервер
-  (скилл jira-issues) → встроенный superpowers-quick-dev-flow → финализация
-  задачи в JIRA. Развилки quick-dev и sdd отсутствуют.
+  A flow for finding a JIRA issue in the selected DELTA, SIGMA, or SBERTRACK
+  environment by project, type, status, and assignee strictly through the
+  corresponding MCP server (the jira-issues skill) → embedded
+  superpowers-quick-dev-flow → issue finalization in JIRA.
+  There are no quick-dev or SDD branches.
 coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK

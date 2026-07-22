@@ -3,9 +3,10 @@ version: "1.0"
 canonical_name: jira-task-superpowers-flow@1.0
 title: JIRA Task Superpowers — Найти задачу, спланировать, реализовать
 description: >
-  Flow для поиска JIRA-задачи по типу, статусу и assignee строго через MCP
-  (скилл jira-issues), а затем прохождения встроенного superpowers-quick-dev-flow
-  с финализацией задачи в JIRA. Развилки quick-dev и sdd отсутствуют.
+  A flow for finding a JIRA issue by type, status, and assignee strictly
+  through MCP (the jira-issues skill), then running the embedded
+  superpowers-quick-dev-flow and finalizing the issue in JIRA.
+  There are no quick-dev or SDD branches.
 
 start_node_id: ai-fetch-task
 failure_node_id: terminal-failed

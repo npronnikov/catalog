@@ -3,11 +3,11 @@ version: "1.0"
 canonical_name: superpowers-guided-dev-flow@1.0
 title: Superpowers Guided Development Flow
 description: >
-  Цикл разработки на основе методологии Superpowers.
-  Последовательность: уточнение запроса → детальный план (writing-plans) →
-  апрув плана → исполнение по плану (executing-plans) →
-  верификация перед завершением → финальный апрув.
-  Автоматический возврат на доработку при незакрытых замечаниях верификации.
+  A development cycle based on the Superpowers methodology.
+  Sequence: clarify the request → detailed plan (writing-plans) →
+  plan approval → execute the plan (executing-plans) →
+  verification before completion → final approval.
+  Automatically returns to rework when verification findings remain open.
 coding_agent: qwen
 start_node_id: ai-clarifying-questions
 failure_node_id: terminal-complete

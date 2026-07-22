@@ -3,10 +3,11 @@ version: "1.0"
 canonical_name: jira-openspec-full-cycle-flow@1.0
 title: JIRA OpenSpec Full Cycle — DeepSeek-V4-Flash-131k
 description: >
-  Flow находит одну JIRA-задачу по типу, статусу и assignee строго через MCP
-  (скилл jira-issues), формализует её как OpenSpec change-request, выполняет полный
-  OpenSpec-цикл (explore → propose → apply → verify → archive), после чего задача
-  получает label AIFIXED и переводится в конечный статус по workflow её типа.
+  The flow finds exactly one JIRA issue by type, status, and assignee strictly
+  through MCP (the jira-issues skill), formalizes it as an OpenSpec change
+  request, runs the full OpenSpec cycle (explore → propose → apply → verify →
+  archive), then adds the AIFIXED label and moves the issue to the final status
+  according to its type-specific workflow.
 
 start_node_id: ai-fetch-task
 failure_node_id: terminal-failed
