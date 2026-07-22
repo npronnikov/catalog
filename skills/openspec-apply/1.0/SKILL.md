@@ -1,111 +1,112 @@
 ---
 name: openspec-apply
 description: >
-  Реализует задачи из tasks.md текущего OpenSpec-изменения, опираясь
-  на specs/ и design.md как источники истины о требованиях и решениях.
+  Implements tasks from tasks.md for the current OpenSpec change, using
+  specs/ and design.md as the sources of truth for requirements and decisions.
 ---
 
-# OpenSpec Apply — Реализация по tasks.md
+# OpenSpec Apply - Implementation from tasks.md
 
-Реализуй задачи из OpenSpec-изменения.
-
----
-
-## Входные данные
-
-Из контекста у тебя должен быть путь к активному изменению `openspec/changes/<name>/`.
+Implement the tasks from the OpenSpec change.
 
 ---
 
-## Шаги
+## Inputs
 
-### 1. Загрузить контекст изменения
+The context must include the path to the active change:
+`openspec/changes/<name>/`.
 
-Прочитай все артефакты в следующем порядке:
+---
 
-1. `openspec/changes/<name>/proposal.md` — ЧТО делаем и ЗАЧЕМ
-2. `openspec/changes/<name>/specs-index.md` — список активных delta-specs этого change
-3. spec-файлы, перечисленные в `specs-index.md` — КАЖДЫЙ delta-spec (требования и сценарии)
-4. `openspec/changes/<name>/design.md` — КАК реализуем (решения и ограничения)
-5. `openspec/changes/<name>/tasks.md` — ЧЕКЛИСТ задач
+## Steps
 
-### 2. Показать текущий прогресс
+### 1. Load change context
 
+Read all artifacts in this order:
+
+1. `openspec/changes/<name>/proposal.md` - WHAT is being done and WHY
+2. `openspec/changes/<name>/specs-index.md` - the list of active delta-specs for this change
+3. Spec files listed in `specs-index.md` - EVERY delta-spec (requirements and scenarios)
+4. `openspec/changes/<name>/design.md` - HOW to implement it (decisions and constraints)
+5. `openspec/changes/<name>/tasks.md` - the task CHECKLIST
+
+### 2. Show current progress
+
+```markdown
+## Implementation: <name>
+
+Tasks: X/N completed
+Remaining: [list of incomplete tasks]
 ```
-## Реализация: <name>
 
-Задачи: X/N выполнено
-Осталось: [список незавершённых задач]
-```
+### 3. Implement tasks in order
 
-### 3. Реализовывать задачи по порядку
+For each incomplete task `- [ ]`:
 
-Для каждой незавершённой задачи `- [ ]`:
+1. Announce: "Working on task T00N: <description>"
+2. Implement it minimally and exactly according to the task
+3. Check specs whenever behavior is unclear
+4. Check design.md whenever a technical choice is unclear
+5. After completion, mark it in tasks.md: `- [ ]` -> `- [x]`
+6. Move to the next task
 
-1. Объяви: "Выполняю задачу T00N: <описание>"
-2. Реализуй — минимально и точно согласно задаче
-3. Сверяйся со specs когда неясно поведение
-4. Сверяйся с design.md когда неясен технический выбор
-5. После выполнения отметь в tasks.md: `- [ ]` → `- [x]`
-6. Переходи к следующей
+**Implementation rules:**
+- Keep changes minimal and focused: only what the task requires
+- Follow existing codebase patterns
+- Do not create duplicate files with suffixes such as `_new`, `_modified`, etc.
+- If a task contradicts a spec, report it
+- Do not start long-running dev servers, watchers, or background processes for verification
+  (`npm run dev`, `vite`, `./gradlew bootRun`, `docker compose up`, etc.) unless the
+  current change specification explicitly requires it
+- For verification, prefer terminating commands: tests, builds, compilation, linters
 
-**Правила реализации:**
-- Изменения минимальны и сфокусированы — только то что нужно для задачи
-- Следуй существующим паттернам кодовой базы
-- Не создавай копии файлов с суффиксами `_new`, `_modified` и т.п.
-- Если задача противоречит spec — это сигнал, сообщи
-- Не запускай долгоживущие dev-серверы, watchers и фоновые процессы для "проверки работы"
-  (`npm run dev`, `vite`, `./gradlew bootRun`, `docker compose up` и т.п.), если это не
-  требуется явно спецификацией текущего изменения
-- Для verification предпочитай завершающиеся команды: тесты, сборку, компиляцию, линтеры
+### 4. Stop if
 
-### 4. Остановиться если
+- The task is unclear -> ask the user
+- Implementation exposes a design/spec problem -> report it and suggest updating the artifact
+- A critical error or blocker appears -> describe the situation and wait for guidance
+- The user interrupts
 
-- Задача неясна → уточни у пользователя
-- Реализация выявила проблему в design/spec → сообщи, предложи обновить артефакт
-- Критическая ошибка или блокировка → опиши ситуацию, жди указаний
-- Пользователь прервал
+### 5. Show the result
 
-### 5. Показать итог
+```markdown
+## Implemented in this session
 
-```
-## Реализовано в этой сессии
-
-✓ T001 — <описание>
-✓ T002 — <описание>
+OK T001 - <description>
+OK T002 - <description>
 ...
 
-Прогресс: N/M задач выполнено
+Progress: N/M tasks completed
 
-[Если все done]: Все задачи выполнены. Следующий шаг: верификация.
-[Если не все]: Осталось: <список>
+[If all done]: All tasks are complete. Next step: verification.
+[If not all done]: Remaining: <list>
 ```
 
 ---
 
-## Вывод во время реализации
+## Output during implementation
 
-```
-## Реализация: <name>
+```markdown
+## Implementation: <name>
 
-Задача 3/7: Создать миграцию для таблицы X
-[... реализация ...]
-✓ Задача выполнена
+Task 3/7: Create migration for table X
+[... implementation ...]
+OK Task completed
 
-Задача 4/7: Добавить JPA-сущность X
-[... реализация ...]
-✓ Задача выполнена
+Task 4/7: Add JPA entity X
+[... implementation ...]
+OK Task completed
 ```
 
 ---
 
-## Ограничители
+## Constraints
 
-- Реализуй только то что в tasks.md — не добавляй "заодно"
-- Сверяйся со specs при любой неясности в поведении
-- Используй `specs-index.md` как единственный список активных delta-specs текущего change
-- Сверяйся с design.md при любой неясности в техническом выборе
-- Если spec и код расходятся — это проблема, сообщи
-- Помечай задачи выполненными СРАЗУ по завершению, не в конце пакетом
-- Если в tasks.md встречается verification-задача с долгоживущим процессом, не запускай её
-  автоматически: зафиксируй это как проблему плана и предпочти безопасную build/test проверку
+- Implement only what is in tasks.md; do not add "while we are here" work
+- Check specs for any unclear behavior
+- Use `specs-index.md` as the only list of active delta-specs for the current change
+- Check design.md for any unclear technical choice
+- If spec and code disagree, this is a problem; report it
+- Mark tasks complete immediately after finishing them, not as a batch at the end
+- If tasks.md contains a verification task with a long-running process, do not run it
+  automatically; record it as a plan problem and prefer a safe build/test check

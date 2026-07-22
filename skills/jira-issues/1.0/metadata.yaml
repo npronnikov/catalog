@@ -4,8 +4,8 @@ version: "1.0"
 canonical_name: jira-issues@1.0
 display_name: "JIRA Issues"
 description: >
-  Работа с задачами в JIRA через MCP сервер Atlassian. Получение информации,
-  создание, обновление задач, управление комментариями и вложениями.
+  Works with JIRA issues through the Atlassian MCP server. Retrieves issue
+  information, creates and updates issues, and manages comments and attachments.
 coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK

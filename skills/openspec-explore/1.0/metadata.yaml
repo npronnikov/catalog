@@ -2,11 +2,11 @@ entity_type: skill
 id: openspec-explore
 version: "1.0"
 canonical_name: openspec-explore@1.0
-display_name: "OpenSpec: Исследование идей и спецификаций"
+display_name: "OpenSpec: Explore ideas and specifications"
 description: >
-  Режим свободного исследования: thinking partner для проработки идей,
-  изучения текущих спецификаций (openspec/specs/) и выявления скоупа
-  предстоящего изменения. Не реализует код — только помогает думать.
+  A free-form exploration mode: a thinking partner for developing ideas,
+  studying current specifications (openspec/specs/), and identifying the
+  scope of an upcoming change. It does not implement code; it only helps think.
 coding_agent: qwen
 team_code: Demo
 platform_code: BACK

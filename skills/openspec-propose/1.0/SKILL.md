@@ -1,37 +1,37 @@
 ---
 name: openspec-propose
 description: >
-  Создаёт полный набор артефактов OpenSpec-изменения: proposal.md,
-  delta-specs (specs/<capability>/spec.md), design.md, tasks.md.
+  Creates the full artifact set for an OpenSpec change: proposal.md,
+  delta-specs (specs/<capability>/spec.md), design.md, and tasks.md.
 ---
 
-# OpenSpec Propose — Создание артефактов изменения
+# OpenSpec Propose - Create Change Artifacts
 
-Создай OpenSpec-изменение с полным набором артефактов в один шаг.
+Create an OpenSpec change with the full artifact set in one step.
 
-**Что будет создано** в `openspec/changes/<name>/`:
-- `proposal.md` — что делаем и зачем
-- `specs/<capability>/spec.md` — delta-спецификации (изменения к документации)
-- `specs-index.md` — индекс активных delta-specs текущего change
-- `design.md` — как реализуем
-- `tasks.md` — чеклист реализации
-
----
-
-## Входные данные
-
-Из контекста у тебя должен быть:
-- Название изменения (kebab-case, например `add-user-auth`)
-- Описание что нужно сделать
-- Результаты исследования из exploration-notes.md (если есть)
+**Created in** `openspec/changes/<name>/`:
+- `proposal.md` - what we are doing and why
+- `specs/<capability>/spec.md` - delta-specifications (documentation changes)
+- `specs-index.md` - index of active delta-specs for the current change
+- `design.md` - how we will implement it
+- `tasks.md` - implementation checklist
 
 ---
 
-## Шаги
+## Inputs
 
-### 1. Создать структуру папок
+The context must include:
+- Change name (kebab-case, for example `add-user-auth`)
+- Description of what needs to be done
+- Exploration results from exploration-notes.md (if present)
 
-```
+---
+
+## Steps
+
+### 1. Create directory structure
+
+```text
 openspec/
 └── changes/
     └── <name>/
@@ -44,90 +44,94 @@ openspec/
                 └── spec.md
 ```
 
-Создай директорию `openspec/changes/<name>/` и все вложенные папки.
+Create `openspec/changes/<name>/` and all nested directories.
 
-### 2. Создать proposal.md
+### 2. Create proposal.md
 
-**Структура:**
+**Structure:**
 
 ```markdown
-# Proposal: <Название изменения>
+# Proposal: <Change title>
 
 ## Why
-[Проблема или возможность. Почему это важно. Что сейчас не так или чего не хватает.]
+[Problem or opportunity. Why it matters. What is wrong or missing today.]
 
 ## What Changes
-[Конкретное описание что изменится. Что добавится, что изменится, что удалится.]
+[Concrete description of what will change. What will be added, changed, or removed.]
 
 ## Capabilities
-[Список новых или изменённых возможностей. Каждая capability = отдельный spec-файл.]
-- `<capability-name>`: [краткое описание]
+[List of new or changed capabilities. Each capability = a separate spec file.]
+- `<capability-name>`: [short description]
 
 ## Impact
-[Кого затронет изменение. Риски. Зависимости. Связанные компоненты.]
+[Who is affected. Risks. Dependencies. Related components.]
 
 ## Success Criteria
-[Измеримые критерии — как поймём что изменение успешно.]
+[Measurable criteria - how we will know the change is successful.]
 ```
 
-**Правила:**
-- Фокус на ЧТО и ЗАЧЕМ, без деталей реализации
-- Success criteria должны быть проверяемыми, не субъективными
-- Упомяни все capabilities, для каждой будет отдельный spec
+**Rules:**
+- Focus on WHAT and WHY, without implementation details
+- Success criteria must be verifiable, not subjective
+- Mention every capability; each will have a separate spec
 
-### 3. Создать delta-specs
+### 3. Create delta-specs
 
-Для каждой capability из proposal.md создай `openspec/changes/<name>/specs/<capability>/spec.md`.
+For each capability from proposal.md, create:
+`openspec/changes/<name>/specs/<capability>/spec.md`.
 
-**Delta-spec описывает ИЗМЕНЕНИЯ к текущей документации**, а не полную переработку.
+**A delta-spec describes CHANGES to the current documentation**, not a complete
+rewrite.
 
-Прочитай текущий `openspec/specs/<capability>/spec.md` (если существует) для контекста.
+Read the current `openspec/specs/<capability>/spec.md` (if it exists) for context.
 
-**Структура delta-spec:**
+**Delta-spec structure:**
 
 ```markdown
 # <Capability> Specification Delta
 
 ## Purpose
-[Что эта delta добавляет или изменяет относительно текущей спецификации.]
+[What this delta adds or changes relative to the current specification.]
 
 ## Requirements
 
 ### ADDED Requirements
 
-#### Requirement: <Название требования>
-[Описание нового поведения. Фокус на externally observable behavior.]
+#### Requirement: <Requirement title>
+[Description of the new behavior. Focus on externally observable behavior.]
 
-##### Scenario: <Название сценария>
-- **WHEN** <условие>
-- **THEN** <ожидаемый результат>
-- **AND** <дополнительное условие> (опционально)
+##### Scenario: <Scenario title>
+- **WHEN** <condition>
+- **THEN** <expected result>
+- **AND** <additional condition> (optional)
 
-### MODIFIED Requirements (если применимо)
+### MODIFIED Requirements (if applicable)
 
-#### Requirement: <Название существующего требования>
-[Что именно меняется в существующем требовании.]
+#### Requirement: <Existing requirement title>
+[Exactly what changes in the existing requirement.]
 
-##### Scenario: <Название сценария>
+##### Scenario: <Scenario title>
 ...
 
-### REMOVED Requirements (если применимо)
-- `<Requirement Name>` — причина удаления
+### REMOVED Requirements (if applicable)
+- `<Requirement Name>` - removal reason
 ```
 
-**Правила написания specs:**
-- Требования описывают наблюдаемое ПОВЕДЕНИЕ, не детали реализации
-- Каждое требование имеет хотя бы один Scenario
-- Scenario: конкретный WHEN/THEN — тестируемый и проверяемый
-- Детали реализации (библиотеки, классы, методы) → в design.md, не в spec
+**Spec writing rules:**
+- Requirements describe observable BEHAVIOR, not implementation details
+- Every requirement has at least one Scenario
+- Scenario: concrete WHEN/THEN, testable and verifiable
+- Implementation details (libraries, classes, methods) go to design.md, not spec
 
-### 4. Создать specs-index.md
+### 4. Create specs-index.md
 
-После создания всех `specs/<capability>/spec.md` создай `openspec/changes/<name>/specs-index.md`.
+After creating all `specs/<capability>/spec.md` files, create:
+`openspec/changes/<name>/specs-index.md`.
 
-**Назначение:** это единственный индекс активных delta-specs данного change для downstream-шагов.
+**Purpose:** this is the single index of active delta-specs for this change used
+by downstream steps.
 
-**Структура:**
+**Structure:**
 
 ```markdown
 # Specs Index: <name>
@@ -139,122 +143,122 @@ Change path: openspec/changes/<name>
 
 1. Capability: `<capability-name>`
    Path: `openspec/changes/<name>/specs/<capability-name>/spec.md`
-   Purpose: [что именно специфицирует этот delta-spec]
+   Purpose: [what exactly this delta-spec specifies]
 
 ## Usage Contract
 
-Для реализации, верификации и архивирования использовать только spec-файлы,
-перечисленные в этом документе, как активный набор delta-specs текущего change.
+For implementation, verification, and archiving, use only the spec files listed
+in this document as the active delta-spec set for the current change.
 ```
 
-**Правила:**
-- Перечисли все созданные spec-файлы без пропусков
-- Для каждого spec укажи capability, path и краткое purpose
-- Не добавляй ссылки на spec-файлы из других changes
+**Rules:**
+- List every created spec file with no omissions
+- For each spec, include capability, path, and a short purpose
+- Do not add links to spec files from other changes
 
-### 5. Создать design.md
+### 5. Create design.md
 
-**Структура:**
+**Structure:**
 
 ```markdown
-# Design: <Название изменения>
+# Design: <Change title>
 
 ## Overview
-[Краткое резюме технического подхода.]
+[Short summary of the technical approach.]
 
 ## Decisions
 
-### Decision: <Название решения>
-**Выбор:** [что решили]
-**Обоснование:** [почему]
-**Альтернативы:** [что рассматривали]
+### Decision: <Decision title>
+**Choice:** [what was decided]
+**Rationale:** [why]
+**Alternatives:** [what was considered]
 
 ## Architecture
-[Диаграммы, схемы взаимодействия компонентов если применимо.]
+[Diagrams and component interaction schemes if applicable.]
 
-## Data Model (если применимо)
-[Изменения в модели данных, схеме БД.]
+## Data Model (if applicable)
+[Changes in data model or database schema.]
 
 ## Implementation Notes
-[Технические ограничения, важные паттерны, нюансы реализации.]
+[Technical constraints, important patterns, implementation nuances.]
 
 ## Risks
-[Технические риски и как их митигировать.]
+[Technical risks and how to mitigate them.]
 ```
 
-**Правила:**
-- Сюда идёт всё что слишком детально для spec: выбор технологий, структура классов, алгоритмы
-- Каждое нетривиальное решение — явно зафиксировать с обоснованием
-- Может быть кратким для маленьких изменений
+**Rules:**
+- Put everything too detailed for spec here: technology choices, class structure, algorithms
+- Record every non-trivial decision explicitly with rationale
+- It may be short for small changes
 
-### 6. Создать tasks.md
+### 6. Create tasks.md
 
-**Структура:**
+**Structure:**
 
 ```markdown
-# Tasks: <Название изменения>
+# Tasks: <Change title>
 
-## Phase 1: <Название фазы>
+## Phase 1: <Phase name>
 
-- [ ] T001 — <Конкретное действие> (`path/to/file.ext`)
-- [ ] T002 — <Конкретное действие> (`path/to/file.ext`)
+- [ ] T001 - <Concrete action> (`path/to/file.ext`)
+- [ ] T002 - <Concrete action> (`path/to/file.ext`)
 
-## Phase 2: <Название фазы>
+## Phase 2: <Phase name>
 
-- [ ] T003 — <Конкретное действие> (`path/to/file.ext`)
+- [ ] T003 - <Concrete action> (`path/to/file.ext`)
 
 ## Verification
 
-- [ ] T0NN — Запустить тесты: `<команда>`
-- [ ] T0NN — Проверить сборку/статическую проверку: `<команда>`
+- [ ] T0NN - Run tests: `<command>`
+- [ ] T0NN - Check build/static validation: `<command>`
 ```
 
-**Правила:**
-- Каждая задача — атомарная и конкретная (файл, метод, миграция)
-- Порядок — по зависимостям (что должно быть готово раньше — идёт раньше)
-- Фазы — логически независимые группы, каждая фаза проверяемая
-- В конце — верификация через тесты, сборку, линтеры и другие завершающиеся команды
-- ЗАПРЕЩЕНО добавлять в `tasks.md` verification-задачи, которые запускают долгоживущие процессы
-  или требуют "поднять систему и проверить вручную":
-  `npm run dev`, `vite`, `./gradlew bootRun`, `docker compose up`, background-серверы, watchers
-- ЗАПРЕЩЕНО формулировать verification как:
-  `запустить backend/frontend`, `поднять приложение`, `открыть UI и проверить`,
-  `сделать smoke вручную после запуска dev-серверов`
-- Если для проекта нет тестов, предпочитай проверку вида `npm run build`, `./gradlew build`,
-  `./gradlew compileJava`, линтеры и другие команды, завершающиеся без ошибок
-- Ручную проверку добавляй только если она действительно нужна по спецификации; не подменяй ею
-  обязательные build/test checks
-- Предпочитай repo-specific завершающиеся команды, если они доступны:
+**Rules:**
+- Every task is atomic and concrete (file, method, migration)
+- Order tasks by dependencies (what must be ready earlier comes earlier)
+- Phases are logically independent groups, and each phase is verifiable
+- At the end, include verification through tests, build, linters, and other terminating commands
+- FORBIDDEN: add verification tasks to `tasks.md` that start long-running processes
+  or require "start the system and check manually":
+  `npm run dev`, `vite`, `./gradlew bootRun`, `docker compose up`, background servers, watchers
+- FORBIDDEN: phrase verification as:
+  `start backend/frontend`, `bring up the application`, `open UI and check`,
+  `perform smoke manually after starting dev servers`
+- If the project has no tests, prefer checks such as `npm run build`, `./gradlew build`,
+  `./gradlew compileJava`, linters, and other commands that finish with an exit code
+- Add manual verification only when the specification truly requires it; do not use it as a
+  substitute for required build/test checks
+- Prefer repo-specific terminating commands when available:
   `cd backend && ./gradlew test`, `cd backend && ./gradlew build`, `cd backend && ./gradlew compileJava`,
   `cd frontend && npm run build`
-- Если хочешь добавить ручную проверку, сначала добавь обязательные завершающиеся команды, а ручную
-  проверку оставляй только дополнительной и только без требования запускать долгоживущие процессы
+- If you want to add a manual check, add required terminating commands first; keep the manual
+  check additional and never require starting long-running processes
 
 ---
 
-## Правила создания артефактов
+## Artifact creation rules
 
-- Читай exploration-notes.md перед созданием — там кристаллизованные решения
-- Читай текущие `openspec/specs/<capability>/spec.md` перед написанием delta
-- После создания delta-specs собери их в `specs-index.md`
-- Specs = поведение, Design = реализация, Tasks = чеклист
-- Если контекст недостаточно ясен — задай уточняющий вопрос, но предпочитай разумные решения вопросам
-- После создания всех файлов — кратко резюмируй что создано
+- Read exploration-notes.md before creation; it contains crystallized decisions
+- Read current `openspec/specs/<capability>/spec.md` before writing a delta
+- After creating delta-specs, collect them in `specs-index.md`
+- Specs = behavior, Design = implementation, Tasks = checklist
+- If context is insufficient, ask a clarifying question, but prefer reasonable decisions over questions
+- After creating all files, briefly summarize what was created
 
 ---
 
-## Итоговое резюме
+## Final Summary
 
-```
-## Создано: <name>
+```markdown
+## Created: <name>
 
-📁 openspec/changes/<name>/
-   ├── proposal.md      — [одна строка: суть изменения]
-   ├── specs-index.md   — [список active delta-specs текущего change]
-   ├── design.md        — [одна строка: ключевое техническое решение]
-   ├── tasks.md         — N задач в M фазах
-   └── specs/
-       └── <capability>/spec.md  — [одна строка: что специфицировано]
+Directory: openspec/changes/<name>/
+   proposal.md      - [one line: essence of the change]
+   specs-index.md   - [list of active delta-specs for the current change]
+   design.md        - [one line: key technical decision]
+   tasks.md         - N tasks in M phases
+   specs/
+       <capability>/spec.md - [one line: what is specified]
 
-Готово к реализации. Следующий шаг: реализация по tasks.md.
+Ready for implementation. Next step: implement from tasks.md.
 ```

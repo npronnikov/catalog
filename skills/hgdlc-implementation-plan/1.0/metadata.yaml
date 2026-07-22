@@ -2,12 +2,12 @@ entity_type: skill
 id: hgdlc-implementation-plan
 version: "1.0"
 canonical_name: hgdlc-implementation-plan@1.0
-display_name: "Построение плана имплементации для Claude Code"
+display_name: "Implementation Plan for Claude Code"
 description: >
-  Анализирует доступный контекст (требования, дизайн, описание задачи) и
-  кодовую базу, затем формирует пронумерованный план с чекбоксами, который
-  Claude Code может выполнять механически шаг за шагом.
-  Результат сохраняется в implementation-plan.md.
+  Analyzes the available context (requirements, design, task description)
+  and the codebase, then produces a numbered checklist plan that Claude Code
+  can execute mechanically step by step. The result is saved to
+  implementation-plan.md.
 coding_agent: qwen
 team_code: Demo
 platform_code: BACK

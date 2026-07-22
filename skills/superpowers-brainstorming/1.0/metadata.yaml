@@ -4,9 +4,9 @@ version: "1.0"
 canonical_name: superpowers-brainstorming@1.0
 display_name: "Superpowers: Autonomous Brainstorming"
 description: >
-  Автономный анализ дизайна перед реализацией. Изучает контекст проекта,
-  выявляет ключевые решения, выбирает лучший подход с обоснованием,
-  сохраняет brainstorming-summary.md. Без human-gates.
+  Autonomous design analysis before implementation. Studies project context,
+  identifies key decisions, chooses the best approach with rationale, and
+  saves brainstorming-summary.md. No human gates.
 coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK

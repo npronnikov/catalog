@@ -1,124 +1,125 @@
 ---
 name: openspec-verify
 description: >
-  Проверяет соответствие реализации артефактам OpenSpec-изменения по трём
-  измерениям: полнота, корректность, согласованность. Формирует отчёт.
+  Verifies implementation against OpenSpec change artifacts across three
+  dimensions: completeness, correctness, and coherence. Produces a report.
 ---
 
-# OpenSpec Verify — Верификация реализации
+# OpenSpec Verify - Implementation Verification
 
-Проверь что реализация соответствует артефактам изменения.
-
----
-
-## Входные данные
-
-Из контекста у тебя должен быть путь к изменению `openspec/changes/<name>/`.
+Check that the implementation matches the change artifacts.
 
 ---
 
-## Шаги
+## Inputs
 
-### 1. Загрузить все артефакты изменения
+The context must include the path to the change:
+`openspec/changes/<name>/`.
 
-Прочитай:
+---
+
+## Steps
+
+### 1. Load all change artifacts
+
+Read:
 - `openspec/changes/<name>/proposal.md`
 - `openspec/changes/<name>/specs-index.md`
-- spec-файлы, перечисленные в `specs-index.md` — все active delta-specs
-- `openspec/changes/<name>/design.md` (если существует)
+- Spec files listed in `specs-index.md` - all active delta-specs
+- `openspec/changes/<name>/design.md` (if it exists)
 - `openspec/changes/<name>/tasks.md`
 
-### 2. Инициализировать структуру отчёта
+### 2. Initialize report structure
 
-Три измерения, каждое может иметь:
-- **CRITICAL** — блокирует архивирование (незавершённые задачи, нереализованные требования)
-- **WARNING** — стоит исправить (расхождение кода со спеком, непокрытые сценарии)
-- **SUGGESTION** — улучшение (несоответствие паттернам проекта)
+Use three dimensions. Each can contain:
+- **CRITICAL** - blocks archiving (unfinished tasks, unimplemented requirements)
+- **WARNING** - should be fixed (code differs from spec, uncovered scenarios)
+- **SUGGESTION** - improvement (does not match project patterns)
 
-### 3. Измерение 1: Полнота (Completeness)
+### 3. Dimension 1: Completeness
 
-**Проверка задач:**
-- Подсчитай `- [x]` (выполнено) и `- [ ]` (не выполнено) в tasks.md
-- Если есть `- [ ]` → CRITICAL для каждой незавершённой задачи
-- Рекомендация: "Выполни задачу: <описание>" или "Отметь как выполненную если уже реализовано"
+**Task check:**
+- Count `- [x]` (completed) and `- [ ]` (incomplete) in tasks.md
+- If any `- [ ]` entries exist, add a CRITICAL item for each incomplete task
+- Recommendation: "Complete task: <description>" or "Mark it complete if it is already implemented"
 
-**Проверка покрытия specs:**
-- Извлеки все Requirements из delta-specs (секции `### Requirement:`)
-- Для каждого требования поищи реализацию в кодовой базе по ключевым словам
-- Если реализация не найдена → CRITICAL
-- Рекомендация: "Реализуй требование: <название>"
+**Spec coverage check:**
+- Extract all Requirements from delta-specs (`### Requirement:` sections)
+- For each requirement, search the codebase by keywords for an implementation
+- If no implementation is found, add a CRITICAL item
+- Recommendation: "Implement requirement: <name>"
 
-### 4. Измерение 2: Корректность (Correctness)
+### 4. Dimension 2: Correctness
 
-**Маппинг требований на реализацию:**
-- Для каждого требования из delta-specs найди релевантный код
-- Оцени соответствует ли реализация смыслу требования
-- Если расхождение → WARNING с указанием файла и строк
+**Requirement-to-implementation mapping:**
+- For each requirement from delta-specs, find the relevant code
+- Assess whether the implementation matches the meaning of the requirement
+- If there is a mismatch, add a WARNING with file and line references
 
-**Покрытие сценариев:**
-- Для каждого Scenario (секции `#### Scenario:`) проверь:
-  - Условие WHEN обрабатывается в коде
-  - Ожидаемый THEN достигается
-  - Есть ли тест покрывающий этот сценарий
-- Если сценарий не покрыт → WARNING
+**Scenario coverage:**
+- For each Scenario (`#### Scenario:` sections), check:
+  - The WHEN condition is handled in code
+  - The expected THEN result is reached
+  - A test covers this scenario
+- If a scenario is not covered, add a WARNING
 
-### 5. Измерение 3: Согласованность (Coherence)
+### 5. Dimension 3: Coherence
 
-**Следование design.md:**
-- Если design.md существует — извлеки ключевые решения (секции Decision:, Approach:, Architecture:)
-- Проверь следует ли реализация этим решениям
-- Если противоречие → WARNING: "Решение из design.md не соблюдено: <решение>"
-- Рекомендация: обновить реализацию или обновить design.md
+**Following design.md:**
+- If design.md exists, extract key decisions (Decision:, Approach:, Architecture:)
+- Check whether the implementation follows those decisions
+- If there is a contradiction, add a WARNING: "Decision from design.md is not followed: <decision>"
+- Recommendation: update the implementation or update design.md
 
-**Паттерны проекта:**
-- Проверь следует ли новый код существующим паттернам (именование, структура, стиль)
-- Значительные отклонения → SUGGESTION
+**Project patterns:**
+- Check whether new code follows existing patterns (naming, structure, style)
+- Add significant deviations as SUGGESTION items
 
-### 6. Сформировать отчёт
+### 6. Create the report
 
-Сохрани в `verify-report.md`:
+Save to `verify-report.md`:
 
 ```markdown
-## Верификация: <name>
+## Verification: <name>
 
-### Сводка
+### Summary
 
-| Измерение | Статус |
+| Dimension | Status |
 |---|---|
-| Полнота | X/Y задач, X/Y требований |
-| Корректность | X/Y требований, X/Y сценариев |
-| Согласованность | Следует / N отклонений |
+| Completeness | X/Y tasks, X/Y requirements |
+| Correctness | X/Y requirements, X/Y scenarios |
+| Coherence | Follows / N deviations |
 
-### Проблемы
+### Issues
 
-#### CRITICAL (необходимо исправить перед архивированием)
-- [файл:строка] — описание проблемы
-  → Рекомендация: ...
+#### CRITICAL (must be fixed before archiving)
+- [file:line] - issue description
+  -> Recommendation: ...
 
-#### WARNING (стоит исправить)
-- [файл:строка] — описание расхождения
-  → Рекомендация: ...
+#### WARNING (should be fixed)
+- [file:line] - mismatch description
+  -> Recommendation: ...
 
-#### SUGGESTION (улучшение)
-- [файл:строка] — описание
-  → Рекомендация: ...
+#### SUGGESTION (improvement)
+- [file:line] - description
+  -> Recommendation: ...
 
-### Итог
+### Result
 ```
 
-**Итоговая строка:**
+**Final result line:**
 
-| Ситуация | Итог |
+| Situation | Result |
 |---|---|
-| Нет проблем | `Все проверки пройдены. Готово к архивированию.` |
-| Только warnings/suggestions | `Нет критических проблем. N предупреждений. Можно архивировать.` |
-| Есть CRITICAL | `N критических проблем. Необходимо исправить перед архивированием.` |
+| No issues | `All checks passed. Ready for archiving.` |
+| Only warnings/suggestions | `No critical issues. N warnings. Archiving is allowed.` |
+| Has CRITICAL | `N critical issues. Must be fixed before archiving.` |
 
 ---
 
-## Ограничители
+## Constraints
 
-- Читай только — не изменяй артефакты изменения и код
-- Не блокируй архивирование на warnings — только CRITICAL блокирует
-- Дай конкретные рекомендации: файл, строка, что именно сделать
-- Не пиши расплывчато ("возможно стоит рассмотреть") — будь точным
+- Read only; do not change change artifacts or code
+- Do not block archiving on warnings; only CRITICAL blocks it
+- Give concrete recommendations: file, line, and exactly what to do
+- Do not write vague phrasing such as "maybe consider"; be precise

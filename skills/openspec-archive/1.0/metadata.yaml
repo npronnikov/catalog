@@ -2,11 +2,11 @@ entity_type: skill
 id: openspec-archive
 version: "1.0"
 canonical_name: openspec-archive@1.0
-display_name: "OpenSpec: Архивирование и актуализация документации"
+display_name: "OpenSpec: Archive and update documentation"
 description: >
-  Финализирует OpenSpec-изменение: мёрджит delta-specs из
-  openspec/changes/<name>/specs/ в актуальные openspec/specs/ (актуализация
-  документации), затем перемещает папку изменения в
+  Finalizes an OpenSpec change by merging delta-specs from
+  openspec/changes/<name>/specs/ into the current openspec/specs/
+  documentation, then moves the change directory to
   openspec/changes/archive/YYYY-MM-DD-<name>/.
 coding_agent: qwen
 team_code: Demo

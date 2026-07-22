@@ -1,431 +1,428 @@
 ---
 name: jira-issues
 description: >
-  Работа с задачами в JIRA через MCP сервер Atlassian. Все операции
-  выполняются только через MCP инструменты. По умолчанию файл результата
-  и состояния — jira-task.json (instruction может переопределить имя файла).
-  Skill работает только с явно переданными аргументами и не зависит от
-  конкретных flow, артефактов или имён файлов.
+  Works with JIRA issues through the Atlassian MCP server. All operations
+  are performed only through MCP tools. By default, the result and state file
+  is jira-task.json (a flow node instruction may override the file name).
+  The skill works only with explicitly provided arguments and does not depend
+  on specific flows, artifacts, or file names.
 ---
 
-# Работа с JIRA через MCP
+# Work with JIRA through MCP
 
-## Цель
+## Goal
 
-Выполнить операции с задачами JIRA только через MCP инструменты Atlassian.
-Все результаты работы сохраняются в файл `jira-task.json` (или в файл,
-явно указанный в instruction flow-ноды).
+Perform JIRA issue operations only through Atlassian MCP tools.
+Save all results to `jira-task.json` or to the file explicitly specified by the
+flow node instruction.
 
-Этот файл используется:
-- как результат выполнения skill;
-- как carrier состояния между шагами flow;
-- как источник `taskKey` для последующих шагов, если flow явно использует его.
-
----
-
-## Контракт skill
-
-Skill работает только с явно переданными аргументами.
-
-Skill не должен:
-- самостоятельно читать произвольные артефакты;
-- предполагать имена файлов (единственное исключение — `jira-task.json` или файл,
-  явно указанный в instruction flow-ноды, который skill читает и записывает как carrier состояния);
-- искать данные в файловой системе раннера;
-- выводить значения из контекста, который не был явно передан аргументами или через carrier-файл.
-
-Если flow хочет использовать данные из артефакта, output parameter или другого источника,
-он должен сам извлечь их и передать skill в виде конкретных аргументов.
-
-### Модель запуска
-
-Skill не определяет действие из текста flow или внешнего контекста.
-Нужные операции определяются только по явно переданным аргументам и правилам маршрутизации ниже.
-
-Набор операций текущего запуска вычисляется так:
-- если передан `jql` — это поиск задач через `jira_search` (сырой JQL);
-- если переданы `project` и `assignee` (без `taskKey`, без `summary`, без `jql`) — это структурированный поиск;
-- если передан `taskKey` — это работа с существующей задачей;
-- если `taskKey` не передан, но переданы `project` и `summary` — это создание новой задачи;
-- если передан `description` — description используется при создании или обновляется для существующей задачи;
-- если передан `additionalFields` — требуется update этих полей;
-- если передан `assignee` (в контексте taskKey/creation) — требуется назначение assignee;
-- если передан `commentBody` — требуется добавление комментария;
-- если передан `transitionMode`, `transitionName`, `transitionId` или `transitionSequence` —
-  требуется transition-сценарий;
-- если передан `labelsToAdd` — требуется добавить labels без удаления существующих;
-- если активирован режим поиска (`jql` или структурированный), модифицирующие аргументы
-  (`description`, `additionalFields`, `commentBody`, `labelsToAdd`, `transitionMode` и т.д.) игнорируются —
-  выполняется только поиск. В структурированном поиске `project`, `assignee` и
-  `searchStatuses` являются критериями поиска, а не изменениями задачи.
-
-Если не передан ни `jql`, ни `project`+`assignee` (для поиска), ни `taskKey`, ни пара `project` + `summary`,
-skill должен завершиться ошибкой, потому что невозможно определить целевую задачу.
-
-Если передан только `taskKey` и больше не передано ни одного изменяющего аргумента,
-skill должен:
-1. получить задачу через `jira_get_issue`;
-2. записать актуальное состояние в `jira-task.json`;
-3. завершиться успешно без побочных изменений.
+This file is used:
+- as the skill execution result;
+- as the state carrier between flow steps;
+- as the source of `taskKey` for later steps when the flow explicitly uses it.
 
 ---
 
-## Аргументы
+## Skill Contract
 
-### Обязательные аргументы
+The skill works only with explicitly provided arguments.
 
-- `environment` — контур JIRA: `SIGMA`, `DELTA` или `SBERTRACK`
+The skill must not:
+- read arbitrary artifacts on its own;
+- assume file names, except `jira-task.json` or a file explicitly specified by
+  the flow node instruction and used as a state carrier;
+- search for data in the runner filesystem;
+- derive values from context that was not explicitly passed as arguments or via
+  the carrier file.
 
-### Опциональные аргументы
+If a flow wants to use data from an artifact, output parameter, or other source,
+the flow itself must extract that data and pass it to the skill as concrete
+arguments.
 
-- `taskKey` — key существующей задачи; если передан, skill работает с существующей задачей
-- `jql` — JQL запрос для поиска задач; если передан, выполняется `jira_search`
-- `maxResults` — ограничение числа результатов при поиске; по умолчанию `1`
-- `searchStatuses` — список статусов через запятую для поиска (например `To Do,Переоткрыт,Reopened`);
-                     используется только в режиме структурированного поиска
-- `project` — project key для создания задачи или для структурированного поиска
-- `summary` — summary новой задачи
-- `description` — description для create или новое description для update
-- `assignee` — пользователь для назначения задачи; передается как email
-- `commentBody` — готовое тело комментария, которое нужно добавить без изменений
-- `transitionMode` — режим transition: `finalize`, `resolved` или `cancelled`
-- `transitionName` — точное имя transition, которое нужно попробовать в первую очередь
-- `transitionId` — точный id transition, который нужно попробовать в первую очередь
-- `transitionSequence` — упорядоченный список имён целевых статусов или transitions,
-  которые нужно пройти последовательно
-- `expectedFinalStatus` — ожидаемый итоговый статус после `transitionSequence`
-- `labelsToAdd` — список labels, которые нужно добавить с сохранением существующих
-- `issueType` — тип задачи при создании; если не передан, используй `Task`
-- `additionalFields` — дополнительные поля для create/update в формате, поддерживаемом MCP инструментом
-- `debug` — если `true`, разрешено сохранять расширенные технические детали в `operations[*].result`
+### Execution Model
 
-### Интерпретация аргументов
+The skill does not infer the action from flow text or external context.
+Operations for the current run are determined only by explicitly provided
+arguments and the routing rules below.
 
-- Если `taskKey` передан, skill работает с существующей задачей.
-- Если `jql` передан, skill выполняет поиск задач через `jira_search` с переданным JQL как есть.
-- Если `project` и `assignee` переданы без `taskKey`, `summary` и `jql`, skill выполняет
-  структурированный поиск: нормализует assignee, строит JQL, вызывает `jira_search`.
-- Если `taskKey` не передан, но переданы `project` и `summary`, skill создаёт новую задачу.
-- Если передан `commentBody`, комментарий должен быть добавлен буквально без изменений.
-- Если передан `transitionMode`, `transitionName`, `transitionId` или `transitionSequence`,
-  должен быть выполнен transition-сценарий.
-- Если передан `labelsToAdd`, labels должны быть объединены с текущими значениями
-  без дублей и проверены повторным `jira_get_issue`.
-- Если передан `assignee` вне режима поиска, задача должна быть назначена на этого пользователя и это должно быть проверено.
-- Если переданы одновременно top-level поля и `additionalFields`, top-level поля имеют приоритет.
-- Запрещено дублировать в `additionalFields` поля `project`, `summary`, `description`, `issuetype`, `assignee`; при обнаружении конфликта skill завершает работу с ошибкой.
+Compute the operation set as follows:
+- if `jql` is provided, perform issue search through `jira_search` using raw JQL;
+- if `project` and `assignee` are provided without `taskKey`, `summary`, or `jql`,
+  perform structured search;
+- if `taskKey` is provided, work with an existing issue;
+- if `taskKey` is not provided but `project` and `summary` are provided, create a new issue;
+- if `description` is provided, use it during creation or update it on an existing issue;
+- if `additionalFields` is provided, update those fields;
+- if `assignee` is provided in a taskKey/creation context, assign the issue;
+- if `commentBody` is provided, add a comment;
+- if `transitionMode`, `transitionName`, `transitionId`, or `transitionSequence` is provided,
+  execute a transition scenario;
+- if `labelsToAdd` is provided, add labels without removing existing ones;
+- if search mode is active (`jql` or structured search), ignore modifying arguments
+  (`description`, `additionalFields`, `commentBody`, `labelsToAdd`, `transitionMode`, etc.)
+  and perform only search. In structured search, `project`, `assignee`, and
+  `searchStatuses` are search criteria, not issue changes.
 
----
+If none of `jql`, `project` + `assignee` for search, `taskKey`, or `project` +
+`summary` is provided, fail because the target issue cannot be determined.
 
-## Нормализация assignee
-
-Если передан `assignee`, перед использованием нормализуй его:
-1. убери ведущие и хвостовые пробелы;
-2. убери пробелы непосредственно перед `@` и после `@`, если значение похоже на email;
-3. используй нормализованное значение и для вызовов JIRA, и для записи в выходной файл, и для краткого результата.
-
-Не вставляй дополнительные пробелы внутрь значения assignee в summary, result и error.
+If only `taskKey` is provided and no modifying argument is provided, the skill must:
+1. fetch the issue through `jira_get_issue`;
+2. write the current state to `jira-task.json`;
+3. finish successfully without side effects.
 
 ---
 
-## Выбор MCP сервера
+## Arguments
 
-Выбирай MCP сервер строго по `environment`:
-- `SIGMA` → Sigma Atlassian
-- `DELTA` → Delta Atlassian
-- `SBERTRACK` → SberTrack
+### Required Arguments
 
-Перед выбором сервера нормализуй `environment`: убери внешние пробелы и приведи
-значение к верхнему регистру.
+- `environment` - JIRA environment: `SIGMA`, `DELTA`, or `SBERTRACK`
 
-Если значение не поддерживается или нужный сервер недоступен, заверши работу
-с ошибкой и запиши это в выходной файл. Не используй другой MCP-сервер как fallback:
-контуры имеют разные URL и токены, поэтому смешивание контуров запрещено.
+### Optional Arguments
 
-Все операции с JIRA выполняй только через MCP инструменты выбранного сервера.
+- `taskKey` - key of an existing issue; when provided, the skill works with that issue
+- `jql` - JQL query for issue search; when provided, execute `jira_search`
+- `maxResults` - result limit for search; default is `1`
+- `searchStatuses` - comma-separated status list for search, for example `To Do,Reopened,Resolved`;
+  used only in structured search mode
+- `project` - project key for issue creation or structured search
+- `summary` - summary for a new issue
+- `description` - description for creation or new description for update
+- `assignee` - user to assign the issue to; pass as email
+- `commentBody` - ready comment body that must be added without changes
+- `transitionMode` - transition mode: `finalize`, `resolved`, or `cancelled`
+- `transitionName` - exact transition name to try first
+- `transitionId` - exact transition id to try first
+- `transitionSequence` - ordered list of target status names or transition names to execute
+- `expectedFinalStatus` - expected final status after `transitionSequence`
+- `labelsToAdd` - labels to add while preserving existing labels
+- `issueType` - issue type during creation; default to `Task` when omitted
+- `additionalFields` - additional fields for create/update in the format supported by the MCP tool
+- `debug` - when `true`, extended technical details may be saved in `operations[*].result`
+
+### Argument Interpretation
+
+- If `taskKey` is provided, the skill works with an existing issue.
+- If `jql` is provided, the skill searches issues through `jira_search` using the JQL as-is.
+- If `project` and `assignee` are provided without `taskKey`, `summary`, and `jql`,
+  the skill performs structured search: normalizes assignee, builds JQL, and calls `jira_search`.
+- If `taskKey` is not provided but `project` and `summary` are provided, the skill creates a new issue.
+- If `commentBody` is provided, the comment must be added literally without changes.
+- If `transitionMode`, `transitionName`, `transitionId`, or `transitionSequence` is provided,
+  a transition scenario must be executed.
+- If `labelsToAdd` is provided, labels must be merged with current values without duplicates
+  and verified with a repeated `jira_get_issue`.
+- If `assignee` is provided outside search mode, the issue must be assigned to that user and verified.
+- If both top-level fields and `additionalFields` are provided, top-level fields take priority.
+- It is forbidden to duplicate `project`, `summary`, `description`, `issuetype`, or `assignee`
+  inside `additionalFields`; on conflict, fail the skill.
 
 ---
 
-## MCP инструменты
+## Assignee Normalization
 
-| Задача | MCP инструмент |
-|--------|----------------|
-| Получить детали одной задачи | `jira_get_issue` |
-| Найти задачи по JQL | `jira_search` |
-| Получить все задачи проекта | `jira_get_project_issues` |
-| Создать новую задачу | `jira_create_issue` |
-| Обновить задачу | `jira_update_issue` |
-| Добавить комментарий | `jira_add_comment` |
-| Получить transitions | `jira_get_transitions` |
-| Выполнить transition | `jira_transition_issue` |
-| Получить вложения | `jira_download_attachments` |
-| Получить часы работы | `jira_get_worklog` |
-| Получить спринты | `jira_get_sprints_from_board` |
-| Получить задачи спринта | `jira_get_sprint_issues` |
-| Получить список полей | `jira_search_fields` |
-| Получить опции поля | `jira_get_field_options` |
+If `assignee` is provided, normalize it before use:
+1. trim leading and trailing spaces;
+2. remove spaces directly before and after `@` when the value looks like an email;
+3. use the normalized value for JIRA calls, the output file, and the short result.
+
+Do not insert additional spaces inside the assignee value in summary, result, or error.
 
 ---
 
-## Канонические правила
+## MCP Server Selection
 
-### 1. Только MCP
+Select the MCP server strictly by `environment`:
+- `SIGMA` -> Sigma Atlassian
+- `DELTA` -> Delta Atlassian
+- `SBERTRACK` -> SberTrack
 
-Используй только MCP инструменты для работы с JIRA.
-Не пиши код интеграции.
-Не ищи данные обходными путями.
+Before selecting the server, normalize `environment`: trim outer spaces and convert
+the value to uppercase.
 
-### 2. Файл результата
+If the value is unsupported or the required server is unavailable, fail and write
+that failure to the output file. Do not use another MCP server as fallback:
+environments have different URLs and tokens, so mixing environments is forbidden.
 
-По умолчанию создавай или обновляй `jira-task.json`.
-Если instruction flow-ноды явно указывает другой файл — сохраняй в него.
-Секция "Формат jira-task.json" описывает структуру, применимую к любому выходному файлу.
+Perform all JIRA operations only through MCP tools of the selected server.
 
-### 3. Источник task key
+---
 
-Используй task key в следующем приоритете:
-1. `taskKey`, явно переданный аргументом
-2. `taskKey` из ранее переданного carrier-файла, если flow явно использует его как состояние
+## MCP Tools
 
-Если task key отсутствует, но переданы `project` и `summary`, создай задачу.
-Если task key отсутствует и для создания не хватает `project` или `summary`, заверши работу с ошибкой.
+| Task | MCP tool |
+|---|---|
+| Get one issue details | `jira_get_issue` |
+| Search issues by JQL | `jira_search` |
+| Get all project issues | `jira_get_project_issues` |
+| Create a new issue | `jira_create_issue` |
+| Update an issue | `jira_update_issue` |
+| Add a comment | `jira_add_comment` |
+| Get transitions | `jira_get_transitions` |
+| Execute transition | `jira_transition_issue` |
+| Download attachments | `jira_download_attachments` |
+| Get worklogs | `jira_get_worklog` |
+| Get sprints from board | `jira_get_sprints_from_board` |
+| Get sprint issues | `jira_get_sprint_issues` |
+| Search field list | `jira_search_fields` |
+| Get field options | `jira_get_field_options` |
 
-### 4. Идемпотентность
+---
 
-Если task key уже известен, не создавай новую задачу.
-Используй существующую задачу.
+## Canonical Rules
 
-### 5. Создание задачи
+### 1. MCP Only
 
-Если task key не передан и переданы `project` и `summary`:
-1. Используй `project`
-2. Используй `summary`
-3. Используй `description`, если он передан
-4. Используй `issueType`, если он передан, иначе `Task`
-5. Используй `additionalFields`, если они переданы
-6. Если передан `assignee`, попытайся назначить задачу на этого пользователя
-7. Если передан `commentBody`, добавь комментарий
-8. Если передан `transitionMode`, `transitionName` или `transitionId`, выполни transition после создания
-9. После создания сохрани `taskKey` в выходной файл
+Use only MCP tools for JIRA work.
+Do not write integration code.
+Do not look up data through side channels.
 
-Если для создания не хватает обязательных аргументов, заверши работу с ошибкой.
+### 2. Result File
 
-### 6. Назначение assignee
+By default, create or update `jira-task.json`.
+If the flow node instruction explicitly specifies another file, save to that file.
+The "jira-task.json Format" section describes the structure for any output file.
 
-Если передан `assignee` вне режима поиска, он обязателен для успешного завершения сценария.
+### 3. Task Key Source
 
-Порядок действий:
-1. При создании задачи передай assignee в `jira_create_issue`, если инструмент это поддерживает
-2. После создания или обновления обязательно проверь фактического assignee через `jira_get_issue`
-3. Если assignee не применился, выполни `jira_update_issue` как fallback
-4. После fallback снова проверь задачу через `jira_get_issue`
-5. Если assignee всё равно не установлен или задача остаётся `Unassigned`, немедленно заверши выполнение с ошибкой
-6. Не считай сценарий успешным, даже если задача создана и комментарий добавлен
+Use the task key in this priority order:
+1. `taskKey` explicitly provided as an argument
+2. `taskKey` from a previously provided carrier file, if the flow explicitly uses it as state
 
-Не считай assignee успешно установленным без проверки через `jira_get_issue`.
+If there is no task key but `project` and `summary` are provided, create an issue.
+If there is no task key and creation lacks `project` or `summary`, fail.
 
-### 7. Комментарий
+### 4. Idempotency
 
-Если передан `commentBody`, skill обязан добавить комментарий в задачу **строго без изменений**.
+If the task key is already known, do not create a new issue.
+Use the existing issue.
 
-`commentBody` передаётся в формате **Markdown**. MCP-сервер mcp-atlassian автоматически
-конвертирует Markdown в нативный формат Jira (Wiki Markup для Server/DC или ADF для Cloud).
+### 5. Issue Creation
 
-Запрещено:
-- перефразировать `commentBody`;
-- менять порядок строк;
-- добавлять вступление, описание или summary;
-- преобразовывать таблицу в список или наоборот;
-- “улучшать читаемость”.
+If `taskKey` is not provided and `project` and `summary` are provided:
+1. Use `project`
+2. Use `summary`
+3. Use `description` if provided
+4. Use `issueType` if provided; otherwise use `Task`
+5. Use `additionalFields` if provided
+6. If `assignee` is provided, try to assign the issue to that user
+7. If `commentBody` is provided, add a comment
+8. If `transitionMode`, `transitionName`, or `transitionId` is provided, execute the transition after creation
+9. After creation, save `taskKey` to the output file
+
+If required creation arguments are missing, fail.
+
+### 6. Assignee Assignment
+
+If `assignee` is provided outside search mode, it is required for the scenario to succeed.
+
+Action order:
+1. During issue creation, pass assignee to `jira_create_issue` if the tool supports it
+2. After creation or update, always verify the actual assignee through `jira_get_issue`
+3. If the assignee was not applied, call `jira_update_issue` as a fallback
+4. After fallback, verify the issue through `jira_get_issue` again
+5. If the assignee is still missing or the issue remains `Unassigned`, fail immediately
+6. Do not treat the scenario as successful even if the issue was created and a comment was added
+
+Do not treat assignee assignment as successful without `jira_get_issue` verification.
+
+### 7. Comment
+
+If `commentBody` is provided, the skill must add it to the issue **strictly without changes**.
+
+`commentBody` is provided in **Markdown**. The mcp-atlassian MCP server automatically
+converts Markdown to the native Jira format (Wiki Markup for Server/DC or ADF for Cloud).
+
+Forbidden:
+- rephrase `commentBody`;
+- change line order;
+- add an introduction, description, or summary;
+- convert a table into a list or the reverse;
+- "improve readability".
 
 ### 8. Transition
 
-Если передан `transitionId`, skill должен сначала попытаться выполнить transition по `transitionId`.
-Если передан `transitionName`, skill должен сначала попытаться найти точное совпадение по имени.
+If `transitionId` is provided, first try to execute transition by `transitionId`.
+If `transitionName` is provided, first try to find an exact name match.
 
-#### Последовательность transitions
+#### Transition Sequence
 
-Если передан `transitionSequence`:
-1. Получи текущее состояние задачи через `jira_get_issue`.
-2. Нормализуй имена статусов только для сравнения: trim, uppercase, последовательности
-   пробелов и дефисы замени на `_`. Например, `IN_PROGRESS`, `In Progress` и
-   `in-progress` считаются одним статусом. Фактические значения, отправляемые в MCP,
-   не изменяй.
-3. Если текущий статус уже совпадает с одним из элементов последовательности,
-   начни со следующего элемента. Если совпадает с последним элементом — переходы
-   не выполняй, сразу переходи к финальной проверке.
-4. Для каждого оставшегося элемента:
-   - вызови `jira_get_transitions`;
-   - сначала найди transition по точному имени без учёта регистра;
-   - если не найден, найди transition, чей целевой статус `to.name` точно совпадает
-     с элементом без учёта регистра;
-   - выполни найденный transition через `jira_transition_issue`;
-   - вызови `jira_get_issue` и проверь, что текущий статус совпадает с ожидаемым
-     элементом последовательности.
-5. Не пропускай элементы и не выбирай похожие transition по догадке.
-6. Если элемент недоступен или статус после перехода не совпал — заверши работу
-   с ошибкой и не выполняй последующие переходы.
-7. После последовательности проверь, что итоговый статус равен
-   `expectedFinalStatus`, если он передан; иначе — последнему элементу sequence.
-8. Сохрани реально выполненные и пропущенные как уже достигнутые переходы в output.
+If `transitionSequence` is provided:
+1. Fetch the current issue state through `jira_get_issue`.
+2. Normalize status names only for comparison: trim, uppercase, and replace whitespace
+   sequences and hyphens with `_`. For example, `IN_PROGRESS`, `In Progress`, and
+   `in-progress` are treated as the same status. Do not change actual values sent to MCP.
+3. If the current status already matches an element of the sequence, start from the next element.
+   If it matches the last element, do not execute transitions; go directly to final verification.
+4. For each remaining element:
+   - call `jira_get_transitions`;
+   - first find a transition by exact case-insensitive name;
+   - if not found, find a transition whose target status `to.name` exactly matches the element
+     case-insensitively;
+   - execute the found transition through `jira_transition_issue`;
+   - call `jira_get_issue` and verify that the current status matches the expected sequence element.
+5. Do not skip elements and do not choose similar transitions by guesswork.
+6. If an element is unavailable or the post-transition status does not match, fail and do not
+   execute later transitions.
+7. After the sequence, verify that the final status equals `expectedFinalStatus` when provided;
+   otherwise, verify it equals the last sequence element.
+8. Save executed transitions and steps skipped because they were already reached in output.
 
-`transitionSequence` имеет приоритет над `transitionMode`, `transitionName` и
-`transitionId`. Не запускай дополнительные transition-сценарии после sequence.
+`transitionSequence` takes priority over `transitionMode`, `transitionName`, and `transitionId`.
+Do not run additional transition scenarios after a sequence.
 
-Если `transitionMode = finalize`, skill должен:
-1. Получить transitions через `jira_get_transitions`
-2. Если передан `transitionId` или `transitionName`, сначала использовать его как приоритетный вариант
-3. Затем искать финальный transition по названиям:
-   `Выполнена`, `Done`, `Completed`, `Resolve Issue`, `Resolved`, `Закрыта`, `Close Issue`
-4. Если финальный transition найден — выполнить его
-5. Если не найден — попробовать:
-   `Start Progress`, `In Progress`, `Начать работу`, `В работе`
-6. После успешного перевода в progress ещё раз получить transitions
-7. Снова попробовать финальный transition
-8. Если финальный transition не найден — завершить выполнение с ошибкой
-9. Не делать бесконечных повторов
+If `transitionMode = finalize`, the skill must:
+1. Get transitions through `jira_get_transitions`
+2. If `transitionId` or `transitionName` is provided, try it first as the priority option
+3. Then search for a final transition by names such as:
+   `Done`, `Completed`, `Resolve Issue`, `Resolved`, `Close Issue`
+4. If a final transition is found, execute it
+5. If not found, try an intermediate transition:
+   `Start Progress`, `In Progress`
+6. After a successful move to progress, get transitions again
+7. Try the final transition again
+8. If no final transition is found, fail
+9. Do not retry indefinitely
 
-Если `transitionMode` не передан, но передан `transitionId` или `transitionName`, выполни ровно одну попытку заданного transition.
+If `transitionMode` is not provided but `transitionId` or `transitionName` is provided,
+execute exactly one attempt for the requested transition.
 
-Если `transitionMode = resolved`, skill должен:
-1. Получить transitions через `jira_get_transitions`
-2. Если передан `transitionId` или `transitionName`, сначала использовать его как приоритетный вариант
-3. Искать transition, ведущий в статус Resolved:
-   a. Приоритет 1 — по целевому статусу (поле `to`): найти transition,
-      чей целевой статус называется `Resolved` или `Решена`
-   b. Приоритет 2 — по имени перехода: `Resolve Issue`, `Resolved`
-4. Если переход найден — выполнить его
-5. Если не найден — попробовать промежуточный переход:
-   `Start Progress`, `In Progress`, `Начать работу`, `В работе`
-6. После успешного промежуточного перехода ещё раз получить transitions
-7. Повторить поиск по приоритетам 3a и 3b
-8. Если переход найден — выполнить его
-9. Если переход не найден — завершить выполнение с ошибкой
-10. После выполнения transition — верификация:
-    вызвать `jira_get_issue` и проверить, что `status.name` — `Resolved` или `Решена`
-11. Если статус не Resolved — завершить выполнение с ошибкой
-12. Не делать бесконечных повторов
+If `transitionMode = resolved`, the skill must:
+1. Get transitions through `jira_get_transitions`
+2. If `transitionId` or `transitionName` is provided, try it first as the priority option
+3. Search for a transition leading to status `Resolved`:
+   a. Priority 1 - by target status (`to`): a transition whose target status is `Resolved`
+   b. Priority 2 - by transition name: `Resolve Issue`, `Resolved`
+4. If found, execute it
+5. If not found, try an intermediate transition:
+   `Start Progress`, `In Progress`
+6. After a successful intermediate transition, get transitions again
+7. Repeat search by priorities 3a and 3b
+8. If found, execute it
+9. If not found, fail
+10. After executing the transition, verify with `jira_get_issue` that `status.name` is `Resolved`
+11. If status is not `Resolved`, fail
+12. Do not retry indefinitely
 
-Если `transitionMode = cancelled`, skill должен:
-1. Получить transitions через `jira_get_transitions`
-2. Если передан `transitionId` или `transitionName`, сначала использовать его как приоритетный вариант
-3. Искать cancel-переходы по названиям:
-   `Отклонена`, `Cancelled`, `Canceled`, `Reject`, `Rejected`, `Decline`, `Declined`, `Close Issue`, `Закрыта`
-4. Если переход найден — выполнить его
-5. Если не найден — попробовать промежуточный переход:
-   `Start Progress`, `In Progress`, `Начать работу`, `В работе`
-6. После успешного промежуточного перехода ещё раз получить transitions
-7. Снова попробовать cancel-переход
-8. Если cancel-переход не найден — завершить выполнение с ошибкой
-9. Не делать бесконечных повторов
+If `transitionMode = cancelled`, the skill must:
+1. Get transitions through `jira_get_transitions`
+2. If `transitionId` or `transitionName` is provided, try it first as the priority option
+3. Search for cancel transitions by names such as:
+   `Cancelled`, `Canceled`, `Reject`, `Rejected`, `Decline`, `Declined`, `Close Issue`
+4. If found, execute it
+5. If not found, try an intermediate transition:
+   `Start Progress`, `In Progress`
+6. After a successful intermediate transition, get transitions again
+7. Try the cancel transition again
+8. If no cancel transition is found, fail
+9. Do not retry indefinitely
 
-### 9. Обновление существующей задачи
+### 9. Existing Issue Update
 
-Если `taskKey` передан:
-1. Сначала выполни `jira_get_issue`
-2. Затем выполни нужные действия по переданным аргументам:
-   - `description` → `jira_update_issue`
-   - `additionalFields` → `jira_update_issue`
-   - `labelsToAdd` → объединить с текущими labels, обновить через
-     `jira_update_issue`, затем проверить через `jira_get_issue`
-   - `assignee` → проверка и при необходимости fallback update
-   - `commentBody` → `jira_add_comment`
-   - `transitionSequence` / `transitionMode` / `transitionName` / `transitionId` →
-     transition-сценарий
-3. После изменений снова проверь задачу, если менялись assignee, поля или статус
+If `taskKey` is provided:
+1. First call `jira_get_issue`
+2. Then perform required actions based on provided arguments:
+   - `description` -> `jira_update_issue`
+   - `additionalFields` -> `jira_update_issue`
+   - `labelsToAdd` -> merge with current labels, update through `jira_update_issue`, then verify through `jira_get_issue`
+   - `assignee` -> verify and apply fallback update if needed
+   - `commentBody` -> `jira_add_comment`
+   - `transitionSequence` / `transitionMode` / `transitionName` / `transitionId` -> transition scenario
+3. After changes, verify the issue again if assignee, fields, or status changed
 
-При `labelsToAdd`:
-- сохрани все существующие labels;
-- добавь только отсутствующие значения;
-- сравнивай labels с учётом регистра;
-- не удаляй и не переименовывай существующие labels;
-- сценарий успешен только если все запрошенные labels присутствуют после update.
+For `labelsToAdd`:
+- preserve all existing labels;
+- add only missing values;
+- compare labels case-sensitively;
+- do not delete or rename existing labels;
+- the scenario succeeds only if all requested labels are present after update.
 
-### 10. Порядок операций
+### 10. Operation Order
 
-Операции выполняются в таком порядке:
-1. выбрать MCP сервер;
-2. определить или создать `taskKey`;
-3. получить исходное состояние задачи, если работа идёт с существующей задачей;
-4. выполнить update полей;
-5. добавить и проверить `labelsToAdd`;
-6. проверить и при необходимости применить assignee;
-7. добавить комментарий;
-8. выполнить transition или `transitionSequence`;
-9. получить финальное состояние задачи;
-10. сохранить выходной файл.
+Operations run in this order:
+1. select MCP server;
+2. determine or create `taskKey`;
+3. get initial issue state when working with an existing issue;
+4. update fields;
+5. add and verify `labelsToAdd`;
+6. verify and apply assignee if needed;
+7. add comment;
+8. execute transition or `transitionSequence`;
+9. get final issue state;
+10. save the output file.
 
-### 11. Критерии успеха
+### 11. Success Criteria
 
-Сценарий считается успешным только если выполнены все обязательные требования текущего запуска:
-- задача создана или найдена;
-- если передан `assignee` вне режима поиска, он реально установлен;
-- если передан `commentBody`, комментарий успешно добавлен;
-- если переданы `description` или `additionalFields`, изменения успешно применены;
-- если передан `labelsToAdd`, все labels присутствуют и существующие labels сохранены;
-- если передан `transitionSequence`, все необходимые переходы выполнены по порядку
-  и итоговый статус проверен;
-- если передан `transitionMode`, `transitionName` или `transitionId`, transition выполнен или корректно завершился по правилам skill.
+The scenario is successful only if all mandatory requirements for the current run are met:
+- issue was created or found;
+- if `assignee` was provided outside search mode, it is actually assigned;
+- if `commentBody` was provided, the comment was successfully added;
+- if `description` or `additionalFields` was provided, the changes were applied;
+- if `labelsToAdd` was provided, all labels are present and existing labels are preserved;
+- if `transitionSequence` was provided, all required transitions were executed in order and the final status was verified;
+- if `transitionMode`, `transitionName`, or `transitionId` was provided, the transition was executed or correctly failed according to skill rules.
 
-Если хотя бы одно обязательное условие не выполнено, установи `"ok": false`.
+If at least one mandatory condition is not met, set `"ok": false`.
 
-### 12. Ошибки
+### 12. Errors
 
-При любой ошибке всё равно сохрани выходной файл.
-Не выдумывай отсутствующий task key.
-Если выполнение невозможно без task key, project, summary, комментария, transition или корректного assignee, явно зафиксируй это в поле `error`.
+Always save the output file on any error.
+Do not invent a missing task key.
+If execution is impossible without task key, project, summary, comment, transition, or valid assignee,
+record this explicitly in `error`.
 
-### 13. Наблюдаемость
+### 13. Observability
 
-Добавляй в `operations` только реально выполненные действия и только в порядке выполнения.
-Каждая операция должна содержать краткий нормализованный результат.
-Сырые подробные ответы MCP разрешено сохранять только если `debug = true`.
+Add to `operations` only actions that were actually executed and only in execution order.
+Each operation must contain a short normalized result.
+Raw detailed MCP responses may be saved only when `debug = true`.
 
-### 14. Поиск задач
+### 14. Issue Search
 
-#### Режим 1: Сырой JQL (аргумент `jql`)
+#### Mode 1: Raw JQL (`jql` argument)
 
-Если передан `jql`:
-1. Выбрать MCP сервер по `environment`
-2. Вызвать `jira_search` с переданным JQL и `maxResults` (по умолчанию `1`)
-3. Если результатов нет — сохранить `{"ok": true, "totalResults": 0, "issues": []}`,
-   если instruction flow-ноды не требует ровно одну задачу
-4. Если результаты есть — сохранить массив `issues` с атрибутами каждой задачи
+If `jql` is provided:
+1. Select MCP server by `environment`
+2. Call `jira_search` with the provided JQL and `maxResults` (default `1`)
+3. If there are no results, save `{"ok": true, "totalResults": 0, "issues": []}`,
+   unless the flow node instruction requires exactly one issue
+4. If results exist, save the `issues` array with attributes for each issue
    (key, summary, description, status, assignee, labels, priority, issuetype, custom fields)
-5. При `maxResults = 1` первый результат также записать в поля верхнего уровня
-   (`taskKey`, `summary`, `description`, `status`, `assignee` и т.д.) для совместимости
-   с остальными правилами skill
-6. Если instruction flow-ноды требует полные данные задачи или комментарии, после
-   выбора единственной задачи вызвать `jira_get_issue` и обогатить верхнеуровневые
-   поля и элемент `issues[0]` актуальными `summary`, `description` и `comments`.
-   Каждый найденный комментарий сохранять минимум с полями `author`, `body`, `created`.
-   Если комментариев нет, сохранять `comments: []`; это не является ошибкой.
-7. Не выполнять модифицирующих операций (создание, обновление, добавление комментария,
-   transition) в режиме поиска
-8. Если instruction flow-ноды явно требует ровно одну задачу, а `totalResults != 1`,
-   сохранить результат с `"ok": false`, заполнить `error` и не заполнять верхнеуровневый `taskKey`
+5. When `maxResults = 1`, also write the first result to top-level fields
+   (`taskKey`, `summary`, `description`, `status`, `assignee`, etc.) for compatibility
+   with the rest of the skill rules
+6. If the flow node instruction requires full issue data or comments, after selecting
+   the single issue call `jira_get_issue` and enrich top-level fields and `issues[0]`
+   with current `summary`, `description`, and `comments`. Save each found comment with
+   at least `author`, `body`, and `created`. If there are no comments, save `comments: []`;
+   this is not an error.
+7. Do not perform modifying operations (creation, update, comment addition, transition) in search mode
+8. If the flow node instruction explicitly requires exactly one issue and `totalResults != 1`,
+   save `"ok": false`, fill `error`, and do not fill top-level `taskKey`
 
-#### Режим 2: Структурированный поиск (аргументы `project` + `assignee`, без `taskKey`, `summary` и `jql`)
+#### Mode 2: Structured Search (`project` + `assignee`, without `taskKey`, `summary`, and `jql`)
 
-Если переданы `project` и `assignee` без `taskKey`, `summary` и `jql`:
-1. Выбрать MCP сервер по `environment`
-2. Нормализовать `assignee` по стандартным правилам (убрать ведущие/хвостовые пробелы,
-   убрать пробелы перед `@` и после `@`)
-3. Построить JQL:
+If `project` and `assignee` are provided without `taskKey`, `summary`, and `jql`:
+1. Select MCP server by `environment`
+2. Normalize `assignee` by the standard rules (trim leading/trailing spaces and remove
+   spaces before and after `@`)
+3. Build JQL:
    - `project = {project} AND assignee = "{normalizedAssignee}"`
-   - Если передан `searchStatuses` и он непустой (после trim) — разбить по запятой,
-     очистить каждый элемент от пробелов, отбросить пустые, и добавить:
+   - If `searchStatuses` is provided and non-empty after trim, split by comma,
+     trim each item, drop empty items, and add:
      `AND status in ("status1", "status2", ...)`
-   - Если `searchStatuses` не передан или пустой — не добавлять фильтр по статусу
+   - If `searchStatuses` is not provided or empty, do not add a status filter
    - `ORDER BY created ASC`
-4. Вызвать `jira_search` с построенным JQL и `maxResults` (по умолчанию `1`)
-5. Сохранить результат по правилам режима 1 (шаги 3–8)
+4. Call `jira_search` with the constructed JQL and `maxResults` (default `1`)
+5. Save the result according to Mode 1 rules (steps 3-8)
 
 ***
 
-## Формат jira-task.json
+## jira-task.json Format
 
-Сохраняй результат в `jira-task.json` или в файл, явно указанный instruction flow-ноды, со структурой:
+Save the result to `jira-task.json` or to the file explicitly specified by the
+flow node instruction using this structure:
 
 ```json
 {
@@ -435,7 +432,7 @@ skill должен:
   "assigneeRequested": "user@example.com",
   "assigneeApplied": "user@example.com",
   "taskKey": "TEST128-20",
-  "summary": "Необходимо ответить на вопросы",
+  "summary": "Clarifying questions need answers",
   "description": "http://localhost:5173/#/run-console?runId=123",
   "labelsAdded": ["AIFIXED"],
   "transitionSequenceRequested": ["IN_PROGRESS", "Resolved"],
@@ -443,11 +440,11 @@ skill должен:
   "comments": [
     {
       "author": "user@example.com",
-      "body": "Уточнение по ожидаемому поведению",
+      "body": "Clarification about expected behavior",
       "created": "2026-05-29T07:30:00Z"
     }
   ],
-  "commentBodyExact": "h2. Вопросы для ответа\n\n# *Вопрос 1*\n** Вариант А\n** Вариант Б",
+  "commentBodyExact": "h2. Questions to answer\n\n# *Question 1*\n** Option A\n** Option B",
   "commentAdded": true,
   "transitionRequested": "finalize",
   "transitionApplied": "Done",
@@ -469,7 +466,7 @@ skill должен:
       "ok": true,
       "result": {
         "status": "To Do",
-        "assignee":"user@example.com"
+        "assignee": "user@example.com"
       }
     },
     {
@@ -480,40 +477,39 @@ skill должен:
       }
     }
   ],
-  "error":""
+  "error": ""
 }
 ```
 
-### Правила заполнения
+### Field Rules
 
-- `ok`: общий итог выполнения
-- `environment`: использованный контур
-- `project`: project key, если он был передан или определён
-- `assigneeRequested`: нормализованный assignee, который был передан
-- `assigneeApplied`: assignee, который реально установлен
-- `taskKey`: ключ задачи, если он известен
-- `summary`: summary задачи, если применимо
-- `description`: description задачи, если применимо
-- `issueType`: тип задачи из `issuetype.name`, если применимо
-- `labelsAdded`: labels, которые были добавлены и подтверждены
-- `transitionSequenceRequested`: запрошенная последовательность переходов
-- `transitionSequenceApplied`: реально выполненные переходы; уже достигнутые шаги
-  можно отметить отдельными объектами в `operations`
-- `comments`: комментарии задачи с `author`, `body`, `created`, если они были запрошены
-- `commentBodyExact`: фактически отправленный body комментария
-- `commentAdded`: `true` только если комментарий успешно добавлен
-- `transitionRequested`: исходный запрос на transition, если он был
-- `transitionApplied`: имя выполненного transition или пустая строка
-- `finalStatus`: итоговый статус задачи, если его удалось определить
-- `warnings`: список нефатальных замечаний; при полном успехе может быть пустым
-- `startedAt`: время начала выполнения в ISO 8601
-- `finishedAt`: время завершения выполнения в ISO 8601
-- `skillVersion`: версия контракта skill
-- `operations`: только реально выполненные действия в порядке выполнения
-- `operations[*].result`: краткий нормализованный итог операции; полный сырой ответ допустим только при `debug = true`
-- `error`: пустая строка при успехе, иначе понятное описание ошибки
-- `searchMode`: `true` если запуск был в режиме поиска (сырой JQL или структурированный поиск)
-- `jql`: исходный JQL-запрос, если выполнялся поиск
-- `totalResults`: общее число найденных задач при поиске
-- `maxResults`: ограничение результатов, использованное при поиске
-- `issues`: массив найденных задач с полными атрибутами (только в режиме поиска)
+- `ok`: overall execution result
+- `environment`: environment used
+- `project`: project key if provided or determined
+- `assigneeRequested`: normalized assignee that was requested
+- `assigneeApplied`: assignee that is actually set
+- `taskKey`: issue key when known
+- `summary`: issue summary when applicable
+- `description`: issue description when applicable
+- `issueType`: issue type from `issuetype.name` when applicable
+- `labelsAdded`: labels that were added and confirmed
+- `transitionSequenceRequested`: requested transition sequence
+- `transitionSequenceApplied`: actually executed transitions; steps already reached may be noted as separate objects in `operations`
+- `comments`: issue comments with `author`, `body`, and `created` when requested
+- `commentBodyExact`: exact comment body that was sent
+- `commentAdded`: `true` only when the comment was successfully added
+- `transitionRequested`: original transition request when present
+- `transitionApplied`: executed transition name or empty string
+- `finalStatus`: final issue status when it can be determined
+- `warnings`: non-fatal warning list; may be empty on full success
+- `startedAt`: execution start time in ISO 8601
+- `finishedAt`: execution finish time in ISO 8601
+- `skillVersion`: skill contract version
+- `operations`: only actions actually executed, in execution order
+- `operations[*].result`: short normalized operation result; full raw response is allowed only when `debug = true`
+- `error`: empty string on success; otherwise a clear error description
+- `searchMode`: `true` when the run was in search mode (raw JQL or structured search)
+- `jql`: original JQL query when search was performed
+- `totalResults`: total number of issues found during search
+- `maxResults`: result limit used during search
+- `issues`: array of found issues with full attributes (search mode only)

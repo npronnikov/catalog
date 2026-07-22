@@ -1,125 +1,135 @@
 ---
 name: openspec-archive
 description: >
-  Финализирует OpenSpec-изменение: мёрджит delta-specs в openspec/specs/
-  (актуализация документации), затем архивирует папку изменения.
+  Finalizes an OpenSpec change: merges delta-specs into openspec/specs/
+  (documentation update), then archives the change directory.
 ---
 
-# OpenSpec Archive — Архивирование и актуализация документации
+# OpenSpec Archive - Archive and Documentation Update
 
-Это финальный шаг цикла OpenSpec. Он делает две вещи:
-1. **Актуализирует документацию**: мёрджит delta-specs в основные `openspec/specs/`
-2. **Архивирует изменение**: перемещает папку в `openspec/changes/archive/`
-
----
-
-## Входные данные
-
-Из контекста у тебя должен быть путь к изменению `openspec/changes/<name>/`.
+This is the final step of the OpenSpec cycle. It does two things:
+1. **Updates documentation**: merges delta-specs into the main `openspec/specs/`
+2. **Archives the change**: moves the directory to `openspec/changes/archive/`
 
 ---
 
-## Шаги
+## Inputs
 
-### 1. Проверить состояние артефактов
+The context must include the path to the change:
+`openspec/changes/<name>/`.
 
-Прочитай `openspec/changes/<name>/tasks.md`.
+---
 
-Подсчитай незавершённые задачи `- [ ]`.
+## Steps
 
-Если есть незавершённые — сообщи:
+### 1. Check artifact state
+
+Read `openspec/changes/<name>/tasks.md`.
+
+Count incomplete tasks `- [ ]`.
+
+If there are incomplete tasks, report:
+
+```text
+WARNING: N incomplete tasks in tasks.md.
+Implementation should be completed before archiving.
 ```
-⚠ N незавершённых задач в tasks.md.
-Рекомендуется завершить реализацию перед архивированием.
-```
-Но не блокируй — продолжи если пользователь подтвердил.
 
-### 2. Синхронизировать delta-specs → основные specs
+Do not block; continue if the user confirmed.
 
-Это ключевой шаг: **актуализация документации**.
+### 2. Synchronize delta-specs -> main specs
 
-Прочитай `openspec/changes/<name>/specs-index.md` и используй его как единственный
-список active delta-specs текущего change.
+This is the key step: **documentation update**.
 
-Для каждого файла, перечисленного в `specs-index.md`:
+Read `openspec/changes/<name>/specs-index.md` and use it as the only list of
+active delta-specs for the current change.
 
-**a. Определи операцию:**
+For each file listed in `specs-index.md`:
 
-| Ситуация | Действие |
+**a. Determine the operation:**
+
+| Situation | Action |
 |---|---|
-| `openspec/specs/<capability>/` не существует | Создать новую capability целиком |
-| Существует, delta содержит `### ADDED Requirements` | Добавить новые секции |
-| Существует, delta содержит `### MODIFIED Requirements` | Обновить соответствующие секции |
-| Существует, delta содержит `### REMOVED Requirements` | Удалить соответствующие секции |
+| `openspec/specs/<capability>/` does not exist | Create the new capability completely |
+| Existing capability, delta contains `### ADDED Requirements` | Add new sections |
+| Existing capability, delta contains `### MODIFIED Requirements` | Update the corresponding sections |
+| Existing capability, delta contains `### REMOVED Requirements` | Remove the corresponding sections |
 
-**b. Применить изменения к `openspec/specs/<capability>/spec.md`:**
+**b. Apply changes to `openspec/specs/<capability>/spec.md`:**
 
-- При добавлении — встрой новые Requirements в логически подходящее место
-- При изменении — замени только указанные Requirements, остальные не трогай
-- При удалении — удали только указанные Requirements
-- Сохрани форматирование и структуру остального файла
+- When adding, insert new Requirements in the logically appropriate place
+- When modifying, replace only the specified Requirements; leave the rest untouched
+- When removing, remove only the specified Requirements
+- Preserve formatting and the structure of the rest of the file
 
-**c. Если spec не существует — создай с нуля:**
+**c. If the spec does not exist, create it from scratch:**
 
 ```markdown
 # <Capability> Specification
 
 ## Purpose
-[Перенеси из delta — описание назначения]
+[Carry over the purpose from the delta]
 
 ## Requirements
-[Перенеси все Requirements из delta, убрав маркеры ADDED/MODIFIED/REMOVED]
+[Carry over all Requirements from the delta, removing ADDED/MODIFIED/REMOVED markers]
 ```
 
-**d. Показывай прогресс:**
-```
-✓ Синхронизировано: openspec/specs/<capability>/spec.md
-  + Добавлено требований: N
-  ~ Изменено требований: M
-  - Удалено требований: K
+**d. Show progress:**
+
+```text
+OK Synchronized: openspec/specs/<capability>/spec.md
+  + Added requirements: N
+  ~ Modified requirements: M
+  - Removed requirements: K
 ```
 
-### 3. Архивировать папку изменения
+### 3. Archive the change directory
 
-**Сгенерируй целевое имя:**
-```
+**Generate the target name:**
+
+```text
 openspec/changes/archive/YYYY-MM-DD-<name>/
 ```
-где дата — текущая.
 
-**Создай директорию archive если не существует:**
-```
+where the date is current.
+
+**Create the archive directory if it does not exist:**
+
+```text
 openspec/changes/archive/
 ```
 
-**Проверь что целевая папка не существует** — если существует, сообщи об ошибке.
+**Check that the target directory does not already exist.** If it exists, report
+an error.
 
-**Переименуй/перемести:**
-Перемести `openspec/changes/<name>/` в `openspec/changes/archive/YYYY-MM-DD-<name>/`.
+**Rename/move:**
+Move `openspec/changes/<name>/` to
+`openspec/changes/archive/YYYY-MM-DD-<name>/`.
 
-Все файлы (proposal.md, design.md, tasks.md, specs/, .openspec.yaml если есть) перемещаются вместе.
+All files (proposal.md, design.md, tasks.md, specs/, .openspec.yaml if present)
+move together.
 
-### 4. Показать итог
+### 4. Show the result
 
-```
-## Архивирование завершено
+```markdown
+## Archive complete
 
-**Изменение:** <name>
+**Change:** <name>
 
-**Актуализация документации:**
-✓ openspec/specs/auth/spec.md — добавлено 3 требования
-✓ openspec/specs/session/spec.md — изменено 1 требование
+**Documentation update:**
+OK openspec/specs/auth/spec.md - added 3 requirements
+OK openspec/specs/session/spec.md - modified 1 requirement
 
-**Архив:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**Archive:** openspec/changes/archive/YYYY-MM-DD-<name>/
 
-Документация актуализирована. Изменение завершено.
+Documentation is up to date. Change is complete.
 ```
 
 ---
 
-## Ограничители
+## Constraints
 
-- Никогда не удаляй основные `openspec/specs/<cap>/spec.md` — только обновляй
-- При мёрдже сохраняй всё остальное содержимое spec-файла нетронутым
-- Если возникает конфликт (непонятно куда интегрировать) — сообщи, не угадывай
-- Перемести папку целиком, не копируй — артефакты должны жить в archive/
+- Never delete main `openspec/specs/<cap>/spec.md`; only update it
+- During merge, keep all unrelated spec content untouched
+- If a conflict appears and the integration point is unclear, report it instead of guessing
+- Move the whole directory, do not copy it; artifacts should live in archive/

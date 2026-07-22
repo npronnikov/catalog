@@ -348,7 +348,9 @@ nodes:
       уже применены. Если specLoopIteration > 5 — СТОП, эскалируй к человеку.
 
       Сохрани review-report.md в скопе артефактов run.
-    skill_refs: []
+    skill_refs:
+      - bmad-review-adversarial-general@1.0
+      - bmad-review-edge-case-hunter@1.0
     produced_artifacts:
       - scope: run
         path: review-report.md

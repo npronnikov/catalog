@@ -2,12 +2,13 @@ entity_type: skill
 id: openspec-verify
 version: "1.0"
 canonical_name: openspec-verify@1.0
-display_name: "OpenSpec: Верификация реализации"
+display_name: "OpenSpec: Verify implementation"
 description: >
-  Проверяет соответствие реализации артефактам изменения по трём измерениям:
-  полнота (все задачи и требования покрыты), корректность (код соответствует
-  спекам), согласованность (следует решениям из design.md).
-  Формирует отчёт с CRITICAL / WARNING / SUGGESTION приоритетами.
+  Checks implementation against change artifacts across three dimensions:
+  completeness (all tasks and requirements are covered), correctness
+  (code matches specs), and coherence (implementation follows design.md
+  decisions). Produces a report with CRITICAL, WARNING, and SUGGESTION
+  priorities.
 coding_agent: qwen
 team_code: Demo
 platform_code: BACK

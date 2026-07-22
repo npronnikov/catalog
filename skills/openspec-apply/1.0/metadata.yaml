@@ -2,11 +2,11 @@ entity_type: skill
 id: openspec-apply
 version: "1.0"
 canonical_name: openspec-apply@1.0
-display_name: "OpenSpec: Реализация по tasks.md"
+display_name: "OpenSpec: Apply tasks.md"
 description: >
-  Реализует задачи из tasks.md текущего OpenSpec-изменения.
-  Читает specs/, design.md для понимания требований и технических решений.
-  Последовательно выполняет задачи и помечает их выполненными в tasks.md.
+  Implements tasks from tasks.md for the current OpenSpec change.
+  Reads specs/ and design.md to understand requirements and technical decisions.
+  Executes tasks in order and marks them complete in tasks.md.
 coding_agent: qwen
 team_code: Demo
 platform_code: BACK

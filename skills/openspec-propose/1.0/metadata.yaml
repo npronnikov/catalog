@@ -2,13 +2,14 @@ entity_type: skill
 id: openspec-propose
 version: "1.0"
 canonical_name: openspec-propose@1.0
-display_name: "OpenSpec: Создание артефактов изменения"
+display_name: "OpenSpec: Create change artifacts"
 description: >
-  Создаёт полный набор артефактов OpenSpec-изменения в openspec/changes/<name>/:
-  proposal.md (что и зачем), specs/<capability>/spec.md (delta-спецификации),
-  specs-index.md (индекс активных delta-specs), design.md (как),
-  tasks.md (чеклист реализации). Артефакты становятся источником истины
-  для реализации и последующей актуализации документации.
+  Creates the full artifact set for an OpenSpec change in
+  openspec/changes/<name>/: proposal.md (what and why),
+  specs/<capability>/spec.md (delta-specifications), specs-index.md
+  (the active delta-spec index), design.md (how), and tasks.md
+  (the implementation checklist). These artifacts become the source of truth
+  for implementation and later documentation updates.
 coding_agent: qwen
 team_code: Demo
 platform_code: BACK
