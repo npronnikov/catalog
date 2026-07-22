@@ -1,0 +1,431 @@
+id: jira-task-superpowers-flow
+version: "1.0"
+canonical_name: jira-task-superpowers-flow@1.0
+title: JIRA Task Superpowers — Найти задачу, спланировать, реализовать
+description: >
+  Flow для поиска JIRA-задачи по типу, статусу и assignee строго через MCP
+  (скилл jira-issues), а затем прохождения встроенного superpowers-quick-dev-flow
+  с финализацией задачи в JIRA. Развилки quick-dev и sdd отсутствуют.
+
+start_node_id: ai-fetch-task
+failure_node_id: terminal-failed
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+rule_refs: []
+
+nodes:
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Шаг 1 — Найти JIRA-задачу строго через MCP
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-fetch-task
+    title: Найти одну JIRA-задачу в выбранном контуре через MCP
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Найди ровно одну задачу в JIRA строго через skill jira-issues и MCP.
+
+      Обязательные значения env:
+      - environment: ${env.environment}
+      - project: ${env.project}
+      - assignee: ${env.assignee}
+      - status: ${env.status}
+      - issueType: ${env.issueType}
+
+      Если любое значение отсутствует или пусто после trim, заверши ноду ошибкой.
+
+      Нормализуй environment через trim + uppercase. Допустимы только:
+      - DELTA — используй исключительно MCP-сервер Delta Atlassian;
+      - SIGMA — используй исключительно MCP-сервер Sigma Atlassian;
+      - SBERTRACK — используй исключительно MCP-сервер SberTrack Atlassian.
+
+      Не выбирай контур по умолчанию и не переключайся на другой MCP-сервер,
+      если выбранный сервер недоступен.
+
+      Нормализуй assignee и построй JQL:
+        project = "<project>"
+        AND assignee = "<assignee>"
+        AND status = "<status>"
+        AND issuetype = "<issueType>"
+        ORDER BY created ASC
+
+      Если status или issueType содержит несколько значений через запятую,
+      используй соответственно status in (...) или issuetype in (...).
+
+      Передай в jira-issues:
+      - environment: нормализованное значение ${env.environment}
+      - jql: построенный JQL
+      - maxResults: 1
+
+      Требуется ровно один результат. После jira_search обязательно вызови
+      jira_get_issue для найденного taskKey и получи актуальные summary,
+      description и comments. Отсутствие комментариев допустимо.
+
+      Сохрани полный результат в jira-task.json. В нём обязательны:
+      ok, environment, project, taskKey, issueType, summary, description, comments,
+      totalResults, issues и error.
+    skill_refs:
+      - jira-issues@1.0
+    produced_artifacts:
+      - scope: run
+        path: jira-task.json
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: ai-brainstorming
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # ВСТРОЕННЫЙ FLOW — Superpowers quick dev
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: ai-brainstorming
+    title: Автономный анализ и дизайн
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай jira-task.json. Используй summary, description и comments
+      из jira-task.json как источник запроса.
+
+      Изучи запрос и кодовую базу проекта. Строго следуй скилу:
+      выяви ключевые дизайн-решения, выбери лучший подход для каждого
+      с обоснованием, зафиксируй результат в brainstorming-summary.md.
+
+      Не задавай вопросов — принимай решения самостоятельно на основе
+      контекста проекта. Отмечай неуверенные допущения явно.
+    skill_refs:
+      - superpowers-brainstorming@1.0
+    produced_artifacts:
+      - scope: run
+        path: brainstorming-summary.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: ai-writing-plans
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  - id: ai-writing-plans
+    title: Составление детального плана реализации
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-brainstorming
+        path: brainstorming-summary.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Изучи jira-task.json и brainstorming-summary.md и составь детальный план
+      реализации согласно скилу. Сохрани в implementation-plan.md.
+
+      Требования к плану:
+      - Каждый шаг: 2-5 минут работы
+      - Порядок слоёв: миграции → сущности → репозитории → сервисы →
+        контроллеры → конфигурация → фронтенд
+      - После каждого слоя: команда верификации (только завершающиеся команды)
+      - TDD для testable behaviors: write failing test → RED → minimal impl → GREEN → small refactor
+      - Без плейсхолдеров, без TBD, без "добавить обработку ошибок"
+    skill_refs:
+      - superpowers-writing-plans@1.0
+    produced_artifacts:
+      - scope: run
+        path: implementation-plan.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: ai-executing-plans
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  - id: ai-executing-plans
+    title: Исполнение плана реализации
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-writing-plans
+        path: implementation-plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+      - type: artifact_ref
+        node_id: ai-verify-before-completion
+        path: verification-report.md
+        scope: run
+        required: false
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      <#assign verifyBeforeCompletion = step["ai-verify-before-completion"]!{} />
+      <#if verifyBeforeCompletion.rework_instruction?has_content>
+      ${verifyBeforeCompletion.rework_instruction}
+      <#else>
+      Выполни план из implementation-plan.md строго согласно скилу:
+
+      1. Объяви старт: "Executing plan: implementation-plan.md"
+      2. Создай TodoWrite из всех незакрытых [ ] шагов плана
+      3. Для каждого шага по порядку:
+         - Отметь в TodoWrite как in_progress
+         - Выполни точно как написано
+         - Запусти команду из строки Verify:
+         - Прочитай полный вывод команды
+         - Отметь в TodoWrite как completed
+      4. Остановись и сообщи о блокере если:
+         - Зависимость отсутствует
+         - Тест не проходит после 3 попыток
+         - Инструкция неоднозначна
+
+      Запрещено:
+      - Пропускать шаги
+      - Использовать bootRun, npm run dev, curl к локальным сервисам
+      - Создавать копии файлов с суффиксами _modified, _new
+      - Реализовывать функциональность вне плана
+      </#if>
+    skill_refs:
+      - superpowers-executing-plans@1.0
+      - superpowers-test-driven-development@1.0
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: ai-verify-before-completion
+
+  - id: ai-verify-before-completion
+    title: Верификация перед завершением
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-writing-plans
+        path: implementation-plan.md
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Проведи верификацию перед тем как объявить работу завершённой.
+      Строго следуй скилу — каждый из пяти шагов обязателен.
+
+      Верификационный чеклист:
+      1. Все [ ] в implementation-plan.md теперь [x] — нет незакрытых шагов
+      2. Полный build команда проходит с нулём ошибок
+      3. Все тесты зелёные (новые + существующие — нет регрессий)
+      4. git diff HEAD не содержит изменений вне согласованного scope
+      5. Нет backup-копий файлов, debug-кода, TODO в production-коде
+
+      После проверки заполни step-summary:
+      - route: "on_success" если всё прошло
+      - route: "on_rework" если есть проблемы
+
+      Пример on_rework:
+      - actions: ["запустил ./gradlew test", "прочитал полный вывод"]
+      - route: "on_rework"
+      - issues: [{"severity": "critical", "description": "TC-03 падает: expected 201 but was 200"}]
+      - rework_instruction: |
+          1. src/main/java/FooController.java:42 — вернуть HttpStatus.CREATED вместо OK
+          2. implementation-plan.md шаг 3.2 не отмечен [x] — завершить реализацию
+
+    skill_refs:
+      - superpowers-verification-before-completion@1.0
+    produced_artifacts:
+      - scope: run
+        path: verification-report.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: approve-final-code
+    on_rework:
+      transition: ai-executing-plans
+      keep_changes: true
+      session_policy: resume_previous_session
+      max_loop_count: 3
+    retry_policy:
+      attempts: 3
+      on_errors:
+        - NODE_VALIDATION_FAILED
+
+  - id: approve-final-code
+    title: Финальный апрув кода
+    type: human_approval
+    execution_context: []
+    instruction: |
+      Проверь итоговые изменения в кодовой базе и отчёт верификации в
+      verification-report.md.
+
+      Убедись, что:
+      - Все шаги плана отмечены [x]
+      - Build проходит, тесты зелёные
+      - Изменения соответствуют запросу и дизайн-решениям из brainstorming-summary.md
+      - Нет изменений вне согласованного scope
+
+      Апрувь для завершения флоу или верни на доработку с конкретными замечаниями.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: ai-finalize-jira
+    on_rework:
+      transition: ai-executing-plans
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Финализация исходной JIRA-задачи
+  # ════════════════════════════════════════════════════════════════════════════
+
+  # - id: ai-finalize-jira
+  #   title: Добавить AIFIXED и комментарий о run
+  #   type: ai
+  #   routing_type: static
+  #   execution_context:
+  #     - type: artifact_ref
+  #       node_id: ai-fetch-task
+  #       path: jira-task.json
+  #       scope: run
+  #       required: true
+  #       modifiable: false
+  #       transfer_mode: by_ref
+  #   instruction: |
+  #     Прочитай jira-task.json и финализируй исходную задачу.
+  #
+  #     Используй skill jira-issues строго через MCP-сервер,
+  #     выбранный по environment из jira-task.json.
+  #
+  #     Обязательные данные:
+  #     - environment из jira-task.json;
+  #     - taskKey из jira-task.json;
+  #     - issueType из верхнего уровня jira-task.json, либо issuetype/name из issues[0].
+  #
+  #     Сначала получи актуальную задачу через jira_get_issue.
+  #     Добавь label "AIFIXED", не удаляя существующие labels.
+  #     Добавь комментарий со ссылкой на run:
+  #     ${env.baseUrl}/#/run-console?runId=${run.id}
+  #
+  #     Передай в jira-issues:
+  #     - taskKey: ключ задачи;
+  #     - environment: контур задачи;
+  #     - labelsToAdd: ["AIFIXED"];
+  #     - commentBody: Markdown-комментарий со ссылкой на run.
+  #
+  #     Сохрани полный результат и историю операций в jira-finalization.json.
+  #
+  #     # Старый вариант перевода в конечный статус оставлен для быстрого переключения:
+  #     # Нормализуй issueType через trim + uppercase:
+  #     #
+  #     # 1. Для TASK или ТАСКА передай в jira-issues:
+  #     #    - taskKey: ключ задачи;
+  #     #    - environment: контур задачи;
+  #     #    - labelsToAdd: ["AIFIXED"];
+  #     #    - transitionSequence: ["IN_PROGRESS", "Resolved"];
+  #     #    - expectedFinalStatus: "Resolved".
+  #     #
+  #     # 2. Для BUG или БАГ передай в jira-issues:
+  #     #    - taskKey: ключ задачи;
+  #     #    - environment: контур задачи;
+  #     #    - labelsToAdd: ["AIFIXED"];
+  #     #    - transitionSequence:
+  #     #      ["На исправлении", "Тестирование", "Подтверждение исправления"];
+  #     #    - expectedFinalStatus: "Подтверждение исправления".
+  #     #
+  #     # Для другого issueType заверши ноду ошибкой: цепочка переходов не определена.
+  #     #
+  #     # После выполнения обязательно снова получи задачу через jira_get_issue и проверь:
+  #     # - label AIFIXED присутствует;
+  #     # - TASK находится в Resolved;
+  #     # - BUG находится в "Подтверждение исправления".
+  #   skill_refs:
+  #     - jira-issues@1.0
+  #   produced_artifacts:
+  #     - scope: run
+  #       path: jira-finalization.json
+  #       required: true
+  #       modifiable: false
+  #   expected_mutations: []
+  #   on_success:
+  #     transition: terminal-complete
+
+  - id: ai-finalize-jira
+    title: Добавить AIFIXED и комментарий о run
+    type: ai
+    routing_type: static
+    execution_context:
+      - type: artifact_ref
+        node_id: ai-fetch-task
+        path: jira-task.json
+        scope: run
+        required: true
+        modifiable: false
+        transfer_mode: by_ref
+    instruction: |
+      Прочитай jira-task.json и обнови исходную задачу.
+
+      Используй skill jira-issues строго через MCP-сервер,
+      выбранный по environment из jira-task.json.
+
+      Обязательные данные:
+      - environment из jira-task.json;
+      - taskKey из jira-task.json;
+      - issueType из верхнего уровня jira-task.json, либо issuetype/name из issues[0].
+
+      Сначала получи актуальную задачу через jira_get_issue.
+      Добавь label "AIFIXED", не удаляя существующие labels.
+
+      Передай в jira-issues:
+      - taskKey: ключ задачи;
+      - environment: контур задачи;
+      - labelsToAdd: ["AIFIXED"];
+      - commentBody: ${env.baseUrl}/#/run-console?runId=${run.id}
+
+      Сохрани полный результат и историю операций в jira-finalization.json.
+    skill_refs:
+      - jira-issues@1.0
+    produced_artifacts:
+      - scope: run
+        path: jira-finalization.json
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: terminal-complete
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Терминал
+  # ════════════════════════════════════════════════════════════════════════════
+
+  - id: terminal-complete
+    title: Flow завершён
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+
+  - id: terminal-failed
+    title: Flow завершён с ошибкой
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

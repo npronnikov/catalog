@@ -13,6 +13,9 @@ description: >
 Implement an approved `implementation-plan.md` reliably across one session,
 marking each step as it completes and stopping cleanly when blocked.
 
+The plan is the primary artifact. TDD is applied inside the plan's behavior
+steps, not as one global RED phase and one global GREEN phase for the feature.
+
 **Core principle:** Follow the plan exactly. Raise blockers immediately — do not
 improvise around gaps in the plan, do not skip steps, do not "fix it later."
 
@@ -41,7 +44,15 @@ For each step in the plan, in order:
 3. **Run the verification command** specified in the plan's `Verify:` line.
 4. **Read the full output** — do not assume success from partial output.
 5. **Mark completed** in TodoWrite only after verification passes.
-6. **Commit** if the plan includes a `Commit:` line for this step.
+
+When a step starts a TDD behavior cycle:
+- run the focused RED command and confirm failure before implementation
+- write the minimum code for that same behavior
+- run the focused GREEN command and confirm pass
+- do only a small refactor before moving to the next behavior
+
+Do not accumulate many failing tests and postpone implementation to a later
+global GREEN stage.
 
 **Never skip a step.** If a step seems redundant in hindsight, complete it
 anyway — the plan was approved as a unit.
@@ -78,6 +89,8 @@ When all steps are `[x]`:
 
 - Do not implement features not mentioned in the plan.
 - Do not refactor code that is not part of the plan's scope.
+- Do not convert the plan into batch-TDD execution (`all RED first`, then
+  `all GREEN`) unless the approved plan explicitly says so.
 - Do not use long-running runtime processes for verification
   (`bootRun`, `npm run dev`, browser, `curl` to local services).
 - Do not create backup copies of files (`File_modified.java`, etc.).

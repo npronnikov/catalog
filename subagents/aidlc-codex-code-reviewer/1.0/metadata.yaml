@@ -1,0 +1,22 @@
+entity_type: subagent
+id: aidlc-codex-code-reviewer
+version: "1.0"
+canonical_name: aidlc-codex-code-reviewer@1.0
+display_name: "AIDLC Codex Code Reviewer"
+description: >
+  Example Codex subagent for independent review of AI DLC implementation changes.
+  Produces findings-first feedback with verification gaps and merge readiness.
+coding_agent: codex
+team_code: AIDLC
+tags:
+  - aidlc
+  - codex
+  - review
+  - quality
+  - example
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/subagents/aidlc-codex-code-reviewer/1.0"
+definition_file: "aidlc-codex-code-reviewer.toml"

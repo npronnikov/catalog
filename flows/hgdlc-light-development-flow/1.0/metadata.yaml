@@ -5,8 +5,9 @@ canonical_name: hgdlc-light-development-flow@1.0
 display_name: "HGDLC: Light Development Flow"
 description: >
   Лёгкий цикл разработки с участием человека на каждом ключевом этапе.
-  Включает: уточняющие вопросы, план имплементации, разработку, ревью кода
-  и финальный апрув. Автоматический возврат на доработку при замечаниях ревью.
+  Включает: уточняющие вопросы, план имплементации, разработку,
+  adversarial-ревью тремя qwen-сабагентами и финальный апрув.
+  Возврат на доработку после ревью опирается на code-review-report.md.
 coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK

@@ -1,0 +1,22 @@
+entity_type: skill
+id: superpowers-test-driven-development
+version: "1.0"
+canonical_name: superpowers-test-driven-development@1.0
+display_name: "Superpowers: Test-Driven Development"
+description: >
+  Apply upstream-style focused TDD during implementation: one behavior at a
+  time, local RED/GREEN/REFACTOR cycles, no global batch RED/GREEN phases.
+coding_agent: qwen
+team_code: HGDLC
+platform_code: BACK
+tags:
+  - superpowers
+  - tdd
+  - testing
+  - upstream-aligned
+skill_kind: code
+scope: organization
+approval_status: draft
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/superpowers-test-driven-development/1.0"

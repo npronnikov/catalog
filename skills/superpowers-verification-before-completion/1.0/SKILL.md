@@ -33,8 +33,10 @@ completion claim requires a fresh run and a read of the full output.
 Check all of the following that apply to this task:
 
 ### Plan Completion
-- [ ] Every `[ ]` checkbox in `implementation-plan.md` is now `[x]`
-- [ ] No step was skipped or partially completed
+- [ ] If `implementation-plan.md` exists: every `[ ]` checkbox is now `[x]`
+- [ ] If `implementation-plan.md` does not exist but `tdd-plan.md` exists:
+      every `TC-*` is covered by tests and no planned case was skipped
+- [ ] No step / test case was skipped or partially completed
 
 ### Build
 - [ ] Full build command passes with zero errors
@@ -91,7 +93,9 @@ rework_instruction: |
 **route = on_success** only when:
 - Build passes
 - All tests pass (no regressions, no new failures)
-- All plan steps are `[x]`
+- The active planning artifact is fully satisfied:
+  - all plan steps are `[x]`, or
+  - all `TC-*` from `tdd-plan.md` are covered and passing
 - No scope violations
 
 **route = on_rework** when any of the above fails. The `rework_instruction`
