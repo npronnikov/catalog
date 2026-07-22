@@ -1,0 +1,22 @@
+entity_type: flow
+id: qwe
+version: "0.1"
+canonical_name: qwe@0.1
+display_name: "test dynamic route"
+description: "ewq"
+coding_agent: "codex"
+team_code: ''
+platform_code: "FRONT"
+tags: []
+flow_kind: ''
+risk_level: ''
+scope: "organization"
+approved_by: ''
+approved_at: ''
+published_at: ''
+source_ref: "main"
+source_path: "flows/qwe/0.1"
+lifecycle_status: active
+forked_from: ''
+forked_by: ''
+checksum: "58b705b12a533def578d0e7722ec5cc420719fbb869314ff36682efa0575531f"

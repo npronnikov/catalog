@@ -1,0 +1,83 @@
+id: qwe
+version: "0.1"
+canonical_name: qwe@0.1
+title: test dynamic route
+description: ewq
+start_node_id: ai-4
+failure_node_id: approval-5
+fail_on_missing_declared_output: false
+fail_on_missing_expected_mutation: false
+multirepository: false
+
+nodes:
+  - id: ai-1
+    title: New AI Executor
+    type: ai
+    execution_context: []
+    routing_type: dynamic
+    produced_artifacts: []
+    expected_mutations: []
+    on_route_1:
+      transition: ai-2
+    on_route_2:
+      transition: ai-3
+  - id: ai-2
+    title: New AI Executor
+    type: ai
+    execution_context: []
+    routing_type: static
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: command-6
+  - id: ai-3
+    title: New AI Executor
+    type: ai
+    execution_context: []
+    routing_type: static
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: approval-8
+  - id: ai-4
+    title: New AI Executor
+    type: ai
+    execution_context: []
+    instruction: |
+      Делай хорошо не делай плохо
+      
+    routing_type: static
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: ai-1
+  - id: approval-5
+    title: New Stop Flow
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+  - id: command-6
+    title: New Shell Command
+    type: command
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: approval-5
+  - id: command-7
+    title: New Shell Command
+    type: command
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: approval-5
+  - id: approval-8
+    title: New Human Approval Gate
+    type: human_approval
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve:
+      transition: command-7
+    on_rework:
+      transition: ai-3
