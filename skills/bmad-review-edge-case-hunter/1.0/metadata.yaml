@@ -22,3 +22,4 @@ approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "docs/aidlc/skills/bmad-review-edge-case-hunter/1.0"
+checksum: "f49ed9976f46b4cefa1fc8b4f0a495f16089905e6a7bbf4ce73b8f05c9ae3ee6"

@@ -19,3 +19,4 @@ approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "docs/skills/jira-issues/1.0"
+checksum: "05c335999edbec0544fcf66801edc6a43baf125b12c3682eb85c575e85b32735"

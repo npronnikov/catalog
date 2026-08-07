@@ -25,3 +25,4 @@ approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "flows/jira-task-superpowers-flow/1.0"
+checksum: "72cd85b8cc863acf9cc06e4dfd6dd2373bfcfb008c34a4814d27032c2ef8805a"

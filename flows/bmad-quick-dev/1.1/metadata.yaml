@@ -23,3 +23,4 @@ approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "docs/aidlc/flows/bmad-quick-dev/1.1"
+checksum: "86cea45152381b73a34a00b380a9e03c56230380a2a87e5d3bcdfc6a14867848"

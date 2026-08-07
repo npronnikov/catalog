@@ -20,3 +20,4 @@ approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "docs/aidlc/skills/bmad-review-adversarial-general/1.0"
+checksum: "7bffc39e6dba4d9123648c5d4d79e17c3c5b1efbd927c3fe0026c2dbb8d99cff"

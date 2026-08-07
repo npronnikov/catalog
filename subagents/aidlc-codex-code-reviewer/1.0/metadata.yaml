@@ -20,3 +20,4 @@ lifecycle_status: active
 source_ref: main
 source_path: "docs/aidlc/subagents/aidlc-codex-code-reviewer/1.0"
 definition_file: "aidlc-codex-code-reviewer.toml"
+checksum: "6d397dad85f78f66afede5b218bba321c8a5573fbdee53820d409d15552caecf"

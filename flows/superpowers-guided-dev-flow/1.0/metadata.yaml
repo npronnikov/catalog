@@ -22,3 +22,4 @@ approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "docs/aidlc/flows/superpowers-guided-dev-flow/1.0"
+checksum: "029eef8cab9dff78d9dd55f0501fc77296cdca77eff673e5f48e3f046c0504c5"

@@ -20,3 +20,4 @@ approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "docs/aidlc/skills/superpowers-verification-before-completion/1.0"
+checksum: "94b0491d36541099580f238eb9f9f4057c253d9175c718875e39f6470a616b8b"

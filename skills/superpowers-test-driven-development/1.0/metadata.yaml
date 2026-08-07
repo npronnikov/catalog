@@ -20,3 +20,4 @@ approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "docs/aidlc/skills/superpowers-test-driven-development/1.0"
+checksum: "c7b96dc14224bc1227e2b075cfbd33fdd01c8dde3a23e62d3e3522f8212b1cc3"

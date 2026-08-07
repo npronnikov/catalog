@@ -20,3 +20,4 @@ lifecycle_status: active
 source_ref: main
 source_path: "docs/aidlc/subagents/aidlc-qwen-code-reviewer/1.0"
 definition_file: "aidlc-qwen-code-reviewer.md"
+checksum: "e1ccdbe7e599b066428b832af8be6ee333b94de50b1543ab59c0db8c308282d4"

@@ -20,3 +20,4 @@ lifecycle_status: active
 source_ref: main
 source_path: "docs/aidlc/subagents/aidlc-gigacode-code-reviewer/1.0"
 definition_file: "aidlc-gigacode-code-reviewer.md"
+checksum: "22394b233b217122e9f8331aa47e5c65dcb21ece6b4bb3edbb7e0700b95233c4"

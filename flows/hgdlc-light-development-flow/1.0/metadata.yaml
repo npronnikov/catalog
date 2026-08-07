@@ -23,3 +23,4 @@ approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "docs/aidlc/flows/hgdlc-light-development-flow/1.0"
+checksum: "d16ab481536dc4719ce50a5f0f453bb50a27496a172c2b4b6c46f78f0a742d3a"

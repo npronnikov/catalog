@@ -27,3 +27,4 @@ approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "flows/jira-openspec-full-cycle-flow/1.0"
+checksum: "16bfc783345880c41b7e13d2ab737aa140c74423848a22ca1986a621fd532651"
