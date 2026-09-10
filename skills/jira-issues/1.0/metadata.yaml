@@ -4,8 +4,8 @@ version: "1.0"
 canonical_name: jira-issues@1.0
 display_name: "JIRA Issues"
 description: >
-  Works with JIRA issues through the Atlassian MCP server. Retrieves issue
-  information, creates and updates issues, and manages comments and attachments.
+  Searches and reads Jira issues through the Atlassian MCP server, and creates,
+  updates, comments on, labels, and transitions issues.
 coding_agent: qwen
 team_code: HGDLC
 platform_code: BACK
@@ -13,10 +13,10 @@ tags:
   - hgdlc
   - jira
   - mcp
-skill_kind: ops
+skill_kind: generation
 scope: organization
 approval_status: draft
 lifecycle_status: active
 source_ref: main
 source_path: "docs/skills/jira-issues/1.0"
-checksum: "05c335999edbec0544fcf66801edc6a43baf125b12c3682eb85c575e85b32735"
+checksum: "de5b5608c6f08375124cd17e1a153b0d3df9c0c77baaaf64bcbaabd7b5ad7e34"

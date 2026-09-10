@@ -30,11 +30,11 @@ nodes:
       Найди ровно одну задачу в JIRA строго через skill jira-issues и MCP.
 
       Обязательные значения env:
-      - environment: ${env.environment}
-      - project: ${env.project}
-      - assignee: ${env.assignee}
-      - status: ${env.status}
-      - issueType: ${env.issueType}
+      - environment: ${(env.environment)!""}
+      - project: ${(env.project)!""}
+      - assignee: ${(env.assignee)!""}
+      - status: ${(env.status)!""}
+      - issueType: ${(env.issueType)!""}
 
       Если любое значение отсутствует или пусто после trim, заверши ноду ошибкой.
 
@@ -46,20 +46,41 @@ nodes:
       Не выбирай контур по умолчанию и не переключайся на другой MCP-сервер,
       если выбранный сервер недоступен.
 
-      Нормализуй assignee и построй JQL:
+      Перед построением JQL проверь и экранируй входные значения:
+      - project после trim должен соответствовать `^[A-Z][A-Z0-9_]*$`;
+        иначе заверши ноду ошибкой до любых вызовов MCP;
+      - assignee, status и issueType считай недоверенными строками;
+        до trim и другой нормализации отклоняй исходные значения с управляющими
+        символами U+0000..U+001F или U+007F, включая CR и LF;
+      - для status и issueType сначала раздели исходное значение по запятым,
+        выполни trim каждого элемента и заверши ноду ошибкой при пустом элементе;
+      - нормализуй assignee через trim и удаление пробелов вокруг `@`;
+      - внутри каждого строкового литерала JQL экранируй `\` как `\\`,
+        затем `"` как `\"`;
+      - project, assignee и каждый элемент status/issueType заключай в отдельные
+        двойные кавычки; не вставляй исходные значения как фрагменты JQL.
+      При любой ошибке проверки заверши ноду до вызова jira-issues или jira_search.
+
+      Построй JQL только из проверенных и экранированных значений:
         project = "<project>"
         AND assignee = "<assignee>"
         AND status = "<status>"
         AND issuetype = "<issueType>"
         ORDER BY created ASC
 
-      Если status или issueType содержит несколько значений через запятую,
-      используй соответственно status in (...) или issuetype in (...).
+      Для одного элемента status/issueType используй `=`, для нескольких —
+      соответственно `status in (...)` или `issuetype in (...)`, перечисляя
+      отдельно экранированные и заключённые в кавычки элементы через запятую.
 
       Передай в jira-issues:
-      - environment: нормализованное значение ${env.environment}
+      - environment: нормализованное значение ${(env.environment)!""}
+      - project: проверенное значение после trim ${(env.project)!""}
       - jql: построенный JQL
       - maxResults: 1
+      - outputPath: jira-task.json
+      - requireExactlyOne: true
+      - includeFullIssue: true
+      - includeComments: true
 
       Требуется ровно один результат. После jira_search обязательно вызови
       jira_get_issue для найденного taskKey и получи актуальные summary,
@@ -629,14 +650,23 @@ nodes:
       Передай в jira-issues:
       - taskKey: ключ задачи;
       - environment: контур задачи;
+      - outputPath: jira-finalization.json;
+      - allowDuplicateComment: false;
       - labelsToAdd: ["AIFIXED"];
       - commentBody: ${env.baseUrl}/#/run-console?runId=${run.id}
+      - commentReadbackBody: тот же URL, что передан в commentBody.
 
       После выполнения обязательно снова получи задачу через jira_get_issue и проверь:
       - label AIFIXED присутствует;
       - есть комментарий со ссылкой ${env.baseUrl}/#/run-console?runId=${run.id}.
+        Строковое тело должно совпадать с commentReadbackBody с нормализацией
+        только CRLF/CR в LF; требуй commentPresent=true. commentAdded — boolean:
+        true при фактическом добавлении, false при подтверждённом дубле.
 
       Сохрани полный результат и историю операций в jira-finalization.json.
+      Сохрани commentBodyExact и commentReadbackBodyExact как один и тот же
+      переданный URL. Неподтверждённый комментарий означает ошибку финализации;
+      после подтверждённого добавления и неуспешной проверки retrySafe=false.
     skill_refs:
       - jira-issues@1.0
     produced_artifacts:
