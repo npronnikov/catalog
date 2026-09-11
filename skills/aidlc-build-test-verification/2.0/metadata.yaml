@@ -1,0 +1,15 @@
+entity_type: skill
+id: aidlc-build-test-verification
+version: "2.0"
+canonical_name: aidlc-build-test-verification@2.0
+display_name: "AIDLC v2: Build and Test Verification"
+description: Executes real build and test commands and records unaltered outcomes with a verification verdict.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, test]
+skill_kind: qa
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-build-test-verification/2.0"

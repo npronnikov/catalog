@@ -1,0 +1,332 @@
+id: aidlc-feature-delivery-flow
+version: "2.0"
+canonical_name: aidlc-feature-delivery-flow@2.0
+title: AIDLC v2 Feature Delivery
+description: Approved change design to real repository mutations, review, tests, and reusable delivery record.
+coding_agent: qwen
+start_node_id: ai-workspace-context
+failure_node_id: terminal-failed
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: true
+
+nodes:
+  - id: ai-workspace-context
+    title: Pin change workspace and inputs
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Apply the workspace-context skill. Create root input-manifest.yaml with exact
+      repositories, immutable revisions, the requested change identity, and an exact
+      optional approved solution-package path. Never search for an arbitrary "latest"
+      package. Write workspace/context.md with project rules, build/test commands,
+      architecture evidence, dirty-tree risks, and missing inputs. Never store secrets.
+    skill_refs: [aidlc-workspace-context@2.0]
+    produced_artifacts:
+      - {scope: run, path: input-manifest.yaml, required: true, modifiable: false}
+      - {scope: run, path: workspace/context.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-change-questions}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-change-questions
+    title: Clarify bounded change
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-workspace-context, path: input-manifest.yaml, scope: run, required: true, transfer_mode: by_value}
+    instruction: |
+      Apply the requirements-clarification skill to the request, pinned solution package,
+      and pinned repository state. Write feature/change-questions.md with atomic
+      [Answer]: fields for behavioral, compatibility, data, authorization, quality,
+      migration, and verification gaps. Do not ask the user directly or embed design
+      choices in questions.
+    skill_refs: [aidlc-requirements-clarification@2.0]
+    produced_artifacts:
+      - {scope: run, path: feature/change-questions.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: human-answer-change-questions}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: human-answer-change-questions
+    title: Answer change questions
+    type: human_input
+    execution_context:
+      - {type: artifact_ref, node_id: ai-change-questions, path: feature/change-questions.md, scope: run, required: true, modifiable: true, transfer_mode: by_ref}
+    instruction: |
+      Fill every [Answer]: field in feature/change-questions.md and submit when scope,
+      compatibility, migration, and acceptance behavior are explicit. Request rework if
+      the questionnaire is incomplete or prescriptive.
+    produced_artifacts:
+      - {scope: run, path: feature/change-questions.md, required: true}
+    expected_mutations: []
+    on_submit: {transition: ai-impact-design}
+    on_rework: {transition: ai-change-questions}
+
+  - id: ai-impact-design
+    title: Analyze impact and design the change
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: human-answer-change-questions, path: feature/change-questions.md, scope: run, required: true, transfer_mode: by_ref}
+    subagent_refs: [aidlc-qwen-solution-architecture-reviewer@2.0]
+    instruction: |
+      Analyze only repository revisions and artifacts pinned in input-manifest.yaml.
+      Draft the impact and change design, then invoke this named regular Qwen subagent
+      in the foreground:
+
+      agent(
+        description="Review feature change architecture",
+        prompt="Review the proposed impact analysis and change design against the pinned repository and accepted answers. Return evidence-based findings with an APPROVE or BLOCKED verdict. Do not edit artifacts or code.",
+        subagent_type="aidlc-qwen-solution-architecture-reviewer",
+        run_in_background=false
+      )
+
+      Wait for the returned inline result. Fail the node on invocation failure, empty
+      output, or missing verdict. Do not replace a failed subagent with inline self-review.
+      Do not use fork, background agents, list_agents, or send_message. Apply the
+      change-impact skill and write feature/impact-analysis.md, feature/change-design.md,
+      and reviews/change-architecture-review.md. Unresolved `BLOCKED` findings remain
+      explicit blockers.
+    skill_refs: [aidlc-change-impact-design@2.0]
+    produced_artifacts:
+      - {scope: run, path: feature/impact-analysis.md, required: true, modifiable: false}
+      - {scope: run, path: feature/change-design.md, required: true, modifiable: false}
+      - {scope: run, path: reviews/change-architecture-review.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-implementation-plan}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-implementation-plan
+    title: Create test-first implementation plan
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-impact-design, path: feature/change-design.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      <#assign gate = step["human-approve-plan"]!{} />
+      Apply the code-generation-plan skill. Write feature/implementation-plan.md with
+      coherent units, DAG order, exact repositories/files, test-first steps, executable
+      commands, expected red/green outcomes, stop conditions, and rollback boundaries.
+      <#if gate.rework_instruction?has_content>
+      Incorporate this gate feedback: ${gate.rework_instruction}
+      </#if>
+    skill_refs: [aidlc-code-generation-plan@2.0]
+    produced_artifacts:
+      - {scope: run, path: feature/implementation-plan.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: human-approve-plan}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: human-approve-plan
+    title: Approve implementation plan
+    type: human_approval
+    execution_context:
+      - {type: artifact_ref, node_id: ai-implementation-plan, path: feature/implementation-plan.md, scope: run, required: true, modifiable: false, transfer_mode: by_ref}
+    instruction: |
+      Review scope, exact files, unit dependencies, test-first checks, commands, migration,
+      and rollback boundaries. Approve to authorize project mutations, or provide precise
+      rework instructions. Approval does not authorize deployment.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve: {transition: ai-implement-units}
+    on_rework: {transition: ai-implementation-plan}
+
+  - id: ai-implement-units
+    title: Implement approved units sequentially
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-implementation-plan, path: feature/implementation-plan.md, scope: run, required: true, transfer_mode: by_ref}
+      - {type: artifact_ref, node_id: ai-code-review, path: reviews/code-review.md, scope: run, required: false, transfer_mode: by_ref}
+      - {type: artifact_ref, node_id: ai-build-test, path: feature/test-results.md, scope: run, required: false, transfer_mode: by_ref}
+    subagent_refs: [aidlc-qwen-unit-implementer@2.0]
+    instruction: |
+      Apply the implementation-execution skill to the approved plan. If returning from
+      review or test, first constrain work to unresolved blocking findings.
+
+      For each executable unit in DAG order, invoke the named regular Qwen subagent in
+      the foreground with that one unit's exact files, inputs, acceptance checks, and
+      current evidence:
+
+      agent(
+        description="Implement one approved unit",
+        prompt="Implement only the supplied unit in its allocated files. Follow its test-first steps. Return changed paths, exact tests and outcomes, deviations, blockers, and a COMPLETE or BLOCKED verdict.",
+        subagent_type="aidlc-qwen-unit-implementer",
+        run_in_background=false
+      )
+
+      Wait for each inline result, validate its changed paths and verdict, and update
+      feature/mutation-manifest.yaml before starting the next unit. Units must never run
+      concurrently. Fail the node on invocation failure, empty output, missing verdict,
+      out-of-scope mutation, or `BLOCKED`. Do not replace a failed subagent with inline
+      implementation. Do not use fork, background agents, list_agents, or send_message.
+      Documentation under aidlc-docs/** does not qualify as implementation: success
+      requires at least one concrete non-documentation project mutation listed in the
+      manifest, with unit IDs and completed checks.
+    skill_refs: [aidlc-implementation-execution@2.0]
+    produced_artifacts:
+      - {scope: run, path: feature/mutation-manifest.yaml, required: true, modifiable: false}
+    expected_mutations:
+      - {scope: project, path: "**/*", required: true}
+    on_success: {transition: ai-code-review}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-code-review
+    title: Independently review implemented diff
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - {type: artifact_ref, node_id: ai-implement-units, path: feature/mutation-manifest.yaml, scope: run, required: true, transfer_mode: by_ref}
+    subagent_refs: [aidlc-qwen-code-reviewer@2.0]
+    instruction: |
+      Invoke this named regular Qwen subagent in the foreground:
+
+      agent(
+        description="Review implemented feature diff",
+        prompt="Review the current diff against the approved change design and implementation plan. Never fix the code. Return severity-ranked file/line findings, verification gaps, and an APPROVE or REWORK verdict.",
+        subagent_type="aidlc-qwen-code-reviewer",
+        run_in_background=false
+      )
+
+      Wait for the inline result. Fail the node on invocation failure, empty output, or
+      missing verdict. Do not replace a failed subagent with inline self-review. Do not
+      use fork, background agents, list_agents, or send_message. Apply the code-review
+      skill and write reviews/code-review.md. Write step-summary.json with
+      {"route":"on_success"} for `APPROVE`, or {"route":"on_rework"} for `REWORK`.
+    skill_refs: [aidlc-code-review@2.0]
+    produced_artifacts:
+      - {scope: run, path: reviews/code-review.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-build-test}
+    on_rework:
+      transition: ai-implement-units
+      max_loop_count: 3
+      keep_changes: true
+      session_policy: resume_previous_session
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-build-test
+    title: Execute and independently verify builds and tests
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - {type: artifact_ref, node_id: ai-code-review, path: reviews/code-review.md, scope: run, required: true, transfer_mode: by_ref}
+    subagent_refs: [aidlc-qwen-test-verifier@2.0]
+    instruction: |
+      Apply the build-test-verification skill. The primary agent must first execute the
+      real focused and regression commands from workspace/context.md and the approved
+      plan, recording working directories, actual exit codes, and failure excerpts.
+      Generated instructions or predicted output are not evidence. Then invoke:
+
+      agent(
+        description="Independently verify feature checks",
+        prompt="Inspect and, where safe, reproduce the recorded build and test evidence. Never fix failures. Return commands, exit codes, observed results, gaps, and a VERIFIED or BLOCKED verdict.",
+        subagent_type="aidlc-qwen-test-verifier",
+        run_in_background=false
+      )
+
+      Wait for the inline result. Fail the node on invocation failure, empty output, or
+      missing verdict. Do not replace a failed subagent with inline self-review. Do not
+      use fork, background agents, list_agents, or send_message. Write
+      feature/test-results.md preserving all failing exit codes. Write step-summary.json
+      with {"route":"on_success"} only if all required checks pass and the verifier says
+      `VERIFIED`; otherwise write {"route":"on_rework"}.
+    skill_refs: [aidlc-build-test-verification@2.0]
+    produced_artifacts:
+      - {scope: run, path: feature/test-results.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-delivery-readiness}
+    on_rework:
+      transition: ai-implement-units
+      max_loop_count: 3
+      keep_changes: true
+      session_policy: resume_previous_session
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-delivery-readiness
+    title: Assess delivery readiness
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - {type: artifact_ref, node_id: ai-build-test, path: feature/test-results.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Apply the readiness-review skill to the approved design/plan, mutation manifest,
+      code review, and fresh build/test evidence. Write feature/readiness-report.md with
+      exact READY or BLOCKED. Write step-summary.json with {"route":"on_success"} for
+      READY or {"route":"on_blocked"} for BLOCKED. Do not mutate code or suppress gaps.
+    skill_refs: [aidlc-readiness-review@2.0]
+    produced_artifacts:
+      - {scope: run, path: feature/readiness-report.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: human-approve-delivery}
+    on_blocked: {transition: terminal-failed}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: human-approve-delivery
+    title: Accept delivered change
+    type: human_approval
+    execution_context:
+      - {type: artifact_ref, node_id: ai-delivery-readiness, path: feature/readiness-report.md, scope: run, required: true, modifiable: false, transfer_mode: by_ref}
+    instruction: |
+      Review the actual diff, change design, plan, mutation manifest, code review, test
+      evidence, and readiness report. Approve the implementation and exact change ID for
+      documentation publication, or request bounded implementation rework. Approval does
+      not deploy the change.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve: {transition: ai-publish-delivery}
+    on_rework: {transition: ai-implement-units}
+
+  - id: ai-publish-delivery
+    title: Publish approved delivery record
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-delivery-readiness, path: feature/readiness-report.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Publish only the approved reusable documentation beneath the exact approved change
+      ID: change-spec.md, architecture-delta.md, delivery-record.md, and traceability.yaml.
+      Copy evidence references faithfully. Source, tests, schemas, and migrations remain
+      project mutations from implementation and are not duplicated as artifacts here.
+    skill_refs: [aidlc-readiness-review@2.0]
+    produced_artifacts:
+      - {scope: project, path: aidlc-docs/changes/*/change-spec.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/changes/*/architecture-delta.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/changes/*/delivery-record.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/changes/*/traceability.yaml, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: terminal-complete}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: terminal-complete
+    title: Feature delivery accepted
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+
+  - id: terminal-failed
+    title: Feature delivery blocked
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

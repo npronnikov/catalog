@@ -1,0 +1,21 @@
+entity_type: skill
+id: aidlc-readiness-review
+version: "2.0"
+canonical_name: aidlc-readiness-review@2.0
+display_name: "AIDLC v2: Readiness Review"
+description: >
+  Review an artifact package for completeness, consistency, traceability,
+  freshness, unresolved findings, and evidence-backed handoff readiness.
+coding_agent: qwen
+team_code: AIDLC
+tags:
+  - aidlc
+  - v2
+  - qwen
+  - review
+skill_kind: review
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-readiness-review/2.0"

@@ -31,3 +31,11 @@ Recommended pattern:
 ```ftl
 ${step.ai_review.rework_instruction!"No rework notes provided"}
 ```
+
+## Repository aliases and runtime paths
+
+Repository aliases are safe folder names and are unique within a project. Existing projects may use the legacy alias `main`, but `main` is not required for new projects.
+
+Single-repository flows use ordinary project paths in flow YAML. At run creation, the runtime requires exactly one selected repository and stores snapshot paths as `<selectedAlias>/path`.
+
+Multirepository flows use `alias:path` in flow YAML. At run creation, flow aliases are mapped to selected project repository aliases and stored in the run snapshot as `<selectedAlias>/path`.

@@ -1,0 +1,15 @@
+entity_type: skill
+id: aidlc-code-review
+version: "2.0"
+canonical_name: aidlc-code-review@2.0
+display_name: "AIDLC v2: Code Review"
+description: Reviews implemented changes against requirements and design with evidence-based severity and a routing verdict.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, review]
+skill_kind: review
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-code-review/2.0"

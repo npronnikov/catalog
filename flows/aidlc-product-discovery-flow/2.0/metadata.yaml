@@ -1,0 +1,16 @@
+entity_type: flow
+id: aidlc-product-discovery-flow
+version: "2.0"
+canonical_name: aidlc-product-discovery-flow@2.0
+display_name: "AIDLC v2: Product Discovery"
+description: Turns a product idea into an approved, evidence-backed discovery decision and reusable initiative brief.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, discovery]
+flow_kind: analysis
+risk_level: medium
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/flows/aidlc-product-discovery-flow/2.0"

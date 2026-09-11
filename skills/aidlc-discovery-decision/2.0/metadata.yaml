@@ -1,0 +1,22 @@
+entity_type: skill
+id: aidlc-discovery-decision
+version: "2.0"
+canonical_name: aidlc-discovery-decision@2.0
+display_name: "AIDLC v2: Discovery Decision"
+description: >
+  Synthesize discovery evidence, feasibility, scope, risks, and mockups into a
+  human-reviewable GO, NO-GO, or DEFER recommendation and initiative brief.
+coding_agent: qwen
+team_code: AIDLC
+tags:
+  - aidlc
+  - v2
+  - qwen
+  - discovery
+  - decision
+skill_kind: plan
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-discovery-decision/2.0"

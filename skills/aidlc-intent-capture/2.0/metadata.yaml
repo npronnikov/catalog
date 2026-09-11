@@ -1,0 +1,21 @@
+entity_type: skill
+id: aidlc-intent-capture
+version: "2.0"
+canonical_name: aidlc-intent-capture@2.0
+display_name: "AIDLC v2: Intent Capture"
+description: >
+  Convert a raw product idea into a bounded problem statement, desired outcomes,
+  assumptions, success signals, and discovery questions.
+coding_agent: qwen
+team_code: AIDLC
+tags:
+  - aidlc
+  - v2
+  - qwen
+  - discovery
+skill_kind: analysis
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-intent-capture/2.0"

@@ -1,0 +1,15 @@
+entity_type: subagent
+id: aidlc-qwen-code-reviewer
+version: "2.0"
+canonical_name: aidlc-qwen-code-reviewer@2.0
+display_name: "AIDLC v2: Qwen Code Reviewer"
+description: Independent read-only reviewer producing severity-ranked file and line findings.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, code, review]
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/subagents/aidlc-qwen-code-reviewer/2.0"
+definition_file: "aidlc-qwen-code-reviewer.md"

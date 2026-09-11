@@ -1,0 +1,15 @@
+entity_type: skill
+id: aidlc-release-validation-recovery
+version: "2.0"
+canonical_name: aidlc-release-validation-recovery@2.0
+display_name: "AIDLC v2: Release Validation and Recovery"
+description: Validates a release against health criteria and verifies an approved rollback when acceptance fails.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, recovery]
+skill_kind: qa
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-release-validation-recovery/2.0"

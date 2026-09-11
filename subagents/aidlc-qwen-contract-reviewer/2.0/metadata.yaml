@@ -1,0 +1,15 @@
+entity_type: subagent
+id: aidlc-qwen-contract-reviewer
+version: "2.0"
+canonical_name: aidlc-qwen-contract-reviewer@2.0
+display_name: "AIDLC v2: Qwen Contract Reviewer"
+description: Read-only API, event, and schema reviewer focused on compatibility and failure semantics.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, contracts, review]
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/subagents/aidlc-qwen-contract-reviewer/2.0"
+definition_file: "aidlc-qwen-contract-reviewer.md"

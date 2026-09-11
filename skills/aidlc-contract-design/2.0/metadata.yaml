@@ -1,0 +1,15 @@
+entity_type: skill
+id: aidlc-contract-design
+version: "2.0"
+canonical_name: aidlc-contract-design@2.0
+display_name: "AIDLC v2: Contract Design"
+description: Defines concrete API, event, and data contracts with compatibility and operational semantics.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, contracts]
+skill_kind: plan
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-contract-design/2.0"

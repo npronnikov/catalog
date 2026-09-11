@@ -1,0 +1,15 @@
+entity_type: skill
+id: aidlc-ci-cd-bootstrap
+version: "2.0"
+canonical_name: aidlc-ci-cd-bootstrap@2.0
+display_name: "AIDLC v2: CI/CD Bootstrap"
+description: Implements and verifies a gated build, test, artifact, promotion, and rollback pipeline.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, cicd]
+skill_kind: code
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-ci-cd-bootstrap/2.0"

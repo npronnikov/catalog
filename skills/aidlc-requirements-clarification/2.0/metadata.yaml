@@ -1,0 +1,15 @@
+entity_type: skill
+id: aidlc-requirements-clarification
+version: "2.0"
+canonical_name: aidlc-requirements-clarification@2.0
+display_name: "AIDLC v2: Requirements Clarification"
+description: Produces an exhaustive, answerable requirements questionnaire without embedding design decisions.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, requirements]
+skill_kind: analysis
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-requirements-clarification/2.0"

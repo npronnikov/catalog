@@ -1,0 +1,334 @@
+id: aidlc-solution-planning-flow
+version: "2.0"
+canonical_name: aidlc-solution-planning-flow@2.0
+title: AIDLC v2 Solution Planning
+description: Approved discovery to reviewed, implementation-ready solution handoff without code mutation.
+coding_agent: qwen
+start_node_id: ai-workspace-context
+failure_node_id: terminal-failed
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+
+nodes:
+  - id: ai-workspace-context
+    title: Pin workspace and initiative inputs
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Apply the workspace-context skill to the request and repositories. Create root
+      input-manifest.yaml containing exact repositories, immutable revisions, and the
+      exact approved discovery package path. Never discover an arbitrary "latest"
+      initiative package. Write workspace/context.md with rules, tools, commands,
+      relevant existing design, risks, and missing inputs. Do not store secrets.
+    skill_refs: [aidlc-workspace-context@2.0]
+    produced_artifacts:
+      - {scope: run, path: input-manifest.yaml, required: true, modifiable: false}
+      - {scope: run, path: workspace/context.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-requirement-questions}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-requirement-questions
+    title: Clarify requirements
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-workspace-context, path: input-manifest.yaml, scope: run, required: true, transfer_mode: by_value}
+    instruction: |
+      Apply the requirements-clarification skill to only the discovery package and
+      repository revisions pinned by input-manifest.yaml. Write solution/questions.md
+      with exhaustive [Answer]: fields, impact, and blocking status. Ask no direct user
+      questions and do not embed design choices as questions.
+    skill_refs: [aidlc-requirements-clarification@2.0]
+    produced_artifacts:
+      - {scope: run, path: solution/questions.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: human-answer-requirements}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: human-answer-requirements
+    title: Answer requirement questions
+    type: human_input
+    execution_context:
+      - {type: artifact_ref, node_id: ai-requirement-questions, path: solution/questions.md, scope: run, required: true, modifiable: true, transfer_mode: by_ref}
+    instruction: |
+      Fill every [Answer]: field in solution/questions.md. Resolve contradictions or
+      explicitly accept documented assumptions, then submit. Request rework if the
+      questionnaire itself is incomplete or prescriptive.
+    produced_artifacts:
+      - {scope: run, path: solution/questions.md, required: true}
+    expected_mutations: []
+    on_submit: {transition: ai-requirements-specification}
+    on_rework: {transition: ai-requirement-questions}
+
+  - id: ai-requirements-specification
+    title: Draft measurable requirements
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: human-answer-requirements, path: solution/questions.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      <#assign gate = step["human-approve-requirements"]!{} />
+      Apply the requirements-specification skill. Reconcile approved discovery and all
+      answers. Write solution/requirements.md with stable FR/API/DM/AUTH/NFR/TEST IDs,
+      constraints, assumptions, traceability, and measurable criteria.
+      <#if gate.rework_instruction?has_content>
+      Incorporate this gate feedback: ${gate.rework_instruction}
+      </#if>
+    skill_refs: [aidlc-requirements-specification@2.0]
+    produced_artifacts:
+      - {scope: run, path: solution/requirements.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: human-approve-requirements}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: human-approve-requirements
+    title: Approve requirements baseline
+    type: human_approval
+    execution_context:
+      - {type: artifact_ref, node_id: ai-requirements-specification, path: solution/requirements.md, scope: run, required: true, modifiable: false, transfer_mode: by_ref}
+    instruction: |
+      Approve only if scope, IDs, constraints, assumptions, and acceptance criteria are
+      complete and measurable. Approval freezes the requirements baseline for design;
+      it does not publish project artifacts. Otherwise provide precise rework feedback.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve: {transition: ai-user-story-design}
+    on_rework: {transition: ai-requirements-specification}
+
+  - id: ai-user-story-design
+    title: Design user stories where useful
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-requirements-specification, path: solution/requirements.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Apply the user-story skill. Write solution/user-stories.md with requirement-linked,
+      testable slices, or `status: not_applicable` and a rigorous alternative. Do not
+      change the approved requirement baseline.
+    skill_refs: [aidlc-user-story-design@2.0]
+    produced_artifacts:
+      - {scope: run, path: solution/user-stories.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-domain-design}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-domain-design
+    title: Design domain and architecture
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-user-story-design, path: solution/user-stories.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Apply the domain-design skill to approved requirements and the pinned repository
+      context. Write solution/domain-model.md and solution/architecture.md with
+      boundaries, responsibilities, states, invariants, dependencies, data/trust flows,
+      failures, and ADR-style decisions. Preserve requirement traceability.
+    skill_refs: [aidlc-domain-design@2.0]
+    produced_artifacts:
+      - {scope: run, path: solution/domain-model.md, required: true, modifiable: false}
+      - {scope: run, path: solution/architecture.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-contract-design}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-contract-design
+    title: Design concrete contracts
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-domain-design, path: solution/architecture.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Apply the contract-design skill. Write solution/contracts/index.md and concrete
+      API, event, message, or schema files beneath solution/contracts/. Cover ownership,
+      compatibility, errors, authentication/authorization, idempotency, evolution, and
+      requirement links. Prose alone is insufficient where a formal contract is feasible.
+    skill_refs: [aidlc-contract-design@2.0]
+    produced_artifacts:
+      - {scope: run, path: solution/contracts/index.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-quality-infrastructure-design}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-quality-infrastructure-design
+    title: Design qualities and infrastructure impact
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-contract-design, path: solution/contracts/index.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Apply both attached skills. Write solution/nfr-design.md mapping every NFR to
+      mechanism, measurement, threshold, failure response, and verification. Write
+      solution/infrastructure-impact.md covering topology, environments, data, secret
+      references (never values), migration, capacity, cost, ownership, and rollback.
+    skill_refs:
+      - aidlc-nfr-design@2.0
+      - aidlc-infrastructure-design@2.0
+    produced_artifacts:
+      - {scope: run, path: solution/nfr-design.md, required: true, modifiable: false}
+      - {scope: run, path: solution/infrastructure-impact.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-units-decomposition}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-units-decomposition
+    title: Decompose implementation units
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-quality-infrastructure-design, path: solution/nfr-design.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Apply the units-decomposition skill across the entire solution package. Write
+      solution/units.yaml with stable IDs, dependencies, requirement links, exact
+      repositories/files, inputs, outputs, checks, and execution waves. Explicitly test
+      the graph for cycles and reject units without acceptance checks.
+    skill_refs: [aidlc-units-decomposition@2.0]
+    produced_artifacts:
+      - {scope: run, path: solution/units.yaml, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-delivery-planning}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-delivery-planning
+    title: Plan delivery and traceability
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-units-decomposition, path: solution/units.yaml, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      <#assign gate = step["human-approve-solution"]!{} />
+      Apply the delivery-planning skill. Write solution/delivery-plan.md and
+      solution/traceability.yaml with dependency waves, gates, test-first commands,
+      evidence, rollback, and complete requirement-to-unit-to-check coverage. Every
+      uncovered requirement is blocking.
+      <#if gate.rework_instruction?has_content>
+      Revisit the relevant upstream run artifacts as needed and incorporate this final
+      gate feedback before regenerating the plan: ${gate.rework_instruction}
+      </#if>
+    skill_refs: [aidlc-delivery-planning@2.0]
+    produced_artifacts:
+      - {scope: run, path: solution/delivery-plan.md, required: true, modifiable: false}
+      - {scope: run, path: solution/traceability.yaml, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-solution-readiness}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-solution-readiness
+    title: Independently review solution readiness
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - {type: artifact_ref, node_id: ai-delivery-planning, path: solution/delivery-plan.md, scope: run, required: true, transfer_mode: by_ref}
+      - {type: artifact_ref, node_id: ai-delivery-planning, path: solution/traceability.yaml, scope: run, required: true, transfer_mode: by_ref}
+    subagent_refs:
+      - aidlc-qwen-solution-architecture-reviewer@2.0
+      - aidlc-qwen-contract-reviewer@2.0
+      - aidlc-qwen-quality-risk-reviewer@2.0
+    instruction: |
+      Invoke all three named regular Qwen subagents, one call at a time, in the foreground:
+
+      agent(description="Review solution architecture", prompt="Review the complete run-scoped solution package. Return evidence-based findings and an APPROVE or BLOCKED verdict.", subagent_type="aidlc-qwen-solution-architecture-reviewer", run_in_background=false)
+      agent(description="Review solution contracts", prompt="Review contracts against requirements and domain design. Return compatibility findings and an APPROVE or BLOCKED verdict.", subagent_type="aidlc-qwen-contract-reviewer", run_in_background=false)
+      agent(description="Review quality risks", prompt="Review NFR and infrastructure design against requirements. Return uncovered risks and an APPROVE or BLOCKED verdict.", subagent_type="aidlc-qwen-quality-risk-reviewer", run_in_background=false)
+
+      Wait for each inline result before starting or synthesizing the next step, and wait
+      for all three before routing. Fail this node if any invocation fails, returns empty
+      output, or omits its verdict. Do not replace a failed subagent with inline self-review.
+      Do not use fork, background agents, list_agents, or send_message.
+      Preserve the results in reviews/architecture-review.md,
+      reviews/contract-review.md, and reviews/quality-risk-review.md. Apply the readiness
+      skill to produce solution/readiness-report.md. If every verdict supports readiness,
+      write step-summary.json with {"route":"on_success"}; otherwise write
+      {"route":"on_blocked"} and retain all blocking findings.
+    skill_refs: [aidlc-readiness-review@2.0]
+    produced_artifacts:
+      - {scope: run, path: reviews/architecture-review.md, required: true, modifiable: false}
+      - {scope: run, path: reviews/contract-review.md, required: true, modifiable: false}
+      - {scope: run, path: reviews/quality-risk-review.md, required: true, modifiable: false}
+      - {scope: run, path: solution/readiness-report.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: human-approve-solution}
+    on_blocked: {transition: terminal-failed}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: human-approve-solution
+    title: Approve implementation-ready solution
+    type: human_approval
+    execution_context:
+      - {type: artifact_ref, node_id: ai-solution-readiness, path: solution/readiness-report.md, scope: run, required: true, modifiable: false, transfer_mode: by_ref}
+    instruction: |
+      Review requirements, design, contracts, qualities, infrastructure, units, delivery
+      plan, traceability, and all independent reviews. Approve the exact initiative ID
+      and package for publication, or provide rework instructions identifying the
+      upstream artifact that must change. Approval authorizes documentation publication,
+      not implementation.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve: {transition: ai-publish-solution}
+    on_rework: {transition: ai-delivery-planning}
+
+  - id: ai-publish-solution
+    title: Publish approved solution package
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-solution-readiness, path: solution/readiness-report.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Publish exact approved artifacts beneath the approved initiative ID under
+      aidlc-docs/initiatives/*/solution/. Do not modify content during publication and do
+      not infer an ID. Include requirements.md, user-stories.md (including explicit
+      not-applicable status), domain-model.md, architecture.md, contracts/index.md,
+      nfr-design.md, infrastructure-impact.md, units.yaml, delivery-plan.md, and
+      traceability.yaml. Verify copied content and paths before completion.
+    skill_refs: [aidlc-readiness-review@2.0]
+    produced_artifacts:
+      - {scope: project, path: aidlc-docs/initiatives/*/solution/requirements.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/initiatives/*/solution/user-stories.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/initiatives/*/solution/domain-model.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/initiatives/*/solution/architecture.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/initiatives/*/solution/contracts/index.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/initiatives/*/solution/nfr-design.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/initiatives/*/solution/infrastructure-impact.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/initiatives/*/solution/units.yaml, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/initiatives/*/solution/delivery-plan.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/initiatives/*/solution/traceability.yaml, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: terminal-complete}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: terminal-complete
+    title: Solution package published
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+
+  - id: terminal-failed
+    title: Solution planning blocked
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

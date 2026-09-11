@@ -1,0 +1,15 @@
+entity_type: subagent
+id: aidlc-qwen-solution-architecture-reviewer
+version: "2.0"
+canonical_name: aidlc-qwen-solution-architecture-reviewer@2.0
+display_name: "AIDLC v2: Qwen Solution Architecture Reviewer"
+description: Read-only reviewer for architectural consistency, boundaries, invariants, and requirement coverage.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, architecture, review]
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/subagents/aidlc-qwen-solution-architecture-reviewer/2.0"
+definition_file: "aidlc-qwen-solution-architecture-reviewer.md"

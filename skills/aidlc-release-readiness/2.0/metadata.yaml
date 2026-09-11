@@ -1,0 +1,15 @@
+entity_type: skill
+id: aidlc-release-readiness
+version: "2.0"
+canonical_name: aidlc-release-readiness@2.0
+display_name: "AIDLC v2: Release Readiness"
+description: Audits an immutable candidate, target, dependencies, migrations, verification, and rollback before deployment approval.
+coding_agent: qwen
+team_code: AIDLC
+tags: [aidlc, v2, qwen, release]
+skill_kind: review
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-release-readiness/2.0"

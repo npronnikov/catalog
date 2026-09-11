@@ -1,0 +1,22 @@
+entity_type: skill
+id: aidlc-feasibility-and-scope
+version: "2.0"
+canonical_name: aidlc-feasibility-and-scope@2.0
+display_name: "AIDLC v2: Feasibility and Scope"
+description: >
+  Assess feasibility across business and engineering dimensions and define a
+  bounded MVP, risks, dependencies, experiments, and stop conditions.
+coding_agent: qwen
+team_code: AIDLC
+tags:
+  - aidlc
+  - v2
+  - qwen
+  - discovery
+  - scope
+skill_kind: analysis
+scope: organization
+approval_status: published
+lifecycle_status: active
+source_ref: main
+source_path: "docs/aidlc/skills/aidlc-feasibility-and-scope/2.0"

@@ -1,0 +1,238 @@
+id: aidlc-platform-foundation-flow
+version: "2.0"
+canonical_name: aidlc-platform-foundation-flow@2.0
+title: AIDLC v2 Platform Foundation
+description: Human-approved platform design through real IaC, pipeline, observability, validation, and reusable operations handoff.
+coding_agent: qwen
+start_node_id: ai-workspace-context
+failure_node_id: terminal-failed
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: true
+
+nodes:
+  - id: ai-workspace-context
+    title: Pin platform workspace and targets
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Apply the workspace-context skill. Create root input-manifest.yaml containing exact
+      repositories, immutable revisions, existing IaC/pipeline/operations artifacts, and
+      explicit account/project/cluster/environment identities. Never use an implicit
+      default or arbitrary "latest" input. Write workspace/context.md with project rules,
+      tool versions, validation commands, current architecture, ownership, and blockers.
+      Record secret references only; credentials, tokens, keys, and kubeconfigs are never artifacts.
+    skill_refs: [aidlc-workspace-context@2.0]
+    produced_artifacts:
+      - {scope: run, path: input-manifest.yaml, required: true, modifiable: false}
+      - {scope: run, path: workspace/context.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: ai-platform-design}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-platform-design
+    title: Design platform foundation
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-workspace-context, path: input-manifest.yaml, scope: run, required: true, transfer_mode: by_value}
+    instruction: |
+      <#assign gate = step["human-approve-platform-plan"]!{} />
+      Apply the platform-foundation-design skill to pinned inputs. Write
+      platform/requirements.md with the environment matrix, topology, security,
+      ownership, RTO/RPO, capacity, cost, and measurable acceptance. Write
+      platform/change-plan.md with exact repository/files, targets, mutation waves,
+      approvals, evidence, stop conditions, and rollback.
+      <#if gate.rework_instruction?has_content>
+      Incorporate this gate feedback: ${gate.rework_instruction}
+      </#if>
+    skill_refs: [aidlc-platform-foundation-design@2.0]
+    produced_artifacts:
+      - {scope: run, path: platform/requirements.md, required: true, modifiable: false}
+      - {scope: run, path: platform/change-plan.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: human-approve-platform-plan}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: human-approve-platform-plan
+    title: Approve platform mutation plan
+    type: human_approval
+    execution_context:
+      - {type: artifact_ref, node_id: ai-platform-design, path: platform/change-plan.md, scope: run, required: true, modifiable: false, transfer_mode: by_ref}
+    instruction: |
+      Verify exact targets, permissions, repository mutations, security boundaries,
+      validation, cost, destructive steps, stop conditions, and rollback. Approve to
+      authorize only the listed platform mutations, or return precise rework feedback.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve: {transition: ai-provision-environments}
+    on_rework: {transition: ai-platform-design}
+
+  - id: ai-provision-environments
+    title: Provision approved environments
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-platform-design, path: platform/change-plan.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Apply the environment-provisioning skill. First use safe read-only inspection to
+      revalidate exact target identity, current state, permission, and approval evidence.
+      Stop before mutation if any differ or are missing. Implement version-controlled IaC
+      and configuration, validate plan/policy, then perform only explicitly approved
+      external actions. Do not automatically retry a destructive action. Write
+      platform/provisioning-results.md with redacted commands, exit codes, observed state,
+      concrete changed paths, deviations, and verdict. Project documentation alone does
+      not qualify as the required mutation.
+    skill_refs: [aidlc-environment-provisioning@2.0]
+    produced_artifacts:
+      - {scope: run, path: platform/provisioning-results.md, required: true, modifiable: false}
+    expected_mutations:
+      - {scope: project, path: "**/*", required: true}
+    on_success: {transition: ai-bootstrap-ci-cd}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-bootstrap-ci-cd
+    title: Bootstrap controlled CI/CD
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-provision-environments, path: platform/provisioning-results.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Apply the CI/CD bootstrap skill. Implement version-controlled pipeline changes for
+      build, test, immutable artifact, provenance/security controls, promotion, protected
+      approvals, and rollback. Validate syntax and safe non-production behavior; never
+      trigger an unapproved production deployment. Write platform/pipeline-validation.md
+      with concrete commands, exit codes, gate behavior, changed paths, gaps, and verdict.
+      Documentation alone does not qualify as the required mutation.
+    skill_refs: [aidlc-ci-cd-bootstrap@2.0]
+    produced_artifacts:
+      - {scope: run, path: platform/pipeline-validation.md, required: true, modifiable: false}
+    expected_mutations:
+      - {scope: project, path: "**/*", required: true}
+    on_success: {transition: ai-configure-observability}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-configure-observability
+    title: Configure and validate observability
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-bootstrap-ci-cd, path: platform/pipeline-validation.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Apply the observability-validation skill. Implement version-controlled telemetry,
+      dashboards, alerts, routing, and runbook links. In the exact approved safe target,
+      emit or simulate representative signals and observe collection, dashboard, alert,
+      acknowledgment, and recovery paths. Write platform/observability-validation.md with
+      exact commands, exit codes, timestamps, observed signal identifiers, changed paths,
+      gaps, and verdict. Never expose secret or personal data. Documentation alone does
+      not qualify as the required mutation.
+    skill_refs: [aidlc-observability-validation@2.0]
+    produced_artifacts:
+      - {scope: run, path: platform/observability-validation.md, required: true, modifiable: false}
+    expected_mutations:
+      - {scope: project, path: "**/*", required: true}
+    on_success: {transition: ai-platform-validation}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: ai-platform-validation
+    title: Independently validate platform readiness
+    type: ai
+    routing_type: dynamic
+    execution_context:
+      - {type: artifact_ref, node_id: ai-configure-observability, path: platform/observability-validation.md, scope: run, required: true, transfer_mode: by_ref}
+    subagent_refs:
+      - aidlc-qwen-platform-sre-reviewer@2.0
+      - aidlc-qwen-quality-risk-reviewer@2.0
+      - aidlc-qwen-test-verifier@2.0
+    instruction: |
+      Invoke all three named regular Qwen subagents in the foreground:
+
+      agent(description="Review platform operations", prompt="Review the resulting environment, IaC, delivery pipeline, observability evidence, and rollback readiness. Return findings and an APPROVE or BLOCKED verdict.", subagent_type="aidlc-qwen-platform-sre-reviewer", run_in_background=false)
+      agent(description="Review platform quality risks", prompt="Review security, reliability, capacity, recovery and secret-handling evidence. Return findings and an APPROVE or BLOCKED verdict.", subagent_type="aidlc-qwen-quality-risk-reviewer", run_in_background=false)
+      agent(description="Verify platform checks", prompt="Independently inspect commands, exit codes and observable results. Do not fix failures. Return VERIFIED or BLOCKED.", subagent_type="aidlc-qwen-test-verifier", run_in_background=false)
+
+      Wait for each inline result and for all three before synthesizing or routing. Fail
+      this node if any invocation fails, output is empty, or a required verdict is
+      missing. Do not replace a failed subagent with inline self-review. Do not use fork,
+      background agents, list_agents, or send_message. Preserve reports at
+      reviews/platform-sre-review.md, reviews/platform-quality-review.md, and
+      reviews/platform-test-verification.md. Apply the readiness-review skill and write
+      platform/readiness-report.md. Write step-summary.json with {"route":"on_success"}
+      only when all verdicts approve/verify; otherwise {"route":"on_blocked"}.
+    skill_refs: [aidlc-readiness-review@2.0]
+    produced_artifacts:
+      - {scope: run, path: reviews/platform-sre-review.md, required: true, modifiable: false}
+      - {scope: run, path: reviews/platform-quality-review.md, required: true, modifiable: false}
+      - {scope: run, path: reviews/platform-test-verification.md, required: true, modifiable: false}
+      - {scope: run, path: platform/readiness-report.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: human-accept-platform}
+    on_blocked: {transition: terminal-failed}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: human-accept-platform
+    title: Accept platform foundation
+    type: human_approval
+    execution_context:
+      - {type: artifact_ref, node_id: ai-platform-validation, path: platform/readiness-report.md, scope: run, required: true, modifiable: false, transfer_mode: by_ref}
+    instruction: |
+      Review actual project mutations, targets, provisioning/pipeline/observability
+      evidence, independent findings, residual cost/risk, and readiness. Approve the
+      resulting platform foundation for documentation publication, or request rework
+      beginning with the relevant implementation wave.
+    produced_artifacts: []
+    expected_mutations: []
+    on_approve: {transition: ai-publish-platform}
+    on_rework: {transition: ai-provision-environments}
+
+  - id: ai-publish-platform
+    title: Publish accepted platform handoff
+    type: ai
+    routing_type: static
+    execution_context:
+      - {type: artifact_ref, node_id: ai-platform-validation, path: platform/readiness-report.md, scope: run, required: true, transfer_mode: by_ref}
+    instruction: |
+      Publish only accepted, non-secret reusable documentation under aidlc-docs/platform/:
+      foundation-requirements.md, architecture.md, delivery.md, observability.md,
+      operations.md, and acceptance-record.md. Reference exact repository revisions and
+      external target identities. Never copy credentials, tokens, private keys,
+      kubeconfigs, secret values, or raw sensitive command output.
+    skill_refs: [aidlc-readiness-review@2.0]
+    produced_artifacts:
+      - {scope: project, path: aidlc-docs/platform/foundation-requirements.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/platform/architecture.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/platform/delivery.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/platform/observability.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/platform/operations.md, required: true, modifiable: false}
+      - {scope: project, path: aidlc-docs/platform/acceptance-record.md, required: true, modifiable: false}
+    expected_mutations: []
+    on_success: {transition: terminal-complete}
+    retry_policy:
+      attempts: 2
+      on_errors: [AGENT_EXECUTION_FAILED, AGENT_SESSION_RESUME_FAILED, NODE_VALIDATION_FAILED, ACP_REQUEST_FAILED]
+
+  - id: terminal-complete
+    title: Platform foundation accepted
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+
+  - id: terminal-failed
+    title: Platform foundation blocked
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
