@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Units Decomposition"
 description: Decomposes a solution into acceptance-bound implementation units arranged as an acyclic execution graph.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, decomposition]
 skill_kind: plan
 scope: organization

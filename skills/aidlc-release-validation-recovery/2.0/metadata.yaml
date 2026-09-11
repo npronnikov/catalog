@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Release Validation and Recovery"
 description: Validates a release against health criteria and verifies an approved rollback when acceptance fails.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, recovery]
 skill_kind: qa
 scope: organization

@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Code Review"
 description: Reviews implemented changes against requirements and design with evidence-based severity and a routing verdict.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, review]
 skill_kind: review
 scope: organization

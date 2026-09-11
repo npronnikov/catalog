@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Release Execution"
 description: Executes an explicitly approved deployment or rollback once against an exact target and records the outcome.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, deployment]
 skill_kind: code
 scope: organization

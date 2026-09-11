@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Platform Foundation Design"
 description: Defines a secure, operable platform foundation and its acceptance plan.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, platform]
 skill_kind: plan
 scope: organization

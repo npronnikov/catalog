@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Product Discovery"
 description: Turns a product idea into an approved, evidence-backed discovery decision and reusable initiative brief.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, discovery]
 flow_kind: analysis
 risk_level: medium

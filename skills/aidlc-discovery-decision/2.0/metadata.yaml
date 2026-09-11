@@ -8,6 +8,7 @@ description: >
   human-reviewable GO, NO-GO, or DEFER recommendation and initiative brief.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags:
   - aidlc
   - v2

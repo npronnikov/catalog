@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Implementation Execution"
 description: Executes approved units as real repository mutations and records exact changed paths and checks.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, code]
 skill_kind: code
 scope: organization

@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Observability Validation"
 description: Implements telemetry and validates dashboards, alerts, routing, and recovery signals end to end.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, observability]
 skill_kind: qa
 scope: organization

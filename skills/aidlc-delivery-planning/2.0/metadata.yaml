@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Delivery Planning"
 description: Builds an execution plan and complete requirement-to-unit-to-check traceability map.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, delivery]
 skill_kind: plan
 scope: organization

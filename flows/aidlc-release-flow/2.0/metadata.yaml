@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Release"
 description: Gates, executes, validates, and if necessary rolls back an immutable release candidate against an exact target.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, release, deployment]
 flow_kind: delivery
 risk_level: high

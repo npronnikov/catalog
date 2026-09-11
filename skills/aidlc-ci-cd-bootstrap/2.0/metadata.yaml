@@ -6,6 +6,7 @@ display_name: "AIDLC v2: CI/CD Bootstrap"
 description: Implements and verifies a gated build, test, artifact, promotion, and rollback pipeline.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, cicd]
 skill_kind: code
 scope: organization

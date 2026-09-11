@@ -6,6 +6,7 @@ display_name: "AIDLC v2: User Story Design"
 description: Organizes approved requirements into testable user stories when story form adds delivery value.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, stories]
 skill_kind: plan
 scope: organization

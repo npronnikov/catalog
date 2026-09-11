@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Solution Planning"
 description: Converts an approved initiative into a reviewed and approved implementation-ready solution package.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, solution, planning]
 flow_kind: analysis
 risk_level: medium

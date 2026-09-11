@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Requirements Specification"
 description: Converts approved discovery inputs and answers into stable, measurable requirements.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, requirements]
 skill_kind: analysis
 scope: organization

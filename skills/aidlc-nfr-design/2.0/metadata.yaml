@@ -6,6 +6,7 @@ display_name: "AIDLC v2: NFR Design"
 description: Maps each quality requirement to mechanisms, measurements, thresholds, failure responses, and verification.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, quality]
 skill_kind: plan
 scope: organization

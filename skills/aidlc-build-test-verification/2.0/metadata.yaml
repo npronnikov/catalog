@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Build and Test Verification"
 description: Executes real build and test commands and records unaltered outcomes with a verification verdict.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, test]
 skill_kind: qa
 scope: organization

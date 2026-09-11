@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Infrastructure Design"
 description: Describes solution infrastructure impact, migration, capacity, cost, secrets references, and rollback.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, infrastructure]
 skill_kind: plan
 scope: organization

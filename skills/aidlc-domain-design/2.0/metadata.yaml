@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Domain and Architecture Design"
 description: Defines domain boundaries, invariants, states, responsibilities, and architecture decisions.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, architecture]
 skill_kind: plan
 scope: organization

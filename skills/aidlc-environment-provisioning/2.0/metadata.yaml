@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Environment Provisioning"
 description: Applies approved IaC and configuration changes with target identity and evidence controls.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, provisioning]
 skill_kind: code
 scope: organization

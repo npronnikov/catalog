@@ -6,6 +6,7 @@ display_name: "AIDLC v2: Code Generation Plan"
 description: Produces an ordered, test-first implementation plan with exact files, commands, and rollback boundaries.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags: [aidlc, v2, qwen, implementation]
 skill_kind: plan
 scope: organization

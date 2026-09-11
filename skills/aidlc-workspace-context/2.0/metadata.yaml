@@ -8,6 +8,7 @@ description: >
   conventions, and unresolved context before an AIDLC v2 workflow proceeds.
 coding_agent: qwen
 team_code: AIDLC
+platform_code: BACK
 tags:
   - aidlc
   - v2
