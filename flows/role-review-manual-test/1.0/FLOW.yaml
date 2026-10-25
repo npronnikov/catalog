@@ -1,0 +1,70 @@
+id: role-review-manual-test
+version: "1.0"
+canonical_name: role-review-manual-test@1.0
+title: Пример ролевого ревью
+description: >
+  AI создаёт простой калькулятор. PRODUCT_OWNER проверяет результат
+  с участием DEV, QA и SA и при необходимости возвращает его на доработку.
+status: draft
+start_node_id: prepare-review
+failure_node_id: done
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+
+nodes:
+  - id: prepare-review
+    title: Создать или доработать калькулятор
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      <#assign review = step["role-review"]!{} />
+      <#if review.rework_instruction?has_content && (review.keep_changes!false)>
+      Исправь role-review-fixture/calculator.js по замечаниям:
+      ${review.rework_instruction}
+      <#else>
+      Создай role-review-fixture/calculator.js с двумя функциями:
+      - add(a, b) — сложение двух чисел.
+      - divide(a, b) — деление с проверкой деления на ноль.
+
+      Дополнительные пожелания пользователя: ${run.feature_request!""}
+
+      <#if review.rework_instruction?has_content>
+      Учти замечания при создании файла: ${review.rework_instruction}
+      </#if>
+      </#if>
+    produced_artifacts:
+      - scope: project
+        path: role-review-fixture/calculator.js
+        required: true
+    on_success:
+      transition: role-review
+
+  - id: role-review
+    title: Проверить результат
+    type: human_approval
+    assignee: DEV
+    reviewers: [QA, SA]
+    execution_context:
+      - type: file_ref
+        scope: project
+        path: role-review-fixture/calculator.js
+        required: true
+        transfer_mode: by_ref
+    instruction: |
+      Проверь role-review-fixture/calculator.js:
+      - add правильно складывает числа.
+      - divide обрабатывает деление на ноль.
+
+      Утверди результат или отправь на ревью DEV, QA и SA.
+      Если мнения разошлись, прими окончательное решение после завершения ревью.
+      Для доработки укажи, что нужно исправить.
+    on_approve:
+      transition: done
+    on_rework:
+      transition: prepare-review
+
+  - id: done
+    title: Готово
+    type: terminal
+    execution_context: []

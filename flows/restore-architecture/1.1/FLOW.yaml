@@ -1,0 +1,65 @@
+id: restore-architecture
+version: "1.1"
+canonical_name: restore-architecture@1.1
+title: Restore architecture documentation (Java/C4) with external gate
+description: >
+  Analyzes a Java/Spring Boot project and generates C4 architecture
+  documentation with Mermaid diagrams (Context, Container, Component).
+  A Jenkins external gate verifies the result and can return it for rework.
+start_node_id: ai-analyze-architecture
+failure_node_id: terminal-complete
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+
+nodes:
+  - id: ai-analyze-architecture
+    title: Analyze project and generate C4 architecture
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      <#assign verifyArchitecture = step["verify-architecture"]!{} />
+      Изучи код проекта и подготовь архитектурную документацию
+      в нотации модели C4 с использованием диаграмм Mermaid.
+
+      Строго следуй подключенному skill.
+      Сохрани результат в `docs/architecture.md` в директории проекта.
+
+      <#if verifyArchitecture.reason??>
+      Предыдущая проверка Jenkins не прошла:
+      ${(verifyArchitecture.reason.message)!"Сборка завершилась с ошибкой"}
+      Перепроверь документацию и исправь обнаруженные проблемы перед повторной проверкой.
+      </#if>
+    skill_refs:
+      - c4-architecture@1.0
+    produced_artifacts:
+      - scope: project
+        path: docs/architecture.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: verify-architecture
+
+  - id: verify-architecture
+    title: Verify architecture documentation in Jenkins
+    type: external_gate
+    execution_context: []
+    adapter:
+      type: jenkins
+    on_success:
+      transition: terminal-complete
+    on_rework:
+      transition: ai-analyze-architecture
+      max_loop_count: 2
+      keep_changes: true
+      session_policy: resume_previous_session
+    on_timeout:
+      transition: terminal-complete
+
+  - id: terminal-complete
+    title: Complete
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
