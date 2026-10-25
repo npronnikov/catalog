@@ -26,5 +26,4 @@ source_path: "flows/gate-workbench-smoke-test/1.0"
 lifecycle_status: active
 forked_from: ''
 forked_by: ''
-# checksum пересчитывается приложением при импорте/публикации флоу — оставлено пустым намеренно.
-checksum: ''
+checksum: "763a5ce6f771403a34cda6d5ba2e46e7e597f203a0a9e89068de30af6ac22f48"
