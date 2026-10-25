@@ -6,7 +6,7 @@ description: >
   Полный цикл OpenSpec: исследование текущих спецификаций → создание delta-specs
   и артефактов изменения → реализация → верификация → актуализация документации
   и архивирование. Каждый завершённый цикл оставляет актуальные openspec/specs/.
-coding_agent: claude
+coding_agent: qwen
 start_node_id: ai-describe-change
 failure_node_id: terminal-complete
 fail_on_missing_declared_output: true

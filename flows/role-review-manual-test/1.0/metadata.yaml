@@ -5,7 +5,7 @@ canonical_name: role-review-manual-test@1.0
 display_name: "Пример ролевого ревью"
 description: "AI создаёт калькулятор, PRODUCT_OWNER проверяет его вместе с DEV, QA и SA. Замечания возвращаются AI для доработки."
 # Перед импортом укажите своего агента и команду.
-coding_agent: codex
+coding_agent: qwen
 team_code: Demo
 platform_code: BACK
 tags: [example, multiapproval, role-review]
