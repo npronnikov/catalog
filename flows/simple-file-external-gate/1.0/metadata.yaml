@@ -1,0 +1,22 @@
+entity_type: flow
+id: simple-file-external-gate
+version: "1.0"
+canonical_name: simple-file-external-gate@1.0
+display_name: "Создание файла с внешней проверкой"
+description: >
+  Qwen создаёт один Markdown-файл без подключённых skills. Jenkins проверяет
+  результат и при необходимости возвращает его на доработку.
+coding_agent: qwen
+team_code: Demo
+platform_code: BACK
+tags:
+  - example
+  - external-gate
+  - qwen
+flow_kind: delivery
+risk_level: low
+scope: organization
+source_ref: main
+source_path: "flows/simple-file-external-gate/1.0"
+lifecycle_status: active
+checksum: "acd5d64dc6fb7305dbfa9ce79afe201a31d985036e654ffe4bb89f33da473915"

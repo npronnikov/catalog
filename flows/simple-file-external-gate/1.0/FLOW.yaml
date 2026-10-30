@@ -1,0 +1,62 @@
+id: simple-file-external-gate
+version: "1.0"
+canonical_name: simple-file-external-gate@1.0
+title: Create a file and verify it with an external gate
+description: >
+  Qwen creates a single Markdown file. A Jenkins external gate verifies it
+  and either completes the workflow or returns it for rework.
+start_node_id: create-file
+failure_node_id: terminal-complete
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+
+nodes:
+  - id: create-file
+    title: Create verification file
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Создай в проекте файл `docs/aidlc-gate-check.md` со следующим содержимым:
+
+      # Проверка external gate
+
+      Файл создан кодинг-агентом Qwen.
+
+      <#assign gate = step["verify-file"]!{} />
+      <#if gate.reason??>
+      Предыдущая внешняя проверка не прошла:
+      ${(gate.reason.message)!"Причина не указана"}
+      Исправь файл с учётом причины и сохрани его по тому же пути.
+      </#if>
+    produced_artifacts:
+      - scope: project
+        path: docs/aidlc-gate-check.md
+        required: true
+        modifiable: false
+    expected_mutations: []
+    on_success:
+      transition: verify-file
+
+  - id: verify-file
+    title: Verify file in Jenkins
+    type: external_gate
+    execution_context: []
+    adapter:
+      type: jenkins
+    on_success:
+      transition: terminal-complete
+    on_rework:
+      transition: create-file
+      max_loop_count: 2
+      keep_changes: true
+      session_policy: resume_previous_session
+    on_timeout:
+      transition: terminal-complete
+
+  - id: terminal-complete
+    title: Complete
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
